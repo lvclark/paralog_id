@@ -1,7 +1,7 @@
 # Identify markers where we clearly have two paralogs in miscanthus for one
 # marker location in sorghum
 
-markers <- read.csv("190513miscanthus_sorghum_match.csv",
+markers <- read.csv("marker_CSV/190513miscanthus_sorghum_match.csv",
                     stringsAsFactors = FALSE)
 head(markers)
 
@@ -47,4 +47,4 @@ markers[20001:20030,]
 markers[30001:30030,]
 markers[35001:35030,]
 
-write.csv(markers, file = "190513paralogs.csv", row.names = FALSE)
+write.csv(markers, file = "marker_CSV/190513paralogs.csv", row.names = FALSE)

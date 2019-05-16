@@ -1,4 +1,4 @@
-Rcpp::sourceCpp('simpson.cpp')
+Rcpp::sourceCpp('src/simpson.cpp')
 load("Msa_tetraploids_Chr05_RADdata.RData") # tetraploid Msa data
 library(polyRAD)
 library(ggplot2)

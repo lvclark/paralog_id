@@ -2,7 +2,7 @@
 # for experiment to ID paralogs
 
 # tags to evaluate, and which loci they belong to
-tagtab <- read.csv("190515paralog_tags.csv", stringsAsFactors = FALSE)
+tagtab <- read.csv("marker_CSV/190515paralog_tags.csv", stringsAsFactors = FALSE)
 
 # table indicating ploidy
 accessions <- read.csv("~/DOE Msa study/Seq/GBSv2_180110/all_accession_names.csv",
@@ -69,4 +69,4 @@ totdepthTaxa <- c(rowSums(diploid_mat), rowSums(tetraploid_mat))
 summary(totdepthTaxa)
 hist(totdepthTaxa, breaks = 50)
 
-#save(diploid_mat, tetraploid_mat, file = "190515counts_matrices.RData")
+#save(diploid_mat, tetraploid_mat, file = "workspaces/190515counts_matrices.RData")

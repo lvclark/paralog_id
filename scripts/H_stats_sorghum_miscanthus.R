@@ -2,9 +2,9 @@
 # i.e. for miscanthus tags aligned to sorghum reference vs. miscanthus
 # reference.
 # Can we use this statistic to distinguish good loci from paralogs?
-load("190515counts_matrices.RData")
-tagtab <- read.csv("190515paralog_tags.csv", stringsAsFactors = FALSE)
-Rcpp::sourceCpp('simpson.cpp')
+load("workspaces/190515counts_matrices.RData")
+tagtab <- read.csv("marker_CSV/190515paralog_tags.csv", stringsAsFactors = FALSE)
+Rcpp::sourceCpp('src/simpson.cpp')
 library(ggplot2)
 library(viridis)
 

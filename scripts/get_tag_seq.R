@@ -3,7 +3,7 @@
 library(fastmatch)
 library(Biostrings)
 
-paralogs <- read.csv("190513paralogs.csv", stringsAsFactors = FALSE)
+paralogs <- read.csv("marker_CSV/190513paralogs.csv", stringsAsFactors = FALSE)
 head(paralogs)
 tail(paralogs)
 # eliminate a few from sorghum scaffolds
@@ -124,4 +124,4 @@ tagtab$Sorghum <- paralogs$Sbicolor_3[fmatch(tagtab$Miscanthus, paralogs$Query)]
 
 head(tagtab)
 
-#write.csv(tagtab, file = "190515paralog_tags.csv", row.names = FALSE)
+#write.csv(tagtab, file = "marker_CSV/190515paralog_tags.csv", row.names = FALSE)
