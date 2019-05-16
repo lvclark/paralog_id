@@ -19,6 +19,11 @@ str(depthRatio_dip_S)
 
 depthRatio_dip_S[1:10,alleles2locS == 6]
 
+# function for distance between sequences ####
+seqdist <- function(seq1, seq2){
+  return(sum(strsplit(seq1, "")[[1]] != strsplit(seq2, "")[[1]]))
+}
+
 # exploration - get info on a locus of choice ####
 sorgloc <- 6 # locus to explore from sorghum
 theseal <- which(alleles2locS == sorgloc) # columns containing these alleles
@@ -32,6 +37,7 @@ alnames <- c(paste("MiscAl1", miscal1, sep = "."),
              paste("MiscAl2", miscal2, sep = "."))
 cormat <- matrix(NA_real_, nrow = length(theseal), ncol = length(theseal),
                  dimnames = list(alnames, alnames))
+seqmat <- cormat
 # get correlations
 for(i in 1:(length(theseal) - 1)){
   for(j in (i+1):length(theseal)){
@@ -39,6 +45,10 @@ for(i in 1:(length(theseal) - 1)){
                    depthRatio_dip_S[,theseal[j]])$p.value
     cormat[i,j] <- thiscor
     cormat[j,i] <- thiscor
+    
+    thisseqdist <- seqdist(tagseq[i], tagseq[j])
+    seqmat[i,j] <- thisseqdist
+    seqmat[j,i] <- thisseqdist
   }
 }
 
@@ -50,3 +60,7 @@ grps <- cutree(myclust, k = 2)
 # how does sequence similarity match up by group?
 cat(tagseq[grps == 1], sep = "\n")
 cat(tagseq[grps == 2], sep = "\n")
+
+myclustseq <- hclust(as.dist(seqmat))
+plot(myclustseq)
+cutree(myclustseq, k = 2)
