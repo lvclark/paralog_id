@@ -61,6 +61,8 @@ two-copy loci, *i.e.* those aligned to *Miscanthus* vs. those aligned to
 *Sorghum*.
 Exploration is performed as to how the statistics can be adjusted for read depth.
 
+`scripts/allele_correlations.R` explores ways to group tags into isoloci.
+
 ### Documentation
 
 `doc/proof_heterozygosity_for_isolocus_detection.docx` is a mathematical proof
