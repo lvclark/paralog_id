@@ -66,3 +66,6 @@ Exploration is performed as to how the statistics can be adjusted for read depth
 `doc/proof_heterozygosity_for_isolocus_detection.docx` is a mathematical proof
 demonstrating that the average value for $H_{ind}$ is always expected to be
 $\frac{ploidy - 1}{ploidy}H_E$.
+
+`doc/next_steps.md` describes where I would like to go with this, including
+a final pipeline to sort tags into isoloci.
