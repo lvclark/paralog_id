@@ -25,3 +25,8 @@ two or more isoloci.  The goal is to minimize Hind/HE for both/all isoloci.
 Perhaps this is all done in a Python script before import to polyRAD.  It will
 necessitate looping through loci, which will be slow as molasses in R unless
 Rcpp is used very heavily.
+
+If one tag belongs to multiple isoloci, either the whole marker has to be
+discarded, or polyRAD needs better models for dealing with allopolyploidy.
+This will certainly happen, so there should be mechanisms in place for
+recognizing it.
