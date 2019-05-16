@@ -5,7 +5,9 @@ the top hit, two (or more) top hits are returned.  Many paralogs are going to be
 highly similar or indistiguishable between subgenomes, so we need to accept that
 many tags are not properly aligned.
 
-Tags are grouped based on the unordered set of top hits.
+Tags are grouped based on the unordered set of top hits.  Since some tags really
+may only align once, a minimum alignment quality score is required, or the hit
+is discarded.
 
 Similarly to how polysat looks for negative associations between the presence
 and absence of alleles in order to group them into isoloci, I would like to look
