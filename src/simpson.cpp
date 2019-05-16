@@ -6,11 +6,9 @@ using namespace Rcpp;
 // [[Rcpp::export]]
 double Simpson(IntegerVector counts) {
   double N = sum(counts);
-  // double Nm1 = N - 1;
   double out = 1.0;
   
   for(int i = 0; i < counts.size(); i++){
-    // out -= (counts[i] / N) * ((counts[i] - 1) / Nm1);
     out -= pow(counts[i] / N, 2);
   }
   
