@@ -64,3 +64,6 @@ cat(tagseq[grps == 2], sep = "\n")
 myclustseq <- hclust(as.dist(seqmat))
 plot(myclustseq)
 cutree(myclustseq, k = 2)
+
+# OR, rather than starting with clustering, use alignment as initial
+# configuration for sorting algorithm.
