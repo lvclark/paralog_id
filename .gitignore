@@ -16,6 +16,8 @@
 
 # RStudio files
 .Rproj.user/
+.Rproj.user
+paralog_id.Rproj
 
 # produced vignettes
 vignettes/*.html
@@ -37,5 +39,6 @@ vignettes/*.pdf
 # Shiny token, see https://shiny.rstudio.com/articles/shinyapps.html
 rsconnect/
 
-.Rproj.user
-paralog_id.Rproj
+# Big files
+marker_CSV/190517onealign.csv
+marker_cSV/190517twoalign.csv
