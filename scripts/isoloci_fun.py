@@ -30,3 +30,13 @@ def HindHe(countsmat):
   HindHeByInd = [GiniSimpson(countsmatT[i], N = depthByInd[i]) * \
                  depthByInd[i] / (depthByInd[i] - 1)/ He for i in range(nind) if depthByInd[i] > 0]
   return mean(HindHeByInd)
+  
+def SwapProbs(NMmat, hapAssign, seqlen):
+  '''Look at the number of mutations between haplotypes and the various
+  potential paralogs, and determine probabilities for moving a haplotype from
+  one isolocus to another during random sampling.
+  There should be a greater probability of getting moved to an isolocus where
+  the reference is more similar to the haplotype.'''
+  # numpy.random.choice
+  # 1 - diff/seqlen; where diff can be negative; then normalize to sum to 1.
+  pass
