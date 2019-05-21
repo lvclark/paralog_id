@@ -42,3 +42,6 @@ rsconnect/
 # Big files
 marker_CSV/190517onealign.csv
 marker_cSV/190517twoalign.csv
+
+# Python compiled code
+*.pyc
