@@ -18,41 +18,57 @@ tagtab[1:20,2:3]
 alleles2locS <- match(tagtab$Sorghum, unique(tagtab$Sorghum))
 alleles2locS[1:20]
 
+# function to get He based on depth ratio instead of counts
+He_depth_ratio <- function(alleleDepth, alleles2loc){
+  nloc <- max(alleles2loc)
+  out <- numeric(nloc)
+  for(i in 1:nloc){
+    thesecol <- which(alleles2loc == i)
+    depthRatios <- sweep(alleleDepth[,thesecol, drop = FALSE],
+                         1, rowSums(alleleDepth[,thesecol, drop = FALSE]), "/")
+    freq <- colMeans(depthRatios, na.rm = TRUE)
+    out[i] <- 1 - sum(freq ^ 2)
+  }
+  return(out)
+}
+
 # compare miscanthus and sorghum for diploids
 Depth_dip_M <- tapply(colSums(diploid_mat), alleles2locM, sum)
 
 H_dip_Misc <- HReadDepth(diploid_mat, alleles2locM, max(alleles2locM))
 Hind_dip_Misc <- colMeans(H_dip_Misc[[1]], na.rm = TRUE)
+He_dip_Misc <- He_depth_ratio(diploid_mat, alleles2locM)
 
-ggplot(mapping = aes(x = H_dip_Misc[[2]], y = Hind_dip_Misc,
+ggplot(mapping = aes(x = He_dip_Misc, y = Hind_dip_Misc,
                      col = log(Depth_dip_M))) +
   geom_point() +
   scale_color_viridis(option = "magma") +
   geom_abline(slope = 1/2, intercept = 0) +
   labs(x = "He", y = "Hind", title = "Diploids with Miscanthus reference")
 
-hist(log2(Hind_dip_Misc/H_dip_Misc[[2]]))
-mean(Hind_dip_Misc/H_dip_Misc[[2]] > 1/2, na.rm = TRUE) # 23% exceed expectations (30% when corrected for size)
+hist(log2(Hind_dip_Misc/He_dip_Misc))
+mean(Hind_dip_Misc/He_dip_Misc > 1/2, na.rm = TRUE) # 24% exceed expectations (30% when corrected for size)
 
 Depth_dip_S <- tapply(colSums(diploid_mat), alleles2locS, sum)
 
 H_dip_Sorg <- HReadDepth(diploid_mat, alleles2locS, max(alleles2locS))
 Hind_dip_Sorg <- colMeans(H_dip_Sorg[[1]], na.rm = TRUE)
+He_dip_Sorg <- He_depth_ratio(diploid_mat, alleles2locS)
 
-ggplot(mapping = aes(x = H_dip_Sorg[[2]], y = Hind_dip_Sorg,
+ggplot(mapping = aes(x = He_dip_Sorg, y = Hind_dip_Sorg,
                      col = log(Depth_dip_S))) +
   geom_point() +
   scale_color_viridis(option = "magma") +
   geom_abline(slope = 1/2, intercept = 0) +
   labs(x = "He", y = "Hind", title = "Diploids with Sorghum reference")
 
-hist(log2(Hind_dip_Sorg/H_dip_Sorg[[2]]))
-mean(Hind_dip_Sorg/H_dip_Sorg[[2]] > 1/2, na.rm = TRUE) # 32% exceed expectations (38% previously)
+hist(log2(Hind_dip_Sorg/He_dip_Sorg))
+mean(Hind_dip_Sorg/He_dip_Sorg > 1/2, na.rm = TRUE) # 32% exceed expectations (38% previously)
 
 # put into data frame to compare distributions
 dip_df <- data.frame(Reference = c(rep("Miscanthus", length(Hind_dip_Misc)),
                                    rep("Sorghum", length(Hind_dip_Sorg))),
-                     He = c(H_dip_Misc[[2]], H_dip_Sorg[[2]]),
+                     He = c(He_dip_Misc, He_dip_Sorg),
                      Hind = c(Hind_dip_Misc, Hind_dip_Sorg),
                      Depth = c(Depth_dip_M, Depth_dip_S))
 dip_df <- dip_df[which(dip_df$Depth > 0 & dip_df$He > 0),]
@@ -107,7 +123,7 @@ scaled_Hind_dip_Sorg <- scale_Hind(H_dip_Sorg[[1]],
 
 dip_df <- data.frame(Reference = c(rep("Miscanthus", length(Hind_dip_Misc)),
                                    rep("Sorghum", length(Hind_dip_Sorg))),
-                     He = c(H_dip_Misc[[2]], H_dip_Sorg[[2]]),
+                     He = c(He_dip_Misc, He_dip_Sorg),
                      Hind = c(Hind_dip_Misc, Hind_dip_Sorg),
                      Depth = c(Depth_dip_M, Depth_dip_S))
 

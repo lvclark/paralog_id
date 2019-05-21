@@ -68,6 +68,9 @@ Exploration is performed as to how the statistics can be adjusted for read depth
 twice and group them into markers by alignment location(s).  This is a
 preliminary step before sorting tags into isoloci.
 
+`scripts/isoloci_fun.py` has functions for estimating the Gini-Simpson index
+and Hind/He using Python.  `scripts\isoloci_fun_test.py` tests these functions.
+
 ### Documentation
 
 `doc/proof_heterozygosity_for_isolocus_detection.docx` is a mathematical proof
