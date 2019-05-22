@@ -39,7 +39,7 @@ def SwapHap(NMmat, hapAssign, seqlen, base = 0.5):
   There should be a greater probability of getting moved to an isolocus where
   the reference is more similar to the haplotype.
   Return a new version of hapAssign where one haplotype has been moved from one
-  isolocus to another, and random using the above probabilities.
+  isolocus to another, at random using the above probabilities.
   
   NMmat is a list of lists, the first dimension corresponding to alignment
   locations and the second dimension corresponding to haplotypes.  Values
