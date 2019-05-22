@@ -1,4 +1,5 @@
 from statistics import mean
+from numpy import random.choice
 
 # functions for sorting out isoloci
 
@@ -31,12 +32,47 @@ def HindHe(countsmat):
                  depthByInd[i] / (depthByInd[i] - 1)/ He for i in range(nind) if depthByInd[i] > 0]
   return mean(HindHeByInd)
   
-def SwapProbs(NMmat, hapAssign, seqlen):
+def SwapHap(NMmat, hapAssign, seqlen, base = 0.5):
   '''Look at the number of mutations between haplotypes and the various
   potential paralogs, and determine probabilities for moving a haplotype from
   one isolocus to another during random sampling.
   There should be a greater probability of getting moved to an isolocus where
-  the reference is more similar to the haplotype.'''
-  # numpy.random.choice
-  # 1 - diff/seqlen; where diff can be negative; then normalize to sum to 1.
-  pass
+  the reference is more similar to the haplotype.
+  Return a new version of hapAssign where one haplotype has been moved from one
+  isolocus to another, and random using the above probabilities.
+  
+  NMmat is a list of lists, the first dimension corresponding to alignment
+  locations and the second dimension corresponding to haplotypes.  Values
+  indicate the number of mutations between that haplotype and the reference.
+  
+  hapAssign is a list of lists, with the first dimension corresponding to
+  alignment.  Each list contains indices of haplotypes that have been assigned
+  to that location.
+  
+  seqlen is the sequence length, and base should be about twice the maximum
+  possibley dissimilarity between haplotype and reference.'''
+  
+  nloc = len(NMmat) # number of isoloci
+  # Build a list of potential movements of haplotypes from one isolocus to
+  # another, and their weights.
+  swaplist = []
+  
+  for loc1 in range(nloc): # current locus
+    otherloc = [l for l in range(nloc) if l != loc1] # loci other than this one
+    for hap in hapAssign[loc1]: # haplotype index
+      for loc2 in otherloc: # destination locus
+        swapval = base - (NMmat[loc2] - NMmat[loc1]) / seqlen
+        swaplist.append([hap, loc1, loc2, swapval])
+
+  # normalize weights to probabilities
+  weights = [s[3] for s in swapval]
+  tot = sum(weights)
+  probs = [w/tot for w in weights]
+  
+  # pick a swap to make
+  thisswap = swaplist[random.choice(len(swaplist), size = 1, p = probs)]
+  # move the alleles
+  hapAssign[thisswap[1]].remove(thisswap[0])
+  hapAssign[thisswap[2]].append(thisswap[0])
+  
+  return hapAssign
