@@ -1,5 +1,5 @@
 from statistics import mean
-from numpy import random.choice
+from numpy.random import choice
 
 # functions for sorting out isoloci
 
@@ -61,16 +61,16 @@ def SwapHap(NMmat, hapAssign, seqlen, base = 0.5):
     otherloc = [l for l in range(nloc) if l != loc1] # loci other than this one
     for hap in hapAssign[loc1]: # haplotype index
       for loc2 in otherloc: # destination locus
-        swapval = base - (NMmat[loc2] - NMmat[loc1]) / seqlen
+        swapval = base - (NMmat[loc2][hap] - NMmat[loc1][hap]) / seqlen
         swaplist.append([hap, loc1, loc2, swapval])
 
   # normalize weights to probabilities
-  weights = [s[3] for s in swapval]
+  weights = [s[3] for s in swaplist]
   tot = sum(weights)
   probs = [w/tot for w in weights]
   
   # pick a swap to make
-  thisswap = swaplist[random.choice(len(swaplist), size = 1, p = probs)]
+  thisswap = swaplist[choice(len(swaplist), size = 1, p = probs)[0]]
   # move the alleles
   hapAssign[thisswap[1]].remove(thisswap[0])
   hapAssign[thisswap[2]].append(thisswap[0])

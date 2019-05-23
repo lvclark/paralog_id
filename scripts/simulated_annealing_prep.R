@@ -23,3 +23,6 @@ max(abs(twoalign$V4 - twoalign$V5)) # diff of 19 between them
 max(c(twoalign$V4, twoalign$V5))    # max of 21/80
 hist(abs(twoalign$V4 - twoalign$V5))
 
+# get things for testing in Python
+paste(exampleMrkr$V4, collapse = ", ")
+paste(exampleMrkr$V5, collapse = ", ")
