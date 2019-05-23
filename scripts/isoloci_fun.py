@@ -135,7 +135,7 @@ def AnnealLocus(countsmat, NMmat, seqlen, base = 0.5, maxreps = 100, T0 = 0.5,
         hindhe_mean = hindhe_mean_new
         if logcon != None:
           logcon.write("Temperature: {}, Current Hind/He: {}\n".format(Ti, " ".join(hindhe)))
-    if didswap:
+    if not didswap:
       break # no swaps happened, algorithm is done
     Ti = Ti * rho
   
