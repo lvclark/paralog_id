@@ -11,52 +11,62 @@ head(accessions)
 diploids <- accessions$Accession[accessions$Ploidy == "2x"]    # 356
 tetraploids <- accessions$Accession[accessions$Ploidy == "4x"] # 268
 
-# find accessions in tagtaxadist file
-ttdfile <- "D:/TASSELGBS_Msa/180813tagtaxadist.txt"
-header <- strsplit(readLines(ttdfile, 1), split = "\t")[[1]]
-header[1:50]
-all(diploids %in% header)
-all(tetraploids %in% header)
-
-diploid_index <- match(diploids, header)
-tetraploid_index <- match(tetraploids, header)
-
-# set up matrices for output
-diploid_mat <- matrix(0L, nrow = length(diploids), ncol = nrow(tagtab),
-                      dimnames = list(diploids, tagtab$TagSeq))
-tetraploid_mat <- matrix(0L, nrow = length(tetraploids), ncol = nrow(tagtab),
-                      dimnames = list(tetraploids, tagtab$TagSeq))
-
-# read through tagtaxadist file
-mywhich <- list(character(), integer())
-mywhich <- mywhich[c(1, rep(2, length(header) - 1))]
-
-ttdcon <- file(ttdfile, open = "r")
-depthdat <- scan(ttdcon, what = mywhich, nmax = 10000, sep = "\t", skip = 1)
-tagsread <- 0L
-while(length(depthdat[[1]])){
-  # identify tags that we wanted to keep
-  keep <- which(depthdat[[1]] %in% colnames(diploid_mat))
-  if(length(keep) == 0) next
-  thesetags <- depthdat[[1]][keep]
+readTagTaxaDist <- function(tags,
+                            diploids = diploids, tetraploids = tetraploids,
+                            ttdfile = "D:/TASSELGBS_Msa/180813tagtaxadist.txt"){
+  # find accessions in tagtaxadist file
+  header <- strsplit(readLines(ttdfile, 1), split = "\t")[[1]]
+  header[1:50]
+  all(diploids %in% header)
+  all(tetraploids %in% header)
   
-  # extract the counts for these tags for diploids and tetraploids
-  dip_counts <- lapply(depthdat[diploid_index], function(x) x[keep])
-  tet_counts <- lapply(depthdat[tetraploid_index], function(x) x[keep])
+  diploid_index <- match(diploids, header)
+  tetraploid_index <- match(tetraploids, header)
   
-  # fill in matrices
-  diploid_mat[,thesetags] <- matrix(unlist(dip_counts), nrow = length(diploids),
-                                    ncol = length(thesetags), byrow = TRUE)
-  tetraploid_mat[,thesetags] <- matrix(unlist(tet_counts), nrow = length(tetraploids),
-                                       ncol = length(thesetags), byrow = TRUE)
+  # set up matrices for output
+  diploid_mat <- matrix(0L, nrow = length(diploids), ncol = length(tags),
+                        dimnames = list(diploids, tags))
+  tetraploid_mat <- matrix(0L, nrow = length(tetraploids), ncol = length(tags),
+                           dimnames = list(tetraploids, tags))
+  # read through tagtaxadist file
+  mywhich <- list(character(), integer())
+  mywhich <- mywhich[c(1, rep(2, length(header) - 1))]
   
-  tagsread <- tagsread + length(thesetags)
-  cat(paste(tagsread, "tags read"), sep = "\n")
+  ttdcon <- file(ttdfile, open = "r")
+  depthdat <- scan(ttdcon, what = mywhich, nmax = 10000, sep = "\t", skip = 1)
+  tagsread <- 0L
   
-  # read the next chunk
-  depthdat <- scan(ttdcon, what = mywhich, nmax = 10000, sep = "\t")
+  while(length(depthdat[[1]])){
+    # identify tags that we wanted to keep
+    keep <- which(depthdat[[1]] %in% tags)
+    if(length(keep) == 0) next
+    thesetags <- depthdat[[1]][keep]
+    
+    # extract the counts for these tags for diploids and tetraploids
+    dip_counts <- lapply(depthdat[diploid_index], function(x) x[keep])
+    tet_counts <- lapply(depthdat[tetraploid_index], function(x) x[keep])
+    
+    # fill in matrices
+    diploid_mat[,thesetags] <- matrix(unlist(dip_counts), nrow = length(diploids),
+                                      ncol = length(thesetags), byrow = TRUE)
+    tetraploid_mat[,thesetags] <- matrix(unlist(tet_counts), nrow = length(tetraploids),
+                                         ncol = length(thesetags), byrow = TRUE)
+    
+    tagsread <- tagsread + length(thesetags)
+    message(paste(tagsread, "tags read"))
+    
+    # read the next chunk
+    depthdat <- scan(ttdcon, what = mywhich, nmax = 10000, sep = "\t")
+  }
+  close(ttdcon)
+  
+  return(list(diploid_mat, tetraploid_mat))
 }
-close(ttdcon)
+
+mats <- readTagTaxaDist(tagtab$TagSeq)
+diploid_mat <- tagtab[[1]]
+tetraploid_mat <- tagtab[[2]]
+rm(mats)
 
 # check data
 totdepthTags <- colSums(diploid_mat) + colSums(tetraploid_mat)
