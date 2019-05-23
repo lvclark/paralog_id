@@ -1,4 +1,4 @@
-from isoloci_fun import GiniSimpson, HindHe, SwapHap
+from isoloci_fun import GiniSimpson, HindHe, SwapHap, InitHapAssign
 
 print(GiniSimpson([50, 50]))
 print(GiniSimpson([25, 25, 50]))
@@ -13,8 +13,9 @@ print(HindHe([[10, 5, 0, 0, 0],
 myNM = [[4, 5, 7, 1, 6, 0, 8, 3, 2, 3, 2, 1, 2, 2, 2, 2, 5, 2, 2, 2, 1, 2, 3, 2, 5, 5, 11, 2, 2, 3, 4, 5],
         [8, 1, 7, 5, 2, 4, 9, 4, 3, 4, 3, 2, 3, 3, 3, 3, 3, 3, 3, 3, 2, 3, 4, 3, 2, 2, 8, 1, 3, 0, 1, 2]]
 nhap = len(myNM[0])
-myAssign = [[i for i in range(nhap) if myNM[0][i] < myNM[1][i]],
-            [i for i in range(nhap) if myNM[0][i] >= myNM[1][i]]]
+#myAssign = [[i for i in range(nhap) if myNM[0][i] < myNM[1][i]],
+#            [i for i in range(nhap) if myNM[0][i] >= myNM[1][i]]]
+myAssign = InitHapAssign(myNM)
 print(myAssign)
 
 for i in range(10):

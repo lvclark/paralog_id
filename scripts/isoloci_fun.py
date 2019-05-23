@@ -76,3 +76,24 @@ def SwapHap(NMmat, hapAssign, seqlen, base = 0.5):
   hapAssign[thisswap[2]].append(thisswap[0])
   
   return hapAssign
+
+def InitHapAssign(NMmat):
+  '''Generate initial assignments of haplotypes to loci based on number of
+  mutations between haplotype and the locus.'''
+  nloc = len(NMmat)
+  nhap = len(NMmat[0])
+  hapAssign = [[] for i in range(nloc)] # to store output
+  
+  for h in range(nhap):
+    theseNM = [nm[h] for nm in NMmat]
+    minNM = min(theseNM)
+    bestLoc = [l for l in range(nloc) if theseNM[l] == minNM]
+    if len(bestLoc) > 1:
+      bestLoc = choice(bestLoc, 1)
+    bestLoc = bestLoc[0] # convert list to number
+    hapAssign[bestLoc].append(h) # add haplotype to locus
+  
+  return hapAssign
+
+def AnnealLocus():
+  pass
