@@ -1,26 +1,28 @@
 # Thoughts on a general protocol for sorting paralogs
 
+He is now based on depth ratios rather than raw depth, so the Word document should
+be updated.
+
 Each tag is aligned to the reference using Bowtie2, but instead of only returning
 the top hit, two (or more) top hits are returned.  Many paralogs are going to be
 highly similar or indistiguishable between subgenomes, so we need to accept that
-many tags are not properly aligned.
+many tags are not properly aligned.  Additionally, a difference between the
+two subgenomes in the reference may not be fixed in the population, causing
+tags without that variant to align to the wrong subgenome.
 
-Tags are grouped based on the unordered set of top hits.  Since some tags really
-may only align once, a minimum alignment quality score is required, or the hit
-is discarded.
+Tags are grouped based on the unordered set of top hits.  Tags that align more
+times than expected are discarded, at least for now.  For tags that align once,
+we can look at Hind/He to see if it makes sense to try to split them.
 
-Similarly to how polysat looks for negative associations between the presence
-and absence of alleles in order to group them into isoloci, I would like to look
-for negative associations between read depth ratios (as estimated in polyRAD when
-it builds the RADdata object) to make a preliminary grouping of tags into isoloci.
-
-The preliminary grouping should also be influenced by sequence similarity.  How
-much should depend on whether allelic associations or sequence similarity gives
-cleaner results.  Maybe this is similar to Bayesian stats where posterior probs
-are influenced sometimes more by the priors and sometimes more by the likelihoods.
+Preliminary grouping of tags into isoloci is based on which alignment to the
+reference has fewer apparent mutations.  If a tag aligns equally well to two
+locations, it is assigned to one at random.  Negative associations similar to
+those used in polysat don't seem to be helpful.
 
 An algorithm like simulated annealing or MCMC is used to shuffle tags between the
 two or more isoloci.  The goal is to minimize Hind/HE for both/all isoloci.
+The chance of moving a tag from one isolocus to another is influenced somewhat
+by similarity to the reference.
 
 Perhaps this is all done in a Python script before import to polyRAD.  It will
 necessitate looping through loci, which will be slow as molasses in R unless
