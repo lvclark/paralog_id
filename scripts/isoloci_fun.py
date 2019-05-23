@@ -1,5 +1,6 @@
 from statistics import mean
 from numpy.random import choice
+import math
 
 # functions for sorting out isoloci
 
@@ -94,6 +95,48 @@ def InitHapAssign(NMmat):
     hapAssign[bestLoc].append(h) # add haplotype to locus
   
   return hapAssign
+  
+def HindHeByIsolocus(countsmat, hapAssign):
+  '''For a given set of assignments of haplotypes to isoloci, estimate Hind/He
+  for each isolocus.  countsmat and hapAssign are as defined above.'''
+  splitcounts = [[countsmat[h] for h in isolocus] for isolocus in hapAssign]
+  return [HindHe(c) for c in splitcounts]
 
-def AnnealLocus():
-  pass
+def AnnealLocus(countsmat, NMmat, seqlen, base = 0.5, maxreps = 100, T0 = 0.5,
+                rho = 0.95, logcon = None):
+  '''Perform simulated annealing on one group of haplotypes to split it into isoloci.
+  logcon is a file connection that is already open, for logging progress.'''
+  hapAssign = InitHapAssign(NMmat) # initial assignment of haplotypes to isoloci
+  hindhe = HindHeByIsolocus(countsmat, hapAssign)
+  if logcon != None:
+    logcon.write("Initial Hind/He: {}\n".format(" ".join(hindhe)))
+  hindhe_mean = mean([h for h in hindhe if h != None])
+  
+  # number of swaps to attempt per temperature
+  # roughly allow each allele to get moved to each isolocus
+  swapspertemp = math.factorial(len(NMmat)) * len(NMmat[0])
+  Ti = T0
+  
+  for k in range(maxreps):
+    didswap = False
+    for r in range(swapspertemp):
+      hapAssign_new = SwapHap(NMmat, hapAssign, seqlen, base = base)
+      hindhe_new = HindHeByIsolocus(countsmat, hapAssign_new)
+      hindhe_mean_new = mean([h for h in hindhe_new if h != None])
+      doswap = hindhe_mean_new <= hindhe_mean # the new set is better
+      if not doswap:
+        # new set is worse, decide whether to keep
+        swapprob = math.exp((hindhe_mean - hindhe_mean_new)/Ti)
+        doswap = choice(range(2), size = 1, p = [swapprob, 1 - swapprob])[0] == 0
+      if doswap: # everything that happens if we do a swap
+        didswap = True
+        hapAssign = hapAssign_new
+        hindhe = hindhe_new
+        hindhe_mean = hindhe_mean_new
+        if logcon != None:
+          logcon.write("Temperature: {}, Current Hind/He: {}\n".format(Ti, " ".join(hindhe)))
+    if didswap:
+      break # no swaps happened, algorithm is done
+    Ti = Ti * rho
+  
+  return hapAssign
