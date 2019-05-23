@@ -11,8 +11,7 @@ head(accessions)
 diploids <- accessions$Accession[accessions$Ploidy == "2x"]    # 356
 tetraploids <- accessions$Accession[accessions$Ploidy == "4x"] # 268
 
-readTagTaxaDist <- function(tags,
-                            diploids = diploids, tetraploids = tetraploids,
+readTagTaxaDist <- function(tags, diploids, tetraploids,
                             ttdfile = "D:/TASSELGBS_Msa/180813tagtaxadist.txt"){
   # find accessions in tagtaxadist file
   header <- strsplit(readLines(ttdfile, 1), split = "\t")[[1]]
@@ -63,7 +62,7 @@ readTagTaxaDist <- function(tags,
   return(list(diploid_mat, tetraploid_mat))
 }
 
-mats <- readTagTaxaDist(tagtab$TagSeq)
+mats <- readTagTaxaDist(tagtab$TagSeq, diploids = diploids, tetraploids = tetraploids)
 diploid_mat <- tagtab[[1]]
 tetraploid_mat <- tagtab[[2]]
 rm(mats)
