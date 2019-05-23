@@ -79,3 +79,14 @@ summary(totdepthTaxa)
 hist(totdepthTaxa, breaks = 50)
 
 #save(diploid_mat, tetraploid_mat, file = "workspaces/190515counts_matrices.RData")
+
+# Instead import tags that aligned twice in the Miscanthus genome ####
+twoalign <- read.csv("marker_CSV/190517twoalign.csv", stringsAsFactors = FALSE,
+                     header = FALSE)
+twoalign_Chr1_2 <- twoalign[grepl("Chr01", twoalign$V1) &
+                              grepl("Chr02", twoalign$V2),]
+mats <- readTagTaxaDist(twoalign_Chr1_2$V3, diploids = diploids, tetraploids = tetraploids)
+mats[[1]][1:10,1:10]
+
+#write.csv(t(mats[[1]]), file = "marker_CSV/190523diploid_Chr1Chr2.csv")
+#write.csv(t(mats[[2]]), file = "marker_CSV/190523tetraploid_Chr1Chr2.csv")

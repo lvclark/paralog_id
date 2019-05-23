@@ -42,6 +42,8 @@ rsconnect/
 # Big files
 marker_CSV/190517onealign.csv
 marker_cSV/190517twoalign.csv
+marker_CSV/190523diploid_Chr1Chr2.csv
+marker_CSV/190523tetraploid_Chr1Chr2.csv
 
 # Python compiled code
 *.pyc
