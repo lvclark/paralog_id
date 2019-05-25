@@ -30,7 +30,7 @@ def HindHe(countsmat):
   He = GiniSimpson(meanDepthRatios, N = 1)
   
   HindHeByInd = [GiniSimpson(countsmatT[i], N = depthByInd[i]) * \
-                 depthByInd[i] / (depthByInd[i] - 1)/ He for i in range(nind) if depthByInd[i] > 0]
+                 depthByInd[i] / (depthByInd[i] - 1)/ He for i in range(nind) if depthByInd[i] > 1]
   return mean(HindHeByInd)
   
 def SwapHap(NMmat, hapAssign, seqlen, base = 0.5):
