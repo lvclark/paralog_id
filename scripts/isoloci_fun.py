@@ -109,7 +109,7 @@ def AnnealLocus(countsmat, NMmat, seqlen, base = 0.5, maxreps = 100, T0 = 0.5,
   hapAssign = InitHapAssign(NMmat) # initial assignment of haplotypes to isoloci
   hindhe = HindHeByIsolocus(countsmat, hapAssign)
   if logcon != None:
-    logcon.write("Initial Hind/He: {}\n".format(" ".join(hindhe)))
+    logcon.write("Initial Hind/He: {}\n".format(" ".join([str(h) for h in hindhe])))
   hindhe_mean = mean([h for h in hindhe if h != None])
   
   # number of swaps to attempt per temperature
