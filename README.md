@@ -75,6 +75,9 @@ Python.  `scripts\isoloci_fun_test.py` tests these functions.
 `scripts/process_isoloci.py` runs through the simulated annealing algorithm
 using a test set of tags that aligned to Chr01 and Chr02 in *Miscanthus*.
 
+`scripts/optimize_temperature.R` examines the output of `process_isoloci.py` to
+determina an optimum starting temperature for the simulated annealing algorithm.
+
 ### Documentation
 
 `doc/proof_heterozygosity_for_isolocus_detection.docx` is a mathematical proof
