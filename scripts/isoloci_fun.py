@@ -29,17 +29,14 @@ def HindHe(countsmat):
     return None
   
   depthRatios = [[c / depthByInd[i] for c in countsmatT[i]] for i in range(nind) if depthByInd[i] > 0]
-  meanDepthRatios = [mean(x) for x in zip(*depthRatios)] # mean by allele
+  meanDepthRatios = [sum(x)/nind for x in zip(*depthRatios)] # mean by allele
   He = GiniSimpson(meanDepthRatios, N = 1)
   assert He > 0
   
   HindHeByInd = [GiniSimpson(countsmatT[i], N = depthByInd[i]) * \
                  depthByInd[i] / (depthByInd[i] - 1)/ He for i in range(nind) if depthByInd[i] > 1]
-  try:
-    m = mean(HindHeByInd)
-  except StatisticsError:
-    print(countsmat)
-    print(HindHeByInd)
+
+  m = sum(HindHeByInd)/nind
   return m
   
 def SwapHap(NMmat, hapAssign, seqlen, base = 0.5):
@@ -115,7 +112,7 @@ def MeanNMperLoc(NMmat, hapAssign):
   '''Get mean number of mutations per locus across all haplotypes versus their
   assigned locus.'''
   nLoc = len(NMmat)
-  out = mean([NMmat[L][h] for L in range(nLoc) for h in hapAssign[L]])
+  out = sum([NMmat[L][h] for L in range(nLoc) for h in hapAssign[L]])/nLoc
   return out
 
 def AnnealLocus(countsmat, NMmat, seqlen, expHindHe, base = 0.5, maxreps = 100,
