@@ -135,7 +135,7 @@ def AnnealLocus(countsmat, NMmat, seqlen, expHindHe, base = 0.5, maxreps = 100,
   # number of swaps to attempt per temperature
   # roughly allow each allele to get moved to each isolocus
   swapspertemp = math.factorial(len(NMmat)) * len(NMmat[0])
-  Ti = T0
+  Ti = T0 # current temperature
   
   for k in range(maxreps):
     didswap = False
