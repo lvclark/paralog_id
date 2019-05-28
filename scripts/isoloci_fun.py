@@ -1,4 +1,4 @@
-from statistics import mean
+from statistics import mean, StatisticsError
 from numpy.random import choice
 import math
 
@@ -19,6 +19,9 @@ def HindHe(countsmat):
   and the second dimension representing taxa. Each cell is read depth.
   Hind/He will be corrected for size on a per-taxon basis by multiplying by
   N/(N-1), then averaged across taxa.'''
+  if len(countsmat) < 2:
+    return None
+
   countsmatT = list(zip(*countsmat)) # transpose the matrix
   depthByInd = [sum(x) for x in countsmatT]
   nind = len(depthByInd)
@@ -28,10 +31,16 @@ def HindHe(countsmat):
   depthRatios = [[c / depthByInd[i] for c in countsmatT[i]] for i in range(nind) if depthByInd[i] > 0]
   meanDepthRatios = [mean(x) for x in zip(*depthRatios)] # mean by allele
   He = GiniSimpson(meanDepthRatios, N = 1)
+  assert He > 0
   
   HindHeByInd = [GiniSimpson(countsmatT[i], N = depthByInd[i]) * \
                  depthByInd[i] / (depthByInd[i] - 1)/ He for i in range(nind) if depthByInd[i] > 1]
-  return mean(HindHeByInd)
+  try:
+    m = mean(HindHeByInd)
+  except StatisticsError:
+    print(countsmat)
+    print(HindHeByInd)
+  return m
   
 def SwapHap(NMmat, hapAssign, seqlen, base = 0.5):
   '''Look at the number of mutations between haplotypes and the various
@@ -122,8 +131,14 @@ def AnnealLocus(countsmat, NMmat, seqlen, base = 0.5, maxreps = 100, T0 = 0.5,
     for r in range(swapspertemp):
       hapAssign_new = SwapHap(NMmat, hapAssign, seqlen, base = base)
       hindhe_new = HindHeByIsolocus(countsmat, hapAssign_new)
-      hindhe_mean_new = mean([h for h in hindhe_new if h != None])
-      doswap = hindhe_mean_new <= hindhe_mean # the new set is better
+      try:
+        hindhe_mean_new = mean([h for h in hindhe_new if h != None])
+        doswap = hindhe_mean_new <= hindhe_mean # the new set is better
+      except StatisticsError: # if we get all isoloci fixed, stop algorithm
+        hapAssign = hapAssign_new
+        didswap = False
+        logcon.write("All isoloci fixed.\n")
+        break
       if not doswap:
         # new set is worse, decide whether to keep
         swapprob = math.exp((hindhe_mean - hindhe_mean_new)/Ti)
@@ -134,7 +149,7 @@ def AnnealLocus(countsmat, NMmat, seqlen, base = 0.5, maxreps = 100, T0 = 0.5,
         hindhe = hindhe_new
         hindhe_mean = hindhe_mean_new
         if logcon != None:
-          logcon.write("Temperature: {}, Current Hind/He: {}\n".format(Ti, " ".join(hindhe)))
+          logcon.write("Temperature: {}, Current Hind/He: {}\n".format(Ti, " ".join([str(h) for h in hindhe])))
     if not didswap:
       break # no swaps happened, algorithm is done
     Ti = Ti * rho
