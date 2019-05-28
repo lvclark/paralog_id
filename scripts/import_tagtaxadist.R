@@ -88,5 +88,7 @@ twoalign_Chr1_2 <- twoalign[grepl("Chr01", twoalign$V1) &
 mats <- readTagTaxaDist(twoalign_Chr1_2$V3, diploids = diploids, tetraploids = tetraploids)
 mats[[1]][1:10,1:10]
 
+#write.table(twoalign_Chr1_2, file = "marker_CSV/190525twoalign_Chr1Chr2.csv", col.names = FALSE,
+#          row.names = FALSE, sep = ",")
 #write.csv(t(mats[[1]]), file = "marker_CSV/190523diploid_Chr1Chr2.csv")
 #write.csv(t(mats[[2]]), file = "marker_CSV/190523tetraploid_Chr1Chr2.csv")
