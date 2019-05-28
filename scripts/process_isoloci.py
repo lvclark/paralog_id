@@ -26,10 +26,11 @@ def ProcessRowGroup(alignrows, depthrows, nisoloci, thresh, expHindHe, logcon):
   
   depths = [[int(d) for d in row[1:]] for row in depthrows] # integer depths
   # filter out any alleles without depth
-  depths, alignrows = zip(*[(dep, ar) for dep, ar in zip(depths, alignrows) if not all([d < 2 for d in dep])])
-  if len(depths) < 2:
+  packed = [(dep, ar) for dep, ar in zip(depths, alignrows) if not all([d < 2 for d in dep])]
+  if len(packed) < 2:
     logcon.write("Insufficient read depth.\n")
     return None
+  depths, alignrows = zip(*packed)
   # check if the marker should be split
   hindheUnsplit = isoloci_fun.HindHe(depths)
   logcon.write("Hind/He without splitting: {}\n".format(hindheUnsplit))
