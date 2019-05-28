@@ -10,7 +10,7 @@ maxisoloci = 2  # how many subgenomes are there
 ploidy = 2      # expected ploidy after sorting
 alignfile = "../marker_CSV/190525twoalign_Chr1Chr2.csv" # alignment locations
 depthfile = "../marker_CSV/190523diploid_Chr1Chr2.csv"  # read depth
-logfile = "../log/190528hindhelogT50.txt"
+logfile = "../log/190528hindhelogT05.txt"
 
 # maximum tolerable Hind/He: halfway between this and the next ploidy, on a log scale
 p2 = ploidy * 2
@@ -41,7 +41,7 @@ def ProcessRowGroup(alignrows, depthrows, nisoloci, thresh, expHindHe, logcon):
   NM = [[int(row[nisoloci + 1 + i]) for row in alignrows] for i in range(nisoloci)]
   seqlen = max([len(row[0]) for row in depthrows]) # maximum tag length
   
-  hapAssign = isoloci_fun.AnnealLocus(depths, NM, seqlen, expHindHe, logcon = logcon)
+  hapAssign = isoloci_fun.AnnealLocus(depths, NM, seqlen, expHindHe, T0 = 0.05, logcon = logcon)
   return None
 
 # files need to already have tags in the same order, grouped by alignment location

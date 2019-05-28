@@ -119,7 +119,7 @@ def MeanNMperLoc(NMmat, hapAssign):
   return out
 
 def AnnealLocus(countsmat, NMmat, seqlen, expHindHe, base = 0.5, maxreps = 100,
-                T0 = 0.5, rho = 0.95, logcon = None):
+                T0 = 0.1, rho = 0.95, logcon = None):
   '''Perform simulated annealing on one group of haplotypes to split it into isoloci.
   logcon is a file connection that is already open, for logging progress.'''
   hapAssign = InitHapAssign(NMmat) # initial assignment of haplotypes to isoloci

@@ -124,18 +124,40 @@ ggplot(df10[df10$InitMax_HindHe > 0.5,]) +
   geom_density(aes(x = InitMax_HindHe), col = "red") +
   geom_vline(xintercept = 0.5) 
 
+# try with T0 = 0.05
+df05 <- extractLog("log/190528hindhelogT05.txt")
+
+ggplot(df05, aes(x = InitMax_HindHe, y = FinalMax_HindHe, col = Final_NM - Init_NM)) +
+  geom_point() +
+  geom_hline(yintercept = 1/2) +
+  geom_vline(xintercept = 1/2) +
+  geom_abline(slope = 1, intercept = 0) +
+  scale_color_viridis() +
+  coord_cartesian(xlim = c(0, 1.25), ylim = c(0, 1.25))
+
+ggplot(df05[df05$InitMax_HindHe > 0.5,]) +
+  geom_density(aes(x = FinalMax_HindHe), col = "blue") +
+  geom_density(aes(x = InitMax_HindHe), col = "red") +
+  geom_vline(xintercept = 0.5)
+
 # compare quantitatively
 median(df50$FinalMax_HindHe)
 median(df25$FinalMax_HindHe)
 median(df10$FinalMax_HindHe)
+median(df05$FinalMax_HindHe)
 mean(df50$FinalMax_HindHe)
 mean(df25$FinalMax_HindHe)
 mean(df10$FinalMax_HindHe)
+mean(df05$FinalMax_HindHe)
 sd(df50$FinalMax_HindHe)
 sd(df25$FinalMax_HindHe)
 sd(df10$FinalMax_HindHe)
+sd(df05$FinalMax_HindHe)
 
-t.test(df50$FinalMax_HindHe, df10$FinalMax_HindHe)
+sd(df10$FinalMax_HindHe[df10$InitMax_HindHe > 0.5])
+sd(df05$FinalMax_HindHe[df05$InitMax_HindHe > 0.5])
+
+t.test(df50$FinalMax_HindHe, df05$FinalMax_HindHe)
 
 hist(log(df10$Final_NM / df10$Init_NM))
 median(df50$Final_NM / df50$Init_NM)
@@ -143,3 +165,10 @@ median(df25$Final_NM / df25$Init_NM)
 median(df10$Final_NM / df10$Init_NM)
 
 plot(df50$Init_NM, df25$Init_NM)
+
+mean(df50$FinalMax_HindHe > 0.4 & df50$FinalMax_HindHe < 0.6)
+mean(df25$FinalMax_HindHe > 0.4 & df25$FinalMax_HindHe < 0.6)
+mean(df10$FinalMax_HindHe > 0.4 & df10$FinalMax_HindHe < 0.6)
+mean(df05$FinalMax_HindHe > 0.4 & df05$FinalMax_HindHe < 0.6)
+
+# quantitative differences are not big, but T0 = 0.10 seems to best bring values to around 0.5
