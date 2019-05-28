@@ -110,16 +110,27 @@ def HindHeByIsolocus(countsmat, hapAssign):
   for each isolocus.  countsmat and hapAssign are as defined above.'''
   splitcounts = [[countsmat[h] for h in isolocus] for isolocus in hapAssign]
   return [HindHe(c) for c in splitcounts]
+  
+def MeanNMperLoc(NMmat, hapAssign):
+  '''Get mean number of mutations per locus across all haplotypes versus their
+  assigned locus.'''
+  nLoc = len(NMmat)
+  out = mean([NMmat[L][h] for L in range(nLoc) for h in hapAssign[L]])
+  return out
 
-def AnnealLocus(countsmat, NMmat, seqlen, base = 0.5, maxreps = 100, T0 = 0.5,
-                rho = 0.95, logcon = None):
+def AnnealLocus(countsmat, NMmat, seqlen, expHindHe, base = 0.5, maxreps = 100,
+                T0 = 0.5, rho = 0.95, logcon = None):
   '''Perform simulated annealing on one group of haplotypes to split it into isoloci.
   logcon is a file connection that is already open, for logging progress.'''
   hapAssign = InitHapAssign(NMmat) # initial assignment of haplotypes to isoloci
   hindhe = HindHeByIsolocus(countsmat, hapAssign)
   if logcon != None:
     logcon.write("Initial Hind/He: {}\n".format(" ".join([str(h) for h in hindhe])))
-  hindhe_mean = mean([h for h in hindhe if h != None])
+  # if already fixed at each isolocus, don't do simulated annealing
+  if all([h == None for h in hindhe]):
+    return hapAssign
+  # get the mean amount by which each Hind/He is greater than expectations
+  hindhe_mean = mean([max([0, h - expHindHe]) for h in hindhe if h != None])
   
   # number of swaps to attempt per temperature
   # roughly allow each allele to get moved to each isolocus
@@ -131,18 +142,23 @@ def AnnealLocus(countsmat, NMmat, seqlen, base = 0.5, maxreps = 100, T0 = 0.5,
     for r in range(swapspertemp):
       hapAssign_new = SwapHap(NMmat, hapAssign, seqlen, base = base)
       hindhe_new = HindHeByIsolocus(countsmat, hapAssign_new)
-      try:
-        hindhe_mean_new = mean([h for h in hindhe_new if h != None])
-        doswap = hindhe_mean_new <= hindhe_mean # the new set is better
-      except StatisticsError: # if we get all isoloci fixed, stop algorithm
+      if all([h == None for h in hindhe_new]): # if we get all isoloci fixed, stop algorithm
         hapAssign = hapAssign_new
         didswap = False
-        logcon.write("All isoloci fixed.\n")
+        if logcon != None:
+          logcon.write("All isoloci fixed.\n")
         break
+      else:
+        hindhe_mean_new = mean([max([0, h - expHindHe]) for h in hindhe_new if h != None])
+        doswap = hindhe_mean_new <= hindhe_mean # the new set is better
       if not doswap:
         # new set is worse, decide whether to keep
         swapprob = math.exp((hindhe_mean - hindhe_mean_new)/Ti)
         doswap = choice(range(2), size = 1, p = [swapprob, 1 - swapprob])[0] == 0
+      if hindhe_mean_new == 0 and hindhe_mean == 0:
+        # both the old and new have gotten below the expected value.
+        # decide whether to swap based on whether the number of mutations is lower.
+        doswap = MeanNMperLoc(NMmat, hapAssign_new) < MeanNMperLoc(NMmat, hapAssign)
       if doswap: # everything that happens if we do a swap
         didswap = True
         hapAssign = hapAssign_new
