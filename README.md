@@ -69,7 +69,11 @@ twice and group them into markers by alignment location(s).  This is a
 preliminary step before sorting tags into isoloci.
 
 `scripts/isoloci_fun.py` has functions for estimating the Gini-Simpson index
-and Hind/He using Python.  `scripts\isoloci_fun_test.py` tests these functions.
+and Hind/He, swapping haplotypes, and performing simulated annealing using
+Python.  `scripts\isoloci_fun_test.py` tests these functions.
+
+`scripts/process_isoloci.py` runs through the simulated annealing algorithm
+using a test set of tags that aligned to Chr01 and Chr02 in *Miscanthus*.
 
 ### Documentation
 
