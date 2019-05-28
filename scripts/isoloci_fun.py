@@ -126,6 +126,7 @@ def AnnealLocus(countsmat, NMmat, seqlen, expHindHe, base = 0.5, maxreps = 100,
   hindhe = HindHeByIsolocus(countsmat, hapAssign)
   if logcon != None:
     logcon.write("Initial Hind/He: {}\n".format(" ".join([str(h) for h in hindhe])))
+    logcon.write("Initial average NM: {}\n".format(MeanNMperLoc(NMmat, hapAssign)))
   # if already fixed at each isolocus, don't do simulated annealing
   if all([h == None for h in hindhe]):
     return hapAssign
@@ -164,10 +165,14 @@ def AnnealLocus(countsmat, NMmat, seqlen, expHindHe, base = 0.5, maxreps = 100,
         hapAssign = hapAssign_new
         hindhe = hindhe_new
         hindhe_mean = hindhe_mean_new
-        if logcon != None:
-          logcon.write("Temperature: {}, Current Hind/He: {}\n".format(Ti, " ".join([str(h) for h in hindhe])))
+        #if logcon != None:
+        #  logcon.write("Temperature: {}, Current Hind/He: {}\n".format(Ti, " ".join([str(h) for h in hindhe])))
     if not didswap:
       break # no swaps happened, algorithm is done
     Ti = Ti * rho
+  
+  if logcon != None:
+    logcon.write("Final Hind/He: {}\n".format(" ".join([str(h) for h in hindhe])))
+    logcon.write("Final average NM: {}\n".format(MeanNMperLoc(NMmat, hapAssign)))
   
   return hapAssign
