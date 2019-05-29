@@ -4,7 +4,7 @@ library(viridis)
 
 # function to process log file and extract information on markers that underwent
 # simulated annealing.
-extractLog <- function(file){
+extractLog <- function(file, finalTemp = FALSE){
   logout <- readLines(file)
   initHindHeLines <- grep("^Initial Hind/He:", logout)
   finalHindHeLines <- initHindHeLines + 2
@@ -17,6 +17,9 @@ extractLog <- function(file){
   initNMLines <- initHindHeLines + 1
   finalNMLines <- initHindHeLines + 3
   unsplitHindHeLines <- initHindHeLines - 1
+  if(finalTemp){
+    finalTempLines <- initHindHeLines + 4
+  }
   
   # extract numeric values
   unsplit_HindHe <- as.numeric(sub("Hind/He without splitting: ", "", logout[unsplitHindHeLines]))
@@ -61,6 +64,9 @@ extractLog <- function(file){
                       Final1_HindHe = final1_HindHe,
                       Final2_HindHe = final2_HindHe,
                       FinalMax_HindHe = finalMax_HindHe)
+  if(finalTemp){
+    outdf$Final_Temp <- as.numeric(sub("Final temperature: ", "", logout[finalTempLines]))
+  }
   
   return(outdf)
 }
