@@ -117,7 +117,8 @@ def MeanNMperLoc(NMmat, hapAssign):
   '''Get mean number of mutations per locus across all haplotypes versus their
   assigned locus.'''
   nLoc = len(NMmat)
-  out = sum([NMmat[L][h] for L in range(nLoc) for h in hapAssign[L]])/nLoc
+  nHap = len(NMmat[0])
+  out = sum([NMmat[L][h] for L in range(nLoc) for h in hapAssign[L]])/nHap
   return out
 
 def AnnealLocus(countsmat, NMmat, seqlen, expHindHe, base = 0.5, maxreps = 100,
