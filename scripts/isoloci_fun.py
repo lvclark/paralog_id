@@ -10,6 +10,11 @@ def GiniSimpson(counts, N = None):
     N = sum(counts)
   if N == 0:
     return None
+  for c in counts: # check to see if it should be 0, before doing calc.
+    if c == N:
+      return 0.0
+    elif c != 0:
+      break
   freq = [c/N for c in counts]
   return 1.0 - sum([f**2 for f in freq])
 
