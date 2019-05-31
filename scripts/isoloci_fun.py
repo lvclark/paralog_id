@@ -157,7 +157,7 @@ def AnnealLocus(countsmat, NMmat, seqlen, expHindHe, base = 0.5, maxreps = 100,
   nsol = len(NMmat) ** len(NMmat[0]) # number of possible solutions
   tracksol = swapspertemp * maxreps <= nsol # true if we could explore whole space
   if tracksol:
-    explored = [True for i in range(nsol)]
+    explored = [False for i in range(nsol)]
     all_hindhe = [[] for i in range(nsol)]
     all_hindhe_mean = [0 for i in range(nsol)]
     haInd = IndexHapAssign(hapAssign)
