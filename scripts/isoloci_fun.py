@@ -133,9 +133,10 @@ def AnnealLocus(countsmat, NMmat, seqlen, expHindHe, base = 0.5, maxreps = 100,
   logcon is a file connection that is already open, for logging progress.'''
   hapAssign = InitHapAssign(NMmat) # initial assignment of haplotypes to isoloci
   hindhe = HindHeByIsolocus(countsmat, hapAssign)
+  NM_mean = MeanNMperLoc(NMmat, hapAssign)
   if logcon != None:
     logcon.write("Initial Hind/He: {}\n".format(" ".join([str(h) for h in hindhe])))
-    logcon.write("Initial average NM: {}\n".format(MeanNMperLoc(NMmat, hapAssign)))
+    logcon.write("Initial average NM: {}\n".format(NM_mean))
   # if already fixed at each isolocus, don't do simulated annealing
   if all([h == None or h < expHindHe for h in hindhe]):
     return hapAssign
@@ -146,6 +147,11 @@ def AnnealLocus(countsmat, NMmat, seqlen, expHindHe, base = 0.5, maxreps = 100,
   # roughly allow each allele to get moved to each isolocus
   swapspertemp = math.factorial(len(NMmat)) * len(NMmat[0])
   Ti = T0 # current temperature
+  
+  # set aside objects to hold best solution
+  hapAssign_best = hapAssign
+  hindhe_mean_best = hindhe_mean
+  NM_mean_best = NM_mean
   
   for k in range(maxreps):
     didswap = False
@@ -174,10 +180,21 @@ def AnnealLocus(countsmat, NMmat, seqlen, expHindHe, base = 0.5, maxreps = 100,
         hapAssign = hapAssign_new
         hindhe = hindhe_new
         hindhe_mean = hindhe_mean_new
+        NM_mean = MeanNMperLoc(NMmat, hapAssign)
+        # update best solution of necessary
+        if hindhe_mean < hindhe_mean_best or (hindhemean == hindhe_mean_best and NM_mean < NM_mean_best):
+          hapAssign_best = hapAssign
+          hindhe_mean_best = hindhe_mean
+          NM_mean_best = NM_mean
         #if logcon != None:
         #  logcon.write("Temperature: {}, Current Hind/He: {}\n".format(Ti, " ".join([str(h) for h in hindhe])))
     if not didswap:
-      break # no swaps happened, algorithm is done
+      if hindhe_mean == hindhe_mean_best and NM_mean == NM_mean_best:
+        break # no swaps happened, optimal solution found, algorithm is done
+      else: # restart algorithm at best solution
+        hapAssign = hapAssign_best
+        hindhe_mean = hindhe_mean_best
+        NM_mean = NM_mean_best
     Ti = Ti * rho
   
   if logcon != None:
@@ -185,4 +202,4 @@ def AnnealLocus(countsmat, NMmat, seqlen, expHindHe, base = 0.5, maxreps = 100,
     logcon.write("Final average NM: {}\n".format(MeanNMperLoc(NMmat, hapAssign)))
     logcon.write("Final temperature: {}\n".format(Ti))
   
-  return hapAssign
+  return hapAssign_best
