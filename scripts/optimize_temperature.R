@@ -178,3 +178,46 @@ mean(df10$FinalMax_HindHe > 0.4 & df10$FinalMax_HindHe < 0.6)
 mean(df05$FinalMax_HindHe > 0.4 & df05$FinalMax_HindHe < 0.6)
 
 # quantitative differences are not big, but T0 = 0.10 seems to best bring values to around 0.5
+
+# Re-run incorporating final temperature, and seeing if reps per temp changes things
+df10 <- extractLog("log/190529hindhelogT10.txt", finalTemp = TRUE)
+df10$Num_Temps <- log(df10$Final_Temp/0.1, base = 0.95) # number of temperatures attempted
+head(df10)
+summary(df10$Num_Temps) #(NM is wrong in these two)
+
+ggplot(df10, aes(x = InitMax_HindHe, y = FinalMax_HindHe, col = Num_Temps)) +
+  geom_point() +
+  geom_hline(yintercept = 1/2) +
+  geom_vline(xintercept = 1/2) +
+  geom_abline(slope = 1, intercept = 0) +
+  scale_color_viridis() +
+  coord_cartesian(xlim = c(0, 1.25), ylim = c(0, 1.25))
+# see that more effort has been put into the ones that didn't get to the desired value
+
+# five times as many attempted swaps per temperature
+df10_5x <- extractLog("log/190529hindhelogT10_5xSwaps.txt", finalTemp = TRUE)
+df10_5x$Num_Temps <- log(df10_5x$Final_Temp/0.1, base = 0.95)
+# There are 47 in this one and 44 in the last one, I assume from random chance of 
+# how haplotypes were initially assigned.
+
+ggplot(df10_5x, aes(x = InitMax_HindHe, y = FinalMax_HindHe, col = Num_Temps)) +
+  geom_point() +
+  geom_hline(yintercept = 1/2) +
+  geom_vline(xintercept = 1/2) +
+  geom_abline(slope = 1, intercept = 0) +
+  scale_color_viridis() +
+  coord_cartesian(xlim = c(0, 1.25), ylim = c(0, 1.25))
+
+median(df10_5x$Num_Temps) # 59 - took longer to converge (probably b/c more chances for a swap)
+median(df10$Num_Temps)    # 44
+median(df10_5x$Final_Temp) # 0.005
+median(df10$Final_Temp)    # 0.010
+
+mean(df10$FinalMax_HindHe < 0.6)    # 50%
+mean(df10_5x$FinalMax_HindHe < 0.6) # 66% - slightly better but should try with more markers.
+
+# how many haplotypes per group do we typically have?
+twoalignChr1Chr2 <- read.table("marker_CSV/190525twoalign_Chr1Chr2.csv", sep = ",", header = FALSE)
+table(table(paste(twoalignChr1Chr2$V1, twoalignChr1Chr2$V2)))
+# generally few, but up to over 100
+log2(1e7)
