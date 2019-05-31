@@ -155,7 +155,7 @@ def AnnealLocus(countsmat, NMmat, seqlen, expHindHe, base = 0.5, maxreps = 100,
   
   # are we likely to explore much of the solution space?  If so, track solutions.
   nsol = len(NMmat) ** len(NMmat[0]) # number of possible solutions
-  tracksol = swapspertemp * maxreps <= nsol # true if we could explore whole space
+  tracksol = swapspertemp * maxreps >= nsol # true if we could explore whole space
   if tracksol:
     explored = [False for i in range(nsol)]
     all_hindhe = [[] for i in range(nsol)]
@@ -205,8 +205,8 @@ def AnnealLocus(countsmat, NMmat, seqlen, expHindHe, base = 0.5, maxreps = 100,
         hindhe = hindhe_new
         hindhe_mean = hindhe_mean_new
         NM_mean = MeanNMperLoc(NMmat, hapAssign)
-        # update best solution of necessary
-        if hindhe_mean < hindhe_mean_best or (hindhemean == hindhe_mean_best and NM_mean < NM_mean_best):
+        # update best solution if necessary
+        if hindhe_mean < hindhe_mean_best or (hindhe_mean == hindhe_mean_best and NM_mean < NM_mean_best):
           hapAssign_best = hapAssign
           hindhe_mean_best = hindhe_mean
           NM_mean_best = NM_mean
