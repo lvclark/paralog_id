@@ -221,3 +221,70 @@ twoalignChr1Chr2 <- read.table("marker_CSV/190525twoalign_Chr1Chr2.csv", sep = "
 table(table(paste(twoalignChr1Chr2$V1, twoalignChr1Chr2$V2)))
 # generally few, but up to over 100
 log2(1e7)
+
+# when a record of the best solution is kept
+df10_5x_keepbest <- extractLog("log/190531hindhelogT10_5xSwaps.txt", finalTemp = TRUE)
+df10_5x_keepbest$Num_Temps <- log(df10_5x_keepbest$Final_Temp/0.1, base = 0.95)
+
+ggplot(df10_5x_keepbest, aes(x = InitMax_HindHe, y = FinalMax_HindHe, col = Num_Temps)) +
+  geom_point() +
+  geom_hline(yintercept = 1/2) +
+  geom_vline(xintercept = 1/2) +
+  geom_abline(slope = 1, intercept = 0) +
+  scale_color_viridis() +
+  coord_cartesian(xlim = c(0, 1.25), ylim = c(0, 1.25))
+
+identical(rownames(df10_5x), rownames(df10_5x_keepbest))
+mean(rownames(df10_5x) %in% rownames(df10_5x_keepbest))
+commonsites <- rownames(df10_5x)[rownames(df10_5x) %in% rownames(df10_5x_keepbest)]
+
+plot(df10_5x[commonsites,"FinalMax_HindHe"],
+     df10_5x_keepbest[commonsites,"FinalMax_HindHe"])
+abline(b = 1, a = 0, col = "red")
+
+# the actual value we are trying to optimize
+init_excess_hindhe <- as.matrix(df10_5x_keepbest[,c("Init1_HindHe", "Init2_HindHe")]) - 0.5
+init_excess_hindhe[init_excess_hindhe < 0] <- 0
+df10_5x_keepbest$InitExcess_HindHe <- rowMeans(init_excess_hindhe, na.rm = TRUE)
+
+final_excess_hindhe <- as.matrix(df10_5x_keepbest[,c("Final1_HindHe", "Final2_HindHe")]) - 0.5
+final_excess_hindhe[final_excess_hindhe < 0] <- 0
+df10_5x_keepbest$FinalExcess_HindHe <- rowMeans(final_excess_hindhe, na.rm = TRUE)
+
+init_excess_hindhe <- as.matrix(df10_5x[,c("Init1_HindHe", "Init2_HindHe")]) - 0.5
+init_excess_hindhe[init_excess_hindhe < 0] <- 0
+df10_5x$InitExcess_HindHe <- rowMeans(init_excess_hindhe, na.rm = TRUE)
+
+final_excess_hindhe <- as.matrix(df10_5x[,c("Final1_HindHe", "Final2_HindHe")]) - 0.5
+final_excess_hindhe[final_excess_hindhe < 0] <- 0
+df10_5x$FinalExcess_HindHe <- rowMeans(final_excess_hindhe, na.rm = TRUE)
+
+plot(df10_5x_keepbest$InitExcess_HindHe, df10_5x_keepbest$FinalExcess_HindHe)
+abline(b = 1, a = 0, col = "red")
+grid()
+
+plot(df10_5x$InitExcess_HindHe, df10_5x$FinalExcess_HindHe)
+abline(b = 1, a = 0, col = "red")
+grid()
+
+plot(df10_5x[commonsites,"FinalExcess_HindHe"],
+     df10_5x_keepbest[commonsites,"FinalExcess_HindHe"])
+abline(b = 1, a = 0, col = "red")
+
+plot(df10_5x[commonsites,"Final_Temp"],
+     df10_5x_keepbest[commonsites,"Final_Temp"])
+abline(b = 1, a = 0, col = "red")
+
+# number of haplotypes vs. whether a group goes thru simulated annealing?
+nhap_by_group <- table(paste(twoalignChr1Chr2$V1[1:5000], twoalignChr1Chr2$V2[1:5000]))
+hist(nhap_by_group)
+length(nhap_by_group)
+did_anneal = names(nhap_by_group) %in% rownames(df10_5x_keepbest)
+summary(as.integer(nhap_by_group[did_anneal]))
+summary(as.integer(nhap_by_group[!did_anneal]))
+# tends to be ones where there were ~30 haplotypes
+
+df10_5x_keepbest$nHap <- as.integer(nhap_by_group[rownames(df10_5x_keepbest)])
+ggplot(df10_5x_keepbest, aes(y = FinalExcess_HindHe, x = nHap, color = InitExcess_HindHe)) +
+  geom_point() +
+  scale_color_viridis()
