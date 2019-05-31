@@ -1,5 +1,6 @@
 # Can we find negative correlations among read depth ratios of alleles that
 # belong to the same isolocus?
+Rcpp::sourceCpp("src/simpson.cpp")
 
 load("workspaces/190515counts_matrices.RData")
 tagtab <- read.csv("marker_CSV/190515paralog_tags.csv", stringsAsFactors = FALSE)
@@ -25,7 +26,7 @@ seqdist <- function(seq1, seq2){
 }
 
 # exploration - get info on a locus of choice ####
-sorgloc <- 6 # locus to explore from sorghum
+sorgloc <- 10 # locus to explore from sorghum
 theseal <- which(alleles2locS == sorgloc) # columns containing these alleles
 miscloc <- unique(alleles2locM[theseal]) # corresponding locus numbers in Miscanthus
 if(length(miscloc) != 2) stop("Check Miscanthus loci.")
@@ -38,21 +39,31 @@ alnames <- c(paste("MiscAl1", miscal1, sep = "."),
 cormat <- matrix(NA_real_, nrow = length(theseal), ncol = length(theseal),
                  dimnames = list(alnames, alnames))
 seqmat <- cormat
+cormatBin <- cormat
+cormatC <- cormat
 # get correlations
 for(i in 1:(length(theseal) - 1)){
   for(j in (i+1):length(theseal)){
     thiscor <- cor.test(depthRatio_dip_S[,theseal[i]],
-                   depthRatio_dip_S[,theseal[j]])$p.value
-    cormat[i,j] <- thiscor
-    cormat[j,i] <- thiscor
+                   depthRatio_dip_S[,theseal[j]],
+                   alternative = "less")
+    cormat[i,j] <- thiscor$p.value
+    cormat[j,i] <- thiscor$p.value
+    cormatC[i,j] <- thiscor$estimate
+    cormatC[j,i] <- thiscor$estimate
     
     thisseqdist <- seqdist(tagseq[i], tagseq[j])
     seqmat[i,j] <- thisseqdist
     seqmat[j,i] <- thisseqdist
+    
+    # thiscorBin <- fisher.test(diploid_mat[,theseal[i]] > 0,
+    #                           diploid_mat[,theseal[j]] > 0,
+    #                           alternative = "less")
   }
 }
 
 image(cormat)
+heatmap(cormat)
 myclust <- hclust(as.dist(cormat))
 plot(myclust)
 grps <- cutree(myclust, k = 2)
@@ -65,5 +76,15 @@ myclustseq <- hclust(as.dist(seqmat))
 plot(myclustseq)
 cutree(myclustseq, k = 2)
 
+image(cormatC)
+heatmap(cormatC)
+
 # OR, rather than starting with clustering, use alignment as initial
 # configuration for sorting algorithm.
+
+# how did this perform in terms of Hind/He
+h_orig <- HReadDepth(diploid_mat[,theseal], alleles2locM[theseal] - miscloc[1] + 1, 2)
+h_cor <- HReadDepth(diploid_mat[,theseal], grps, 2)
+
+colMeans(h_orig[[1]], na.rm=TRUE)/h_orig[[2]]
+colMeans(h_cor[[1]], na.rm=TRUE)/h_cor[[2]]
