@@ -180,7 +180,7 @@ def AnnealLocus(countsmat, NMmat, seqlen, expHindHe, base = 0.5, maxreps = 100,
         if tracksol:
           all_hindhe[haInd] = hindhe_new
       if all([h == None for h in hindhe_new]): # if we get all isoloci fixed, stop algorithm
-        hapAssign = hapAssign_new
+        hapAssign_best = hapAssign_new
         didswap = False
         if logcon != None:
           logcon.write("All isoloci fixed.\n")
@@ -226,4 +226,4 @@ def AnnealLocus(countsmat, NMmat, seqlen, expHindHe, base = 0.5, maxreps = 100,
     logcon.write("Final average NM: {}\n".format(MeanNMperLoc(NMmat, hapAssign)))
     logcon.write("Final temperature: {}\n".format(Ti))
   
-  return hapAssign
+  return hapAssign_best
