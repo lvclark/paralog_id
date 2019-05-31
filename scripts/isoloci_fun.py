@@ -175,7 +175,7 @@ def AnnealLocus(countsmat, NMmat, seqlen, expHindHe, base = 0.5, maxreps = 100,
         if explored[haInd]: # solution already explored
           hindhe_new = all_hindhe[haInd]
           hindhe_mean_new = all_hindhe_mean[haInd]
-      if (not tracksol) or (not explored[haInd]):
+      if (not tracksol) or (not explored[haInd]): # Hind/He per isolocus
         hindhe_new = HindHeByIsolocus(countsmat, hapAssign_new)
         if tracksol:
           all_hindhe[haInd] = hindhe_new
@@ -185,7 +185,7 @@ def AnnealLocus(countsmat, NMmat, seqlen, expHindHe, base = 0.5, maxreps = 100,
         if logcon != None:
           logcon.write("All isoloci fixed.\n")
         break
-      if (not tracksol) or (not explored[haInd]):
+      if (not tracksol) or (not explored[haInd]): # Mean Hind/He minus max expected Hind/He
         hindhe_mean_new = mean([max([0, h - expHindHe]) for h in hindhe_new if h != None])
         if tracksol:
           all_hindhe_mean[haInd] = hindhe_mean_new
