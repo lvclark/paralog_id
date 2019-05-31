@@ -153,20 +153,44 @@ def AnnealLocus(countsmat, NMmat, seqlen, expHindHe, base = 0.5, maxreps = 100,
   hindhe_mean_best = hindhe_mean
   NM_mean_best = NM_mean
   
+  # are we likely to explore much of the solution space?  If so, track solutions.
+  nsol = len(NMmat) ** len(NMmat[0]) # number of possible solutions
+  tracksol = swapspertemp * maxreps <= nsol # true if we could explore whole space
+  if tracksol:
+    explored = [True for i in range(nsol)]
+    all_hindhe = [[] for i in range(nsol)]
+    all_hindhe_mean = [0 for i in range(nsol)]
+    haInd = IndexHapAssign(hapAssign)
+    explored[haInd] = True
+    all_hindhe[haInd] = hindhe
+    all_hindhe_mean[haInd] = hindhe_mean
+  
+  # start algorithm
   for k in range(maxreps):
     didswap = False
     for r in range(swapspertemp):
       hapAssign_new = SwapHap(NMmat, hapAssign, seqlen, base = base)
-      hindhe_new = HindHeByIsolocus(countsmat, hapAssign_new)
+      if tracksol: # solution tracking
+        haInd = IndexHapAssign(hapAssign)
+        if explored[haInd]: # solution already explored
+          hindhe_new = all_hindhe[haInd]
+          hindhe_mean_new = all_hindhe_mean[haInd]
+      if (not tracksol) or (not explored[haInd]):
+        hindhe_new = HindHeByIsolocus(countsmat, hapAssign_new)
+        if tracksol:
+          all_hindhe[haInd] = hindhe_new
       if all([h == None for h in hindhe_new]): # if we get all isoloci fixed, stop algorithm
         hapAssign = hapAssign_new
         didswap = False
         if logcon != None:
           logcon.write("All isoloci fixed.\n")
         break
-      else:
+      if (not tracksol) or (not explored[haInd]):
         hindhe_mean_new = mean([max([0, h - expHindHe]) for h in hindhe_new if h != None])
-        doswap = hindhe_mean_new <= hindhe_mean # the new set is better
+        if tracksol:
+          all_hindhe_mean[haInd] = hindhe_mean_new
+          explored[haInd] = True
+      doswap = hindhe_mean_new <= hindhe_mean # the new set is better
       if not doswap:
         # new set is worse, decide whether to keep
         swapprob = math.exp((hindhe_mean - hindhe_mean_new)/Ti)
