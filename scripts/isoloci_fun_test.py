@@ -31,3 +31,6 @@ print(IndexHapAssign([[0,1],[]]))
 print(IndexHapAssign([[1],[0]]))
 print(IndexHapAssign([[0],[1]]))
 print(IndexHapAssign([[],[0,1]]))
+
+print(IndexHapAssign([[1,2],[0]]))
+print(IndexHapAssign([[2,1],[0]]))
