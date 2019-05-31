@@ -202,4 +202,4 @@ def AnnealLocus(countsmat, NMmat, seqlen, expHindHe, base = 0.5, maxreps = 100,
     logcon.write("Final average NM: {}\n".format(MeanNMperLoc(NMmat, hapAssign)))
     logcon.write("Final temperature: {}\n".format(Ti))
   
-  return hapAssign_best
+  return hapAssign
