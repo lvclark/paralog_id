@@ -120,6 +120,12 @@ def MeanNMperLoc(NMmat, hapAssign):
   nHap = len(NMmat[0])
   out = sum([NMmat[L][h] for L in range(nLoc) for h in hapAssign[L]])/nHap
   return out
+  
+def IndexHapAssign(hapAssign):
+  '''Generate an index for a given set of assignments of haplotypes to isoloci,
+  so that we can track solutions that have already been examined.'''
+  nLoc = len(hapAssign)
+  return sum([i * nLoc ** h for i in range(nLoc) for h in hapAssign[i]])
 
 def AnnealLocus(countsmat, NMmat, seqlen, expHindHe, base = 0.5, maxreps = 100,
                 T0 = 0.1, rho = 0.95, logcon = None):

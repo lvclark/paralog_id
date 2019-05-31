@@ -1,4 +1,4 @@
-from isoloci_fun import GiniSimpson, HindHe, SwapHap, InitHapAssign, MeanNMperLoc
+from isoloci_fun import GiniSimpson, HindHe, SwapHap, InitHapAssign, MeanNMperLoc, IndexHapAssign
 
 print(GiniSimpson([50, 50]))
 print(GiniSimpson([25, 25, 50]))
@@ -23,5 +23,11 @@ print(MeanNMperLoc(myNM, myAssign))
 for i in range(10):
   myAssign = SwapHap(myNM, myAssign, 80)
   print(myAssign)
+  print(IndexHapAssign(myAssign))
 
 print(MeanNMperLoc(myNM, myAssign))
+
+print(IndexHapAssign([[0,1],[]]))
+print(IndexHapAssign([[1],[0]]))
+print(IndexHapAssign([[0],[1]]))
+print(IndexHapAssign([[],[0,1]]))
