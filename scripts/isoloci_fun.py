@@ -207,7 +207,7 @@ def AnnealLocus(countsmat, NMmat, seqlen, expHindHe, base = 0.5, maxreps = 100,
   if logcon != None:
     logcon.write("Initial Hind/He: {}\n".format(" ".join([str(h) for h in hindhe])))
     logcon.write("Initial average NM: {}\n".format(NM_mean))
-  # if already fixed at each isolocus, don't do simulated annealing
+  # if already fixed or within Hind/He expectations at each isolocus, don't do simulated annealing
   if all([h == None or h < expHindHe for h in hindhe]):
     return hapAssign
   # get the mean amount by which each Hind/He is greater than expectations
