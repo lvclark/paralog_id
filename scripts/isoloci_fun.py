@@ -206,7 +206,7 @@ def GroupByAlAssociations(countsmat, expHindHe, startP = 0.1):
       break # no groups could be made
     # Test Hind/He for these groups
     hindheOK = [HindHe([countsmat[h] for h in g]) <= expHindHe for g in grps]
-    if all(hindHeOK):
+    if all(hindheOK):
       break
     currP = currP / 10
   return([grps, currP])
@@ -248,7 +248,7 @@ def AnnealLocus(countsmat, NMmat, seqlen, expHindHe, base = 0.5, maxreps = 100,
   if all([h == None or h < expHindHe for h in hindhe]):
     return hapAssign
   # get groups based on allele correlations, and adjust hapAssign if needed
-  corrgrps, corrP = GroupByAlAssociations(countsmat, expHindHe, startP = corrStartP)
+  corrgrps, corrP = GroupByAlAssociations(countsmat, expHindHe, startP = corrstartP)
   hapAssign = AdjustHapAssignByAlAssociations(corrgrps, hapAssign)
   # get the mean amount by which each Hind/He is greater than expectations
   hindhe_mean = mean([max([0, h - expHindHe]) for h in hindhe if h != None])
