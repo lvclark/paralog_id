@@ -1,5 +1,6 @@
 from statistics import mean, StatisticsError
 from numpy.random import choice
+from scipy.stats import kendalltau
 import math
 
 # functions for sorting out isoloci
@@ -126,6 +127,35 @@ def IndexHapAssign(hapAssign):
   so that we can track solutions that have already been examined.'''
   nLoc = len(hapAssign)
   return sum([i * nLoc ** h for i in range(nLoc) for h in hapAssign[i]])
+
+def AlleleAssociations(countsmat):
+  '''Generate a square matrix of p-values for alleles being negatively
+  associated with each other.'''
+  nHap = len(countsmat)
+  nInd = len(countsmat[0])
+  outP = [[1.0 for i in range(nHap)] for j in range(nHap)]
+  
+  for h1 in range(nHap - 1):
+    # tot1 and tot2 are per individual total read depth, omitting h1 and h2, respectively
+    tot1 = [sum([countsmat[h][i] for h in range(nHap) if h != h1]) for i in range(nInd)]
+    for h2 in range(h1 + 1, nHap):
+      tot2 = [sum([countsmat[h][i] for h in range(nHap) if h != h2]) for i in range(nInd)]
+      # depth ratios that ignore the other allele being considered
+      rat1 = [countsmat[h1][i]/tot2[i] if tot2[i] > 0 else 0.0 for i in range(nInd)]
+      rat2 = [countsmat[h2][i]/tot1[i] if tot1[i] > 0 else 0.0 for i in range(nInd)]
+      # omit ones that are both zero (missing data)
+      rat1, rat2 = zip(*[(r1, r2) for r1, r2 in zip(rat1, rat2) if r1 > 0 or r2 > 0])
+      # perform test for association
+      kout = kendalltau(rat1, rat2, nan_policy = 'raise', method = 'asymptotic')
+      # convert p-value to one-tailed
+      if kout[0] <= 0:
+        pout = kout[1]/2
+      else:
+        pout = 1 - kout[1]/2
+      # add to matrix
+      outP[h1][h2] = pout
+      outP[h2][h1] = pout
+  return(outP)
 
 def AnnealLocus(countsmat, NMmat, seqlen, expHindHe, base = 0.5, maxreps = 100,
                 T0 = 0.1, rho = 0.95, logcon = None):

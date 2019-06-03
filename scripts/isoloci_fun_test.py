@@ -1,4 +1,4 @@
-from isoloci_fun import GiniSimpson, HindHe, SwapHap, InitHapAssign, MeanNMperLoc, IndexHapAssign
+from isoloci_fun import GiniSimpson, HindHe, SwapHap, InitHapAssign, MeanNMperLoc, IndexHapAssign, AlleleAssociations
 
 print(GiniSimpson([50, 50]))
 print(GiniSimpson([25, 25, 50]))
@@ -34,3 +34,7 @@ print(IndexHapAssign([[],[0,1]]))
 
 print(IndexHapAssign([[1,2],[0]]))
 print(IndexHapAssign([[2,1],[0]]))
+
+print(AlleleAssociations([[10, 5, 0, 0, 0],
+              [3, 0, 10, 0, 0],
+              [0, 3, 0, 20, 0]]))
