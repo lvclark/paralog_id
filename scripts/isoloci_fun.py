@@ -169,10 +169,10 @@ def GroupByAlAssociations(countsmat, expHindHe, startP = 0.1):
     for h1 in range(nHap - 1):
       for h2 in range(h1 + 1, nHap):
         if pvals[h1][h2] > currP:
-          next # doesn't meet threshold, don't add to group
+          continue # doesn't meet threshold, don't add to group
         if len(grps) == 0: # first group
           grps.append({h1, h2})
-          next
+          continue
         # determine if it is already in any groups
         h1grp = [i for i in range(len(grps)) if h1 in grps[i]]
         h2grp = [i for i in range(len(grps)) if h2 in grps[i]]
