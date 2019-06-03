@@ -156,6 +156,46 @@ def AlleleAssociations(countsmat):
       outP[h1][h2] = pout
       outP[h2][h1] = pout
   return(outP)
+  
+def GroupByAlAssociations(countsmat, expHindHe, startP = 0.1):
+  '''Find groups of alleles that are significantly negatively associated, and
+  don't exceed the expected value of Hind/He.'''
+  nHap = len(countsmat)
+  pvals = AlleleAssociations(countsmat)
+  currP = startP
+  
+  while True:
+    grps = []
+    for h1 in range(nHap - 1):
+      for h2 in range(h1 + 1, nHap):
+        if pvals[h1][h2] > currP:
+          next # doesn't meet threshold, don't add to group
+        if len(grps) == 0: # first group
+          grps.append({h1, h2})
+          next
+        # determine if it is already in any groups
+        h1grp = [i for i in range(len(grps)) if h1 in grps[i]]
+        h2grp = [i for i in range(len(grps)) if h2 in grps[i]]
+        assert len(h1grp) < 2
+        assert len(h2grp) < 2
+        if len(h1grp) == 0 and len(h2grp) == 0:
+          grps.append({h1, h2}) # new group
+        elif len(h1grp) == 1 and len(h2grp) == 0:
+          grps[h1grp[0]].add(h2) # add to existing group
+        elif len(h1grp) == 0 and len(h2grp) == 1:
+          grps[h2grp[0]].add(h1) # add to existing group
+        elif len(h1grp) == 1 and len(h2grp) == 1 and h1grp[0] != h2grp[0]:
+          # merge groups
+          grps[h1grp[0]].update(grps[h2grp[0]])
+          grps.pop(h2grp[0])
+    if(len(grps) == 0):
+      break # no groups could be made
+    # Test Hind/He for these groups
+    hindheOK = [HindHe([countsmat[h] for h in g]) <= expHindHe for g in grps]
+    if all(hindHeOK):
+      break
+    currP = currP / 10
+  return(grps)
 
 def AnnealLocus(countsmat, NMmat, seqlen, expHindHe, base = 0.5, maxreps = 100,
                 T0 = 0.1, rho = 0.95, logcon = None):
