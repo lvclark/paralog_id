@@ -45,12 +45,15 @@ def HindHe(countsmat):
   m = sum(HindHeByInd)/nind
   return m
   
-def SwapHap(NMmat, hapAssign, seqlen, base = 0.5):
+def SwapHap(NMmat, hapAssign, seqlen, corrgrps, corrP, base = 0.5):
   '''Look at the number of mutations between haplotypes and the various
   potential paralogs, and determine probabilities for moving a haplotype from
   one isolocus to another during random sampling.
   There should be a greater probability of getting moved to an isolocus where
   the reference is more similar to the haplotype.
+  Additionally, if there are groups based on allele correlations, and if the
+  allele to be swapped is in one of those groups, move the whole group, with
+  a probability based on the p-value used to make the groups.
   Return a new version of hapAssign where one haplotype has been moved from one
   isolocus to another, at random using the above probabilities.
   
@@ -84,6 +87,17 @@ def SwapHap(NMmat, hapAssign, seqlen, base = 0.5):
   
   # pick a swap to make
   thisswap = swaplist[choice(len(swaplist), size = 1, p = probs)[0]]
+  # determine whether it was in a group, and whether to move the whole group
+  if len(corrgrps) > 0:
+    thisgrp = [grp for grp in corrgrps if thisswap[0] in grp]
+    if len(thisgrp) == 1 and \
+    choice([True, False], size = 1, p = [1 - corrP, corrP])[0]:
+      thisgrp = thisgrp[0]
+      thisgrp.difference_update({thisswap[0]}) # this allele will be moved later
+      for h in thisgrp:
+        [hapAssign[i].remove(h) for i in range(nloc) if h in hapAssign[i]]
+        hapAssign[thisswap[2]].append(h)
+      
   # move the alleles
   hapAssign[thisswap[1]].remove(thisswap[0])
   hapAssign[thisswap[2]].append(thisswap[0])
@@ -265,7 +279,7 @@ def AnnealLocus(countsmat, NMmat, seqlen, expHindHe, base = 0.5, maxreps = 100,
   for k in range(maxreps):
     didswap = False
     for r in range(swapspertemp):
-      hapAssign_new = SwapHap(NMmat, hapAssign, seqlen, base = base)
+      hapAssign_new = SwapHap(NMmat, hapAssign, seqlen, corrgrps, corrP, base = base)
       if tracksol: # solution tracking
         haInd = IndexHapAssign(hapAssign)
         if explored[haInd]: # solution already explored

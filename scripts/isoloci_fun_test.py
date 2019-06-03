@@ -22,7 +22,7 @@ print(myAssign)
 print(MeanNMperLoc(myNM, myAssign))
 
 for i in range(10):
-  myAssign = SwapHap(myNM, myAssign, 80)
+  myAssign = SwapHap(myNM, myAssign, 80, [{1,4}, {10, 11, 12, 13}], 0.01)
   print(myAssign)
   print(IndexHapAssign(myAssign))
 
