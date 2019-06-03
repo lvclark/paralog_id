@@ -195,10 +195,33 @@ def GroupByAlAssociations(countsmat, expHindHe, startP = 0.1):
     if all(hindHeOK):
       break
     currP = currP / 10
-  return(grps)
+  return([grps, currP])
+  
+def AdjustHapAssignByAlAssociations(grps, hapAssign):
+  '''Adjust hapAssign if necessary so that each group that was made based on
+  negative associations between alleles is in just one haplotype group.'''
+  nLoc = len(hapAssign)
+  for grp in grps:
+    numPerHA = [sum([g in ha for g in grp]) for ha in hapAssign]
+    assert sum(numPerHA) == len(grp)
+    haInGrp = [i for i in range(nLoc) if numPerHA[i] > 0]
+    if len(haInGrp) == 1:
+      continue # no rearrangement needed
+    # go to the isolocus where most of these are, or a random one.
+    maxPerHA = max(numPerHA)
+    matchmax = [i for i in haInGrp if numPerHA[i] == maxPerHA]
+    if len(matchmax) == 1:
+      targetLoc = matchmax[0]
+    else:
+      targetLoc = choice(matchmax, size = 1)[0]
+    # rearrange haplotypes
+    [hapAssign[i].remove(h) for i in haInGrp for h in grp if h in hapAssign[i]]
+    hapAssign[targetLoc].extend(grp)
+    
+  return hapAssign
 
 def AnnealLocus(countsmat, NMmat, seqlen, expHindHe, base = 0.5, maxreps = 100,
-                T0 = 0.1, rho = 0.95, logcon = None):
+                T0 = 0.1, rho = 0.95, corrstartP = 0.1, logcon = None):
   '''Perform simulated annealing on one group of haplotypes to split it into isoloci.
   logcon is a file connection that is already open, for logging progress.'''
   hapAssign = InitHapAssign(NMmat) # initial assignment of haplotypes to isoloci
@@ -210,6 +233,9 @@ def AnnealLocus(countsmat, NMmat, seqlen, expHindHe, base = 0.5, maxreps = 100,
   # if already fixed or within Hind/He expectations at each isolocus, don't do simulated annealing
   if all([h == None or h < expHindHe for h in hindhe]):
     return hapAssign
+  # get groups based on allele correlations, and adjust hapAssign if needed
+  corrgrps, corrP = GroupByAlAssociations(countsmat, expHindHe, startP = corrStartP)
+  hapAssign = AdjustHapAssignByAlAssociations(corrgrps, hapAssign)
   # get the mean amount by which each Hind/He is greater than expectations
   hindhe_mean = mean([max([0, h - expHindHe]) for h in hindhe if h != None])
   
