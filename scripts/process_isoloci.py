@@ -75,8 +75,10 @@ try:
       currdepthrows = [newdepthrow]
       curralignrows = [newalignrow]
     rowcount += 1
-    if rowcount > 5000: # for testing only
-      break
+    # if rowcount > 5000: # for testing only
+    #   break
+    if rowcount % 1000 == 0:
+      print rowcount
   ProcessRowGroup(curralignrows, currdepthrows, maxisoloci, maxHindHe, expHindHe, logcon)
 finally:
   depthcon.close()
