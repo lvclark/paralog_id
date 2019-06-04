@@ -288,3 +288,79 @@ df10_5x_keepbest$nHap <- as.integer(nhap_by_group[rownames(df10_5x_keepbest)])
 ggplot(df10_5x_keepbest, aes(y = FinalExcess_HindHe, x = nHap, color = InitExcess_HindHe)) +
   geom_point() +
   scale_color_viridis()
+
+# Adding allele correlations in to the algorithm ####
+# this first version had a mistake but let's take a look anyway
+dfCorr <- extractLog("log/190603hindhelogT10_5xSwaps_UseCorr.txt", finalTemp = TRUE)
+head(dfCorr)
+dfCorr$Num_Temps <- log(dfCorr$Final_Temp/0.1, base = 0.95)
+
+ggplot(dfCorr, aes(x = InitMax_HindHe, y = FinalMax_HindHe, col = Num_Temps)) +
+  geom_point() +
+  geom_hline(yintercept = 1/2) +
+  geom_vline(xintercept = 1/2) +
+  geom_abline(slope = 1, intercept = 0) +
+  scale_color_viridis() +
+  coord_cartesian(xlim = c(0, 1.25), ylim = c(0, 1.25))
+
+init_excess_hindhe <- as.matrix(dfCorr[,c("Init1_HindHe", "Init2_HindHe")]) - 0.5
+init_excess_hindhe[init_excess_hindhe < 0] <- 0
+dfCorr$InitExcess_HindHe <- rowMeans(init_excess_hindhe, na.rm = TRUE)
+
+final_excess_hindhe <- as.matrix(dfCorr[,c("Final1_HindHe", "Final2_HindHe")]) - 0.5
+final_excess_hindhe[final_excess_hindhe < 0] <- 0
+dfCorr$FinalExcess_HindHe <- rowMeans(final_excess_hindhe, na.rm = TRUE)
+
+plot(dfCorr$InitExcess_HindHe, dfCorr$FinalExcess_HindHe)
+abline(b = 1, a = 0, col = "red")
+grid()
+
+mean(dfCorr$FinalExcess_HindHe == 0)           # 49%
+mean(df10_5x_keepbest$FinalExcess_HindHe == 0) # 49%
+mean(dfCorr$Num_Temps)           # 63
+mean(df10_5x_keepbest$Num_Temps) # 63
+
+# after fixing how correlations estimated
+dfCorr1 <- extractLog("log/190604hindhelogT10_5xSwaps_UseCorr.txt", finalTemp = TRUE)
+head(dfCorr)
+dfCorr1$Num_Temps <- log(dfCorr1$Final_Temp/0.1, base = 0.95)
+
+ggplot(dfCorr1, aes(x = InitMax_HindHe, y = FinalMax_HindHe, col = Num_Temps)) +
+  geom_point() +
+  geom_hline(yintercept = 1/2) +
+  geom_vline(xintercept = 1/2) +
+  geom_abline(slope = 1, intercept = 0) +
+  scale_color_viridis() +
+  coord_cartesian(xlim = c(0, 1.25), ylim = c(0, 1.25))
+
+init_excess_hindhe <- as.matrix(dfCorr1[,c("Init1_HindHe", "Init2_HindHe")]) - 0.5
+init_excess_hindhe[init_excess_hindhe < 0] <- 0
+dfCorr1$InitExcess_HindHe <- rowMeans(init_excess_hindhe, na.rm = TRUE)
+
+final_excess_hindhe <- as.matrix(dfCorr1[,c("Final1_HindHe", "Final2_HindHe")]) - 0.5
+final_excess_hindhe[final_excess_hindhe < 0] <- 0
+dfCorr1$FinalExcess_HindHe <- rowMeans(final_excess_hindhe, na.rm = TRUE)
+
+mean(dfCorr1$FinalExcess_HindHe == 0)  # 48%
+mean(dfCorr1$Num_Temps)                # 64
+
+plot(dfCorr1$InitExcess_HindHe, dfCorr1$FinalExcess_HindHe)
+abline(b = 1, a = 0, col = "red")
+
+# can we speed up run time now?
+dfCorr2 <- extractLog("log/190604hindhelogT10_rho90_2xSwaps_UseCorr.txt", finalTemp = TRUE)
+dfCorr2$Num_Temps <- log(dfCorr2$Final_Temp/0.1, base = 0.90)
+
+init_excess_hindhe <- as.matrix(dfCorr2[,c("Init1_HindHe", "Init2_HindHe")]) - 0.5
+init_excess_hindhe[init_excess_hindhe < 0] <- 0
+dfCorr2$InitExcess_HindHe <- rowMeans(init_excess_hindhe, na.rm = TRUE)
+
+final_excess_hindhe <- as.matrix(dfCorr2[,c("Final1_HindHe", "Final2_HindHe")]) - 0.5
+final_excess_hindhe[final_excess_hindhe < 0] <- 0
+dfCorr2$FinalExcess_HindHe <- rowMeans(final_excess_hindhe, na.rm = TRUE)
+
+mean(dfCorr2$FinalExcess_HindHe == 0)  # 42%
+mean(dfCorr2$Num_Temps)                # 31
+
+prop.test(c(sum(dfCorr1$FinalExcess_HindHe == 0), sum(dfCorr2$FinalExcess_HindHe == 0)),
+          c(nrow(dfCorr1), nrow(dfCorr2))) # need a bigger sample to know if these are really different
