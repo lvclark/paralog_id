@@ -158,7 +158,7 @@ def AlleleAssociations(countsmat):
       rat1 = [countsmat[h1][i]/tot2[i] if tot2[i] > 0 else 0.0 for i in range(nInd)]
       rat2 = [countsmat[h2][i]/tot1[i] if tot1[i] > 0 else 0.0 for i in range(nInd)]
       # omit ones that are both zero (missing data)
-      rat1, rat2 = zip(*[(r1, r2) for r1, r2 in zip(rat1, rat2) if r1 > 0 or r2 > 0])
+      rat1, rat2 = zip(*[(r1, r2) for r1, r2, t1, t2 in zip(rat1, rat2, tot1, tot2) if t1 > 0 or t2 > 0])
       # perform test for association
       kout = kendalltau(rat1, rat2, nan_policy = 'raise', method = 'asymptotic')
       # convert p-value to one-tailed
