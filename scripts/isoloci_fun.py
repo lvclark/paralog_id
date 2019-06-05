@@ -164,6 +164,9 @@ def AlleleAssociations(countsmat):
       # skip if there is too much missing data
       if len(rat1) < 10:
         continue
+      # skip if there is no variance in either allele
+      if len(set(rat1)) == 1 or len(set(rat2)) == 1:
+        continue
       # perform test for association
       kout = kendalltau(rat1, rat2, nan_policy = 'raise', method = 'asymptotic')
       # convert p-value to one-tailed
