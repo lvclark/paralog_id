@@ -4,7 +4,10 @@ library(viridis)
 
 # function to process log file and extract information on markers that underwent
 # simulated annealing.
-extractLog <- function(file, finalTemp = FALSE){
+extractLog <- function(file, finalTemp = FALSE, tabu = FALSE){
+  if(finalTemp && tabu){
+    stop("Cannot have both finalTemp and tabu")
+  }
   logout <- readLines(file)
   initHindHeLines <- grep("^Initial Hind/He:", logout)
   finalHindHeLines <- initHindHeLines + 2
@@ -19,6 +22,9 @@ extractLog <- function(file, finalTemp = FALSE){
   unsplitHindHeLines <- initHindHeLines - 1
   if(finalTemp){
     finalTempLines <- initHindHeLines + 4
+  }
+  if(tabu){
+    repLines <- initHindHeLines + 4
   }
   
   # extract numeric values
@@ -66,6 +72,9 @@ extractLog <- function(file, finalTemp = FALSE){
                       FinalMax_HindHe = finalMax_HindHe)
   if(finalTemp){
     outdf$Final_Temp <- as.numeric(sub("Final temperature: ", "", logout[finalTempLines]))
+  }
+  if(tabu){
+    outdf$Reps <- as.integer(sub("Rep where best solution found: ", "", logout[repLines]))
   }
   
   return(outdf)
@@ -364,3 +373,47 @@ mean(dfCorr2$Num_Temps)                # 31
 
 prop.test(c(sum(dfCorr1$FinalExcess_HindHe == 0), sum(dfCorr2$FinalExcess_HindHe == 0)),
           c(nrow(dfCorr1), nrow(dfCorr2))) # need a bigger sample to know if these are really different
+
+# is it generally the same markers that get the best solution?
+Corr1solved <- rownames(dfCorr1)[dfCorr1$FinalExcess_HindHe == 0]
+Corr2solved <- rownames(dfCorr2)[dfCorr2$FinalExcess_HindHe == 0]
+mean(Corr1solved %in% Corr2solved) # 82%
+commonmarkers <- rownames(dfCorr1)[rownames(dfCorr1) %in% rownames(dfCorr2)] # 44
+
+plot(dfCorr1[commonmarkers, "FinalExcess_HindHe"], dfCorr2[commonmarkers, "FinalExcess_HindHe"],
+     col = "#00000040")
+abline(a = 0, b = 1, col = "red")
+# if it was more than zero, it was generally more than zero for both
+# quicker algorithm maybe slightly worse, but again we need more data points
+
+# Examine output of tabu search ####
+dfTabu <- extractLog("log/190605tabu_log.txt", tabu = TRUE)
+
+init_excess_hindhe <- as.matrix(dfTabu[,c("Init1_HindHe", "Init2_HindHe")]) - 0.5
+init_excess_hindhe[init_excess_hindhe < 0] <- 0
+dfTabu$InitExcess_HindHe <- rowMeans(init_excess_hindhe, na.rm = TRUE)
+
+final_excess_hindhe <- as.matrix(dfTabu[,c("Final1_HindHe", "Final2_HindHe")]) - 0.5
+final_excess_hindhe[final_excess_hindhe < 0] <- 0
+dfTabu$FinalExcess_HindHe <- rowMeans(final_excess_hindhe, na.rm = TRUE)
+
+ggplot(dfTabu, aes(x = InitMax_HindHe, y = FinalMax_HindHe, col = Reps)) +
+  geom_point() +
+  geom_hline(yintercept = 1/2) +
+  geom_vline(xintercept = 1/2) +
+  geom_abline(slope = 1, intercept = 0) +
+  scale_color_viridis()
+
+ggplot(dfTabu, aes(x = InitExcess_HindHe, y = FinalExcess_HindHe, col = Reps)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0) +
+  scale_color_viridis()
+
+mean(dfTabu$FinalExcess_HindHe == 0)  # 70%
+table(dfTabu$Reps[dfTabu$FinalExcess_HindHe == 0])
+table(dfTabu$Reps[dfTabu$FinalExcess_HindHe < 0.05])
+# quite a lot that are zero reps, which I assume means that just using correlations
+# worked. don't do tabu if ok after correlations.
+# probably 25 reps is an ok cutoff.
+
+mean(dfTabu$FinalExcess_HindHe[dfTabu$Reps > 0] == 0) # 48% if it actually searched
