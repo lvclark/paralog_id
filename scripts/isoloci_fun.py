@@ -66,7 +66,7 @@ def SwapHap(NMmat, hapAssign, seqlen, corrgrps, corrP, base = 0.5):
   to that location.
   
   seqlen is the sequence length, and base should be about twice the maximum
-  possibley dissimilarity between haplotype and reference.'''
+  possible dissimilarity between haplotype and reference.'''
   
   nloc = len(NMmat) # number of isoloci
   # Build a list of potential movements of haplotypes from one isolocus to
