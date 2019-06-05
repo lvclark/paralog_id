@@ -245,7 +245,11 @@ def AdjustHapAssignByAlAssociations(grps, hapAssign):
 def HindHeExcess(hindhe, expHindHe):
   '''Return the mean amount by which per-isolocus Hind/He exceeds the expected
   value.'''
-  return mean([max([0, h - expHindHe]) for h in hindhe if h != None])
+  excess = [max([0, h - expHindHe]) for h in hindhe if h != None]
+  if len(excess) == 0:
+    return 0.0 # all isoloci fixed; want to keep this solution
+  else:
+    return mean(excess)
 
 def AnnealLocus(countsmat, NMmat, seqlen, expHindHe, base = 0.5, maxreps = 100,
                 T0 = 0.1, rho = 0.95, corrstartP = 0.1, logcon = None):
