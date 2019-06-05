@@ -239,6 +239,9 @@ def AdjustHapAssignByAlAssociations(grps, hapAssign):
     
   return hapAssign
 
+def HindHeExcess(hindhe, expHindHe):
+  return mean([max([0, h - expHindHe]) for h in hindhe if h != None])
+
 def AnnealLocus(countsmat, NMmat, seqlen, expHindHe, base = 0.5, maxreps = 100,
                 T0 = 0.1, rho = 0.95, corrstartP = 0.1, logcon = None):
   '''Perform simulated annealing on one group of haplotypes to split it into isoloci.
@@ -256,8 +259,8 @@ def AnnealLocus(countsmat, NMmat, seqlen, expHindHe, base = 0.5, maxreps = 100,
   corrgrps, corrP = GroupByAlAssociations(countsmat, expHindHe, startP = corrstartP)
   hapAssign = AdjustHapAssignByAlAssociations(corrgrps, hapAssign)
   # get the mean amount by which each Hind/He is greater than expectations
-  hindhe_mean = mean([max([0, h - expHindHe]) for h in hindhe if h != None])
-  
+  hindhe_mean = HindHeExcess(hindhe, expHindHe)
+
   # number of swaps to attempt per temperature
   # roughly allow each allele to get moved to each isolocus
   swapspertemp = math.factorial(len(NMmat)) * len(NMmat[0]) * 5
@@ -301,7 +304,7 @@ def AnnealLocus(countsmat, NMmat, seqlen, expHindHe, base = 0.5, maxreps = 100,
           logcon.write("All isoloci fixed.\n")
         break
       if (not tracksol) or (not explored[haInd]): # Mean Hind/He minus max expected Hind/He
-        hindhe_mean_new = mean([max([0, h - expHindHe]) for h in hindhe_new if h != None])
+        hindhe_mean_new = HindHeExcess(hindhe_new, expHindHe)
         if tracksol:
           all_hindhe_mean[haInd] = hindhe_mean_new
           explored[haInd] = True
