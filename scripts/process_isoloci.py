@@ -10,7 +10,7 @@ maxisoloci = 2  # how many subgenomes are there
 ploidy = 2      # expected ploidy after sorting
 alignfile = "../marker_CSV/190525twoalign_Chr1Chr2.csv" # alignment locations
 depthfile = "../marker_CSV/190523diploid_Chr1Chr2.csv"  # read depth
-logfile = "../log/190605tabu_log.txt"
+logfile = "../log/190605tabu_log_long.txt"
 
 # maximum tolerable Hind/He: halfway between this and the next ploidy, on a log scale
 p2 = ploidy * 2
@@ -76,8 +76,8 @@ try:
       currdepthrows = [newdepthrow]
       curralignrows = [newalignrow]
     rowcount += 1
-    if rowcount > 5000: # for testing only
-       break
+    # if rowcount > 5000: # for testing only
+    #    break
     if rowcount % 1000 == 0:
       print(rowcount)
   ProcessRowGroup(curralignrows, currdepthrows, maxisoloci, maxHindHe, expHindHe, logcon)

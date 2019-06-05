@@ -368,7 +368,7 @@ def FindNeighbors(hapAssign, corrgrps, tabu):
   return haList
 
 def TabuLocus(countsmat, NMmat, expHindHe, \
-reps = 300, maxTabu = 100, corrstartP = 0.01, logcon = None):
+reps = 25, maxTabu = 5, corrstartP = 0.01, logcon = None):
   '''A Tabu Search to try to optimize first Hind/He, then NM from reference,
   while keeping together groups of alleles that are negatively associated.'''
   nHap = len(countsmat)
@@ -386,6 +386,10 @@ reps = 300, maxTabu = 100, corrstartP = 0.01, logcon = None):
   # get groups based on allele correlations, and adjust hapAssign if needed
   corrgrps, corrP = GroupByAlAssociations(countsmat, expHindHe, startP = corrstartP)
   hapAssign = AdjustHapAssignByAlAssociations(corrgrps, hapAssign)
+  hindhe = HindHeByIsolocus(countsmat, hapAssign)
+  # if everything ok after adjusting by corrgrps, don't do search
+  if all([h == None or h < expHindHe for h in hindhe]):
+    return hapAssign
   # expand corrgrps to add individual alleles
   if len(corrgrps) == 0:
     corrgrps = [{h} for h in range(nHap)]
@@ -400,7 +404,7 @@ reps = 300, maxTabu = 100, corrstartP = 0.01, logcon = None):
 
   # set aside objects to hold best solution
   hapAssign_best = deepcopy(hapAssign)
-  hindhe_excess_best = HindHeExcess(HindHeByIsolocus(countsmat, hapAssign), expHindHe)
+  hindhe_excess_best = HindHeExcess(hindhe, expHindHe)
   NM_mean_best = MeanNMperLoc(NMmat, hapAssign)
   best_rep = 0 # rep where best solution was found
 
