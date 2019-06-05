@@ -92,3 +92,5 @@ mats[[1]][1:10,1:10]
 #          row.names = FALSE, sep = ",")
 #write.csv(t(mats[[1]]), file = "marker_CSV/190523diploid_Chr1Chr2.csv")
 #write.csv(t(mats[[2]]), file = "marker_CSV/190523tetraploid_Chr1Chr2.csv")
+
+table(table(paste(twoalign_Chr1_2$V1, twoalign_Chr1_2$V2)))
