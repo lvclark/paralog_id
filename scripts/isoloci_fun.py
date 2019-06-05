@@ -392,8 +392,6 @@ reps = 300, maxTabu = 100, corrstartP = 0.01, logcon = None):
   else:
     corrgrps.extend([{h} for h in range(nHap) if all([h not in grp for grp in corrgrps])])
   nGrp = len(corrgrps)
-  # in each rep, we will try swapping each group to each locus (minus where it is already)
-  swapsperrep = nGrp * (nLoc - 1)
 
   # set up tabu list
   tabu = [0 for i in range(maxTabu)]
