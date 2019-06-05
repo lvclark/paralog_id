@@ -1,5 +1,6 @@
 from isoloci_fun import GiniSimpson, HindHe, SwapHap, InitHapAssign, \
-MeanNMperLoc, IndexHapAssign, AlleleAssociations, AdjustHapAssignByAlAssociations
+MeanNMperLoc, IndexHapAssign, AlleleAssociations, AdjustHapAssignByAlAssociations, \
+FindNeighbors
 
 print(GiniSimpson([50, 50]))
 print(GiniSimpson([25, 25, 50]))
@@ -42,3 +43,9 @@ print(AlleleAssociations([[10, 5, 0, 0, 0],
               
 print(AdjustHapAssignByAlAssociations([{2,3,4}, {1,5}], \
 [[0,1,2],[3,4,5]]))
+
+myAssign = [[0,2,3],[1,4]]
+mycorrgrps = [{0,2}, {1}, {3}, {4}]
+mytabu = [IndexHapAssign(myAssign)] + [0 for i in range(99)]
+print(myAssign)
+print(FindNeighbors(myAssign, mycorrgrps, mytabu))

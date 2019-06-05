@@ -347,3 +347,101 @@ def AnnealLocus(countsmat, NMmat, seqlen, expHindHe, base = 0.5, maxreps = 100,
     logcon.write("Final temperature: {}\n".format(Ti))
 
   return hapAssign_best
+
+def FindNeighbors(hapAssign, corrgrps, tabu):
+  '''For the Tabu Search algorithm, find neighboring solutions to the current
+  one that have not recently been examined.  corrgrps is a list of groups of
+  haplotypes that can be swapped together, including all individual haplotypes
+  that were not placed in groups.'''
+  nLoc = len(hapAssign)
+  assert sum([len(grp) for grp in corrgrps]) == sum([len(ha) for ha in hapAssign])
+  haList = []
+  for grp in corrgrps:
+    for loc in range(nLoc):
+      if not all([g in hapAssign[loc] for g in grp]):
+        hapAssign_new = deepcopy(hapAssign)
+        [[ha.remove(g) for g in grp if g in ha] for ha in hapAssign_new]
+        hapAssign_new[loc].extend(grp)
+        haInd = IndexHapAssign(hapAssign_new)
+        if haInd not in tabu:
+          haList.append(hapAssign_new)
+  return haList
+
+def TabuLocus(countsmat, NMmat, expHindHe, \
+reps = 300, maxTabu = 100, corrstartP = 0.01, logcon = None):
+  '''A Tabu Search to try to optimize first Hind/He, then NM from reference,
+  while keeping together groups of alleles that are negatively associated.'''
+  nHap = len(countsmat)
+  nLoc = len(NMmat)
+  hapAssign = InitHapAssign(NMmat) # initial assignment of haplotypes to isoloci
+  hindhe = HindHeByIsolocus(countsmat, hapAssign) # doesn't get updated
+  NM_mean = MeanNMperLoc(NMmat, hapAssign)        # doesn't get updated
+  if logcon != None:
+    logcon.write("Initial Hind/He: {}\n".format(" ".join([str(h) for h in hindhe])))
+    logcon.write("Initial average NM: {}\n".format(NM_mean))
+  # if already fixed or within Hind/He expectations at each isolocus, don't do search
+  if all([h == None or h < expHindHe for h in hindhe]):
+    return hapAssign
+
+  # get groups based on allele correlations, and adjust hapAssign if needed
+  corrgrps, corrP = GroupByAlAssociations(countsmat, expHindHe, startP = corrstartP)
+  hapAssign = AdjustHapAssignByAlAssociations(corrgrps, hapAssign)
+  # expand corrgrps to add individual alleles
+  if len(corrgrps) == 0:
+    corrgrps = [{h} for h in range(nHap)]
+  else:
+    corrgrps.extend([{h} for h in range(nHap) if all([h not in grp for grp in corrgrps])])
+  nGrp = len(corrgrps)
+  # in each rep, we will try swapping each group to each locus (minus where it is already)
+  swapsperrep = nGrp * (nLoc - 1)
+
+  # set up tabu list
+  tabu = [0 for i in range(maxTabu)]
+  tabu[0] = IndexHapAssign(hapAssign)
+  tabuIndex = 1
+
+  # set aside objects to hold best solution
+  hapAssign_best = deepcopy(hapAssign)
+  hindhe_excess_best = HindHeExcess(HindHeByIsolocus(countsmat, hapAssign), expHindHe)
+  NM_mean_best = MeanNMperLoc(NMmat, hapAssign)
+  best_rep = 0 # rep where best solution was found
+
+  # tabu search algorithm
+  for rep in range(reps):
+    # get all non-tabu neighbors and choose the best
+    neighbors = FindNeighbors(hapAssign, corrgrps, tabu)
+    if len(neighbors) == 0:
+      break
+    hindhe_neighbors = [HindHeByIsolocus(countsmat, ha) for ha in neighbors]
+    hindhe_excess_neighbors = [HindHeExcess(hh, expHindHe) for hh in hindhe_neighbors]
+    min_excess = min(hindhe_excess_neighbors)
+    min_neighbors = [neighbors[i] for i in range(len(neighbors)) \
+                     if hindhe_excess_neighbors[i] == min_excess]
+    if len(min_neighbors) == 1:
+      hapAssign = min_neighbors[0]
+    else:
+      NM_neighbors = [MeanNMperLoc(NMmat, ha) for ha in min_neighbors]
+      min_NM = min(NM_neighbors)
+      min_neighbors = [min_neighbors[i] for i in range(len(min_neighbors)) \
+                       if NM_neighbors[i] == min_NM]
+      if len(min_neighbors) == 1:
+        hapAssign = min_neighbors[0]
+      else:
+        hapAssign = min_neighbors[int(choice(range(len(min_neighbors)), size = 1))]
+    # update the tabu list
+    tabu[tabuIndex % maxTabu] = IndexHapAssign(hapAssign)
+    tabuIndex += 1
+    # update the best solution if appropriate
+    min_NM = MeanNMperLoc(NMmat, hapAssign)
+    if min_excess < hindhe_excess_best or (min_excess == hindhe_excess_best and min_NM < NM_mean_best):
+      hapAssign_best = deepcopy(hapAssign)
+      hindhe_excess_best = min_excess
+      NM_mean_best = min_NM
+      best_rep = rep
+
+  if logcon != None:
+    logcon.write("Final Hind/He: {}\n".format(" ".join([str(h) for h in HindHeByIsolocus(countsmat, hapAssign_best)])))
+    logcon.write("Final average NM: {}\n".format(NM_mean_best))
+    logcon.write("Rep where best solution found: {}\n".format(best_rep))
+
+  return hapAssign_best
