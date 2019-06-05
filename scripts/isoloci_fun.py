@@ -34,18 +34,18 @@ def HindHe(countsmat):
   nind = len(depthByInd)
   if all([d == 0 for d in depthByInd]):
     return None
-  
+
   depthRatios = [[c / depthByInd[i] for c in countsmatT[i]] for i in range(nind) if depthByInd[i] > 0]
   meanDepthRatios = [sum(x)/nind for x in zip(*depthRatios)] # mean by allele
   He = GiniSimpson(meanDepthRatios, N = 1)
   assert He > 0
-  
+
   HindHeByInd = [GiniSimpson(countsmatT[i], N = depthByInd[i]) * \
                  depthByInd[i] / (depthByInd[i] - 1)/ He for i in range(nind) if depthByInd[i] > 1]
 
   m = sum(HindHeByInd)/nind
   return m
-  
+
 def SwapHap(NMmat, hapAssign, seqlen, corrgrps, corrP, base = 0.5):
   '''Look at the number of mutations between haplotypes and the various
   potential paralogs, and determine probabilities for moving a haplotype from
@@ -57,24 +57,24 @@ def SwapHap(NMmat, hapAssign, seqlen, corrgrps, corrP, base = 0.5):
   a probability based on the p-value used to make the groups.
   Return a new version of hapAssign where one haplotype has been moved from one
   isolocus to another, at random using the above probabilities.
-  
+
   NMmat is a list of lists, the first dimension corresponding to alignment
   locations and the second dimension corresponding to haplotypes.  Values
   indicate the number of mutations between that haplotype and the reference.
-  
+
   hapAssign is a list of lists, with the first dimension corresponding to
   alignment.  Each list contains indices of haplotypes that have been assigned
   to that location.
-  
+
   seqlen is the sequence length, and base should be about twice the maximum
   possible dissimilarity between haplotype and reference.'''
-  
+
   nloc = len(NMmat) # number of isoloci
   hapAssign = deepcopy(hapAssign)
   # Build a list of potential movements of haplotypes from one isolocus to
   # another, and their weights.
   swaplist = []
-  
+
   for loc1 in range(nloc): # current locus
     otherloc = [l for l in range(nloc) if l != loc1] # loci other than this one
     for hap in hapAssign[loc1]: # haplotype index
@@ -86,7 +86,7 @@ def SwapHap(NMmat, hapAssign, seqlen, corrgrps, corrP, base = 0.5):
   weights = [s[3] for s in swaplist]
   tot = sum(weights)
   probs = [w/tot for w in weights]
-  
+
   # pick a swap to make
   thisswap = swaplist[choice(len(swaplist), size = 1, p = probs)[0]]
   # determine whether it was in a group, and whether to move the whole group
@@ -99,11 +99,11 @@ def SwapHap(NMmat, hapAssign, seqlen, corrgrps, corrP, base = 0.5):
       for h in thisgrp:
         [hapAssign[i].remove(h) for i in range(nloc) if h in hapAssign[i]]
         hapAssign[thisswap[2]].append(h)
-      
+
   # move the alleles
   hapAssign[thisswap[1]].remove(thisswap[0])
   hapAssign[thisswap[2]].append(thisswap[0])
-  
+
   return hapAssign
 
 def InitHapAssign(NMmat):
@@ -112,7 +112,7 @@ def InitHapAssign(NMmat):
   nloc = len(NMmat)
   nhap = len(NMmat[0])
   hapAssign = [[] for i in range(nloc)] # to store output
-  
+
   for h in range(nhap):
     theseNM = [nm[h] for nm in NMmat]
     minNM = min(theseNM)
@@ -121,15 +121,15 @@ def InitHapAssign(NMmat):
       bestLoc = choice(bestLoc, 1)
     bestLoc = bestLoc[0] # convert list to number
     hapAssign[bestLoc].append(h) # add haplotype to locus
-  
+
   return hapAssign
-  
+
 def HindHeByIsolocus(countsmat, hapAssign):
   '''For a given set of assignments of haplotypes to isoloci, estimate Hind/He
   for each isolocus.  countsmat and hapAssign are as defined above.'''
   splitcounts = [[countsmat[h] for h in isolocus] for isolocus in hapAssign]
   return [HindHe(c) for c in splitcounts]
-  
+
 def MeanNMperLoc(NMmat, hapAssign):
   '''Get mean number of mutations per locus across all haplotypes versus their
   assigned locus.'''
@@ -137,7 +137,7 @@ def MeanNMperLoc(NMmat, hapAssign):
   nHap = len(NMmat[0])
   out = sum([NMmat[L][h] for L in range(nLoc) for h in hapAssign[L]])/nHap
   return out
-  
+
 def IndexHapAssign(hapAssign):
   '''Generate an index for a given set of assignments of haplotypes to isoloci,
   so that we can track solutions that have already been examined.'''
@@ -150,7 +150,7 @@ def AlleleAssociations(countsmat):
   nHap = len(countsmat)
   nInd = len(countsmat[0])
   outP = [[1.0 for i in range(nHap)] for j in range(nHap)]
-  
+
   for h1 in range(nHap - 1):
     # tot1 and tot2 are per individual total read depth, omitting h1 and h2, respectively
     tot1 = [sum([countsmat[h][i] for h in range(nHap) if h != h1]) for i in range(nInd)]
@@ -175,14 +175,14 @@ def AlleleAssociations(countsmat):
       outP[h1][h2] = pout
       outP[h2][h1] = pout
   return(outP)
-  
+
 def GroupByAlAssociations(countsmat, expHindHe, startP = 0.1):
   '''Find groups of alleles that are significantly negatively associated, and
   don't exceed the expected value of Hind/He.'''
   nHap = len(countsmat)
   pvals = AlleleAssociations(countsmat)
   currP = startP
-  
+
   while True:
     grps = []
     for h1 in range(nHap - 1):
@@ -215,7 +215,7 @@ def GroupByAlAssociations(countsmat, expHindHe, startP = 0.1):
       break
     currP = currP / 10
   return([grps, currP])
-  
+
 def AdjustHapAssignByAlAssociations(grps, hapAssign):
   '''Adjust hapAssign if necessary so that each group that was made based on
   negative associations between alleles is in just one haplotype group.'''
@@ -236,7 +236,7 @@ def AdjustHapAssignByAlAssociations(grps, hapAssign):
     # rearrange haplotypes
     [hapAssign[i].remove(h) for i in haInGrp for h in grp if h in hapAssign[i]]
     hapAssign[targetLoc].extend(grp)
-    
+
   return hapAssign
 
 def HindHeExcess(hindhe, expHindHe):
@@ -265,12 +265,12 @@ def AnnealLocus(countsmat, NMmat, seqlen, expHindHe, base = 0.5, maxreps = 100,
   # roughly allow each allele to get moved to each isolocus
   swapspertemp = math.factorial(len(NMmat)) * len(NMmat[0]) * 5
   Ti = T0 # current temperature
-  
+
   # set aside objects to hold best solution
   hapAssign_best = deepcopy(hapAssign)
   hindhe_mean_best = deepcopy(hindhe_mean)
   NM_mean_best = deepcopy(NM_mean)
-  
+
   # are we likely to explore much of the solution space?  If so, track solutions.
   nsol = len(NMmat) ** len(NMmat[0]) # number of possible solutions
   tracksol = swapspertemp * maxreps >= nsol # true if we could explore whole space
@@ -282,7 +282,7 @@ def AnnealLocus(countsmat, NMmat, seqlen, expHindHe, base = 0.5, maxreps = 100,
     explored[haInd] = True
     all_hindhe[haInd] = hindhe
     all_hindhe_mean[haInd] = hindhe_mean
-  
+
   # start algorithm
   for k in range(maxreps):
     didswap = False
@@ -338,10 +338,10 @@ def AnnealLocus(countsmat, NMmat, seqlen, expHindHe, base = 0.5, maxreps = 100,
         hindhe_mean = deepcopy(hindhe_mean_best)
         NM_mean = deepcopy(NM_mean_best)
     Ti = Ti * rho
-  
+
   if logcon != None:
     logcon.write("Final Hind/He: {}\n".format(" ".join([str(h) for h in hindhe])))
     logcon.write("Final average NM: {}\n".format(MeanNMperLoc(NMmat, hapAssign)))
     logcon.write("Final temperature: {}\n".format(Ti))
-  
+
   return hapAssign_best
