@@ -1,6 +1,7 @@
 from statistics import mean, StatisticsError
 from numpy.random import choice
 from scipy.stats import kendalltau
+from copy import deepcopy
 import math
 
 # functions for sorting out isoloci
@@ -69,6 +70,7 @@ def SwapHap(NMmat, hapAssign, seqlen, corrgrps, corrP, base = 0.5):
   possible dissimilarity between haplotype and reference.'''
   
   nloc = len(NMmat) # number of isoloci
+  hapAssign = deepcopy(hapAssign)
   # Build a list of potential movements of haplotypes from one isolocus to
   # another, and their weights.
   swaplist = []
@@ -262,9 +264,9 @@ def AnnealLocus(countsmat, NMmat, seqlen, expHindHe, base = 0.5, maxreps = 100,
   Ti = T0 # current temperature
   
   # set aside objects to hold best solution
-  hapAssign_best = hapAssign
-  hindhe_mean_best = hindhe_mean
-  NM_mean_best = NM_mean
+  hapAssign_best = deepcopy(hapAssign)
+  hindhe_mean_best = deepcopy(hindhe_mean)
+  NM_mean_best = deepcopy(NM_mean)
   
   # are we likely to explore much of the solution space?  If so, track solutions.
   nsol = len(NMmat) ** len(NMmat[0]) # number of possible solutions
@@ -320,18 +322,18 @@ def AnnealLocus(countsmat, NMmat, seqlen, expHindHe, base = 0.5, maxreps = 100,
         NM_mean = MeanNMperLoc(NMmat, hapAssign)
         # update best solution if necessary
         if hindhe_mean < hindhe_mean_best or (hindhe_mean == hindhe_mean_best and NM_mean < NM_mean_best):
-          hapAssign_best = hapAssign
-          hindhe_mean_best = hindhe_mean
-          NM_mean_best = NM_mean
+          hapAssign_best = deepcopy(hapAssign)
+          hindhe_mean_best = deepcopy(hindhe_mean)
+          NM_mean_best = deepcopy(NM_mean)
         #if logcon != None:
         #  logcon.write("Temperature: {}, Current Hind/He: {}\n".format(Ti, " ".join([str(h) for h in hindhe])))
     if not didswap:
       if hindhe_mean == hindhe_mean_best and NM_mean == NM_mean_best:
         break # no swaps happened, optimal solution found, algorithm is done
       else: # restart algorithm at best solution
-        hapAssign = hapAssign_best
-        hindhe_mean = hindhe_mean_best
-        NM_mean = NM_mean_best
+        hapAssign = deepcopy(hapAssign_best)
+        hindhe_mean = deepcopy(hindhe_mean_best)
+        NM_mean = deepcopy(NM_mean_best)
     Ti = Ti * rho
   
   if logcon != None:
