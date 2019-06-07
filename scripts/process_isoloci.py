@@ -7,10 +7,10 @@ import math
 
 # variables to set up as command line args later
 maxisoloci = 2  # how many subgenomes are there
-ploidy = 2      # expected ploidy after sorting
+ploidy = 4      # expected ploidy after sorting
 alignfile = "../marker_CSV/190525twoalign_Chr1Chr2.csv" # alignment locations
-depthfile = "../marker_CSV/190523diploid_Chr1Chr2.csv"  # read depth
-logfile = "../log/190605tabu_log_long.txt"
+depthfile = "../marker_CSV/190523tetraploid_Chr1Chr2.csv"  # read depth
+logfile = "../log/190607tabu_log_long_tetra.txt"
 
 # maximum tolerable Hind/He: halfway between this and the next ploidy, on a log scale
 p2 = ploidy * 2
