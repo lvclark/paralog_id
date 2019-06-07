@@ -417,3 +417,66 @@ table(dfTabu$Reps[dfTabu$FinalExcess_HindHe < 0.05])
 # probably 25 reps is an ok cutoff.
 
 mean(dfTabu$FinalExcess_HindHe[dfTabu$Reps > 0] == 0) # 48% if it actually searched
+
+# Tabu search algorithm on entire file
+dfTabu2 <- extractLog("log/190605tabu_log_long.txt", tabu = TRUE) #988 markers went through tabu search
+
+init_excess_hindhe <- as.matrix(dfTabu2[,c("Init1_HindHe", "Init2_HindHe")]) - 0.5
+init_excess_hindhe[init_excess_hindhe < 0] <- 0
+dfTabu2$InitExcess_HindHe <- rowMeans(init_excess_hindhe, na.rm = TRUE)
+
+final_excess_hindhe <- as.matrix(dfTabu2[,c("Final1_HindHe", "Final2_HindHe")]) - 0.5
+final_excess_hindhe[final_excess_hindhe < 0] <- 0
+dfTabu2$FinalExcess_HindHe <- rowMeans(final_excess_hindhe, na.rm = TRUE)
+
+head(dfTabu2)
+
+ggplot(dfTabu2, aes(x = InitMax_HindHe, y = FinalMax_HindHe, col = Reps)) +
+  geom_point() +
+  geom_hline(yintercept = 1/2) +
+  geom_vline(xintercept = 1/2) +
+  geom_abline(slope = 1, intercept = 0) +
+  scale_color_viridis()
+
+ggplot(dfTabu2, aes(x = InitExcess_HindHe, y = FinalExcess_HindHe, col = Reps)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0) +
+  scale_color_viridis()
+
+mean(dfTabu2$FinalExcess_HindHe == 0, na.rm = TRUE) # 67%
+summary(dfTabu2$Reps[which(dfTabu2$FinalExcess_HindHe == 0)])
+ # most (56%) were corrected on one round, out of ones that weren't already corrected
+ # sufficiently using allele correlations.  A few needed a lot of iteration though.
+table(dfTabu2$Reps[which(dfTabu2$FinalExcess_HindHe == 0)])
+mean(dfTabu2$Reps[which(dfTabu2$FinalExcess_HindHe == 0)] == 0)
+
+# Tabu search on tetraploids
+dfTabu4x <- extractLog("log/190607tabu_log_long_tetra.txt", tabu = TRUE)
+# 615 markers went through tabu search; expected since overly high heterozygosity
+# will be harder to detect.
+
+init_excess_hindhe <- as.matrix(dfTabu4x[,c("Init1_HindHe", "Init2_HindHe")]) - 0.75
+init_excess_hindhe[init_excess_hindhe < 0] <- 0
+dfTabu4x$InitExcess_HindHe <- rowMeans(init_excess_hindhe, na.rm = TRUE)
+
+final_excess_hindhe <- as.matrix(dfTabu4x[,c("Final1_HindHe", "Final2_HindHe")]) - 0.75
+final_excess_hindhe[final_excess_hindhe < 0] <- 0
+dfTabu4x$FinalExcess_HindHe <- rowMeans(final_excess_hindhe, na.rm = TRUE)
+
+ggplot(dfTabu4x, aes(x = InitMax_HindHe, y = FinalMax_HindHe, col = Reps)) +
+  geom_point() +
+  geom_hline(yintercept = 3/4) +
+  geom_vline(xintercept = 3/4) +
+  geom_abline(slope = 1, intercept = 0) +
+  scale_color_viridis()
+
+# w00+, it also works for tetraploids.
+
+ggplot(dfTabu4x, aes(x = InitExcess_HindHe, y = FinalExcess_HindHe, col = Reps)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0) +
+  scale_color_viridis()
+
+mean(dfTabu4x$FinalExcess_HindHe == 0, na.rm = TRUE) # 81%
+table(dfTabu4x$Reps[which(dfTabu4x$FinalExcess_HindHe == 0)])
+mean(dfTabu4x$Reps[which(dfTabu4x$FinalExcess_HindHe == 0)] == 0) # 56% corrected in one round
