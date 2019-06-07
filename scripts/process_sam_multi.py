@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # Process a SAM file of alignment of M. sacchariflorus tags to the M. sinensis
 # reference.  Output tags that align once, and tags that align twice.  Include
 # NM, the number of mutational steps from the reference for each alignment
@@ -6,8 +8,28 @@
 
 import csv
 import re
+import argparse
 
-mysam = "D:/TASSELGBS_Msa/190517aligned_tags_multi.sam"
+parser = argparse.ArgumentParser(description =
+'''Process a SAM file reporting multiple alignments, and output one or more CSV
+files that list tag sequences organized by sets of aligment locations.  A
+TagTaxaDist file output by TASSEL is also processed to extract read depth for
+the same tags.''')
+parser.add_argument("sam", nargs = 1, help = "Path to SAM file.")
+parser.add_argument("ttd", nargs = 1, help = "Path to TagTaxaDist file.")
+parser.add_argument("out", nargs = 1, help = "Base file name for output.")
+parser.add_argument("--subgenomes", "-g", nargs = 1, type = int, default = 2,
+                    help = "Number of subgenomes, i.e. maximum number of alignments expected per tag.")
+parser.add_argument("--chunks", "-c", nargs = 1, type = int, default = 1,
+                    help = "Number of files to split the output into.")
+args = parser.parse_args()
+mysam = args.sam
+myttd = args.ttd
+outbase = args.out
+maxalign = args.subgenomes
+nchunks = args.chunks
+
+#mysam = "D:/TASSELGBS_Msa/190517aligned_tags_multi.sam"
 #maxalign = 2 # maximum number of alignments allowed per tag
 onealign_file = "marker_CSV/190517onealign.csv"
 twoalign_file = "marker_CSV/190517twoalign.csv"
@@ -27,7 +49,7 @@ with open(mysam, mode = "r") as samcon:
     if line[0] == "@": # header lines
       continue
     row = line.split()
-    
+
     flag = int(row[1])
     if flag & 4 == 4: # no alignment
         continue
