@@ -22,12 +22,16 @@ parser.add_argument("--subgenomes", "-g", nargs = 1, type = int, default = 2,
                     help = "Number of subgenomes, i.e. maximum number of alignments expected per tag.")
 parser.add_argument("--chunks", "-c", nargs = 1, type = int, default = 1,
                     help = "Number of files to split the output into.")
+parser.add_argument("--min_ind_with_reads", "-m", nargs = 1, type = int,
+                    default = 100,
+                    help = "Minimum number of samples with sequencing reads needed to retain a tag set.")
 args = parser.parse_args()
 mysam = args.sam
 myttd = args.ttd
 outbase = args.out
 maxalign = args.subgenomes
 nchunks = args.chunks
+min_ind_with_reads = args.min_ind_with_reads
 
 #mysam = "D:/TASSELGBS_Msa/190517aligned_tags_multi.sam"
 #maxalign = 2 # maximum number of alignments allowed per tag
