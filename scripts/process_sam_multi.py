@@ -9,6 +9,7 @@
 import csv
 import re
 import argparse
+import bisect
 
 parser = argparse.ArgumentParser(description =
 '''Process a SAM file reporting multiple alignments, and output one or more CSV
@@ -103,6 +104,73 @@ print("{} tags aligning".format(count))
 
 # filter to polymorphic sites
 aligndict = {k:v for k, v in aligndict.items() if len(v) > 1}
+
+## Part two: reading TagTaxaDist, filtering, and export
+
+def extractTTD(tags, ttdfile):
+  "Extract a given set of tags from the TTD file"
+  # set up output matrix for TagTaxaDist
+  ttd_mat = [[tag] for tag in tags]
+  # sort tags for binary search
+  sorted_tags, tagindex = zip(*sorted(zip(tags, range(len(tags)))))
+  with open(ttdfile, mode = 'r') as mycon:
+    header = next(mycon).split()[1:]
+    for line in mycon:
+      row = line.split()
+      tag = row[0]
+      ti = bisect.bisect(sorted_tags, tag)
+      if sorted_tags[ti] != tag:
+        continue # skip if this is not a tag we wanted to keep
+      ti2 = tagindex[ti]
+      ttd_mat[ti2].extend([int(d) for d in row[1:]])
+  return header, ttd_mat
+
+def keepMarker(depths, min_ind_with_reads):
+  "Determine whether to keep a marker, based on missing data rate."
+  nind = len(depths[0])
+  ind_with_reads = [any([d[i] > 0 for d in depths]) for i in range(nind)]
+  return sum(ind_with_reads) >= min_ind_with_reads
+
+# divide into chunks and process TTD
+print("Sorting alignment locations and processing TagTaxaDist")
+all_markers = sorted(aligndict.keys())
+m_per_chunk = len(all_markers) % nchunks
+for chnk in range(nchunks):
+  endm = len(these_markers) if chnk == nchunks - 1 else (chnk + 1) * m_per_chunk
+  these_markers = all_markers[chnk * m_per_chunk : endm]
+  nm = len(these_markers)
+  tag_table = [] # to hold tag info in spreadsheet-like format
+  # to index rows that correspond to given markers, same order as these_markers
+  table_row_per_marker = [[-1] for i in range(len(these_markers))]
+  curr_row = 0
+  # loop to build table of tag info
+  for mi in range(nm):
+    m = these_markers[mi]
+    # pad out marker names to maximum
+    npad = maxalign - len(m)
+    m_exp = list(m) + ['' for i in range(npad)]
+    # get tags and NM
+    m_tags = [tup[0] for tup in aligndict[m]]
+    m_NM = [list(tup[1]) + ['' for i in range(npad)] for tup in aligndict[m]]
+    nt = len(m_tags) # number of tags for this marker
+    assert len(m_NM) == nt
+    # add to table
+    tag_table.extend([m_exp + m_tags[i] + m_NM[i] for i in range(nt)])
+    table_row_per_marker[mi] = range(curr_row, curr_row + nt)
+    curr_row += nt
+  # extract all tag sequences
+  these_tags = [tt[maxalign] for tt in tag_table]
+  # extract read depth for these tags
+  ttdheader, this_ttd = extractTTD(these_tags, myttd)
+  # determine which markers (rows) to keep
+  markers_kept = [keepMarker([this_ttd[ti] for ti in table_row_per_marker[mi]],
+                             min_ind_with_reads) for mi in range(nm)]
+  rows_kept = [ti for ti in table_row_per_marker[mi] for mi in range(nm) \
+               if markers_kept[mi]]
+  # subset tag table and depth table
+  tag_table = [tag_table[ti] for ti in rows_kept]
+  this_ttd = [this_ttd[ti] for ti in rows_kept]
+  # export to files
 
 # write to files
 # with open(onealign_file, mode = "w", newline = '') as outcon:
