@@ -34,20 +34,22 @@ nchunks = args.chunks
 min_ind_with_reads = args.min_ind_with_reads
 
 #mysam = "D:/TASSELGBS_Msa/190517aligned_tags_multi.sam"
-#maxalign = 2 # maximum number of alignments allowed per tag
-onealign_file = "marker_CSV/190517onealign.csv"
-twoalign_file = "marker_CSV/190517twoalign.csv"
-
-# dictionaries to store tags aligning once and twice
-onealign = dict()
-twoalign = dict()
-count_one = 0
-count_two = 0
+# dictionary to store alignments
+aligndict = dict()
+count = 0
 
 # lists to store marker data for the current tag
 these_mnames = [] # marker names
 these_NM = [] # number of mutational steps between tag and reference
 
+# subroutine for updating the alignment dictionary
+def update_aligndict(these_mnames, these_NM, lasttagseq):
+  these_mnames, these_NM = zip(*sorted(zip(these_mnames, these_NM)))
+  if these_mnames not in aligndict.keys():
+    aligndict[these_mnames] = []
+  aligndict[these_mnames].append((lasttagseq, these_NM))
+
+# read the sam file and process to aligndict
 with open(mysam, mode = "r") as samcon:
   for line in samcon:
     if line[0] == "@": # header lines
@@ -82,64 +84,35 @@ with open(mysam, mode = "r") as samcon:
       these_mnames.append(mname)
       these_NM.append(NM)
     else: # start a new tag
-      # put the last tag into single alignment dict if applicable
-      if(len(these_mnames) == 1):
-        mname_out = these_mnames[0]
-        if mname_out not in onealign.keys():
-          onealign[mname_out] = []
-        onealign[mname_out].append((lasttagseq, these_NM[0]))
-        count_one += 1
-        if count_one % 5000 == 0:
-          print("{} tags aligning once".format(count_one))
-        # if count_one == 5000:
-        #   break ### temporary for testing
-      # put the last tag into double alignment dict if applicable
-      if(len(these_mnames) == 2):
-        these_mnames, these_NM = zip(*sorted(zip(these_mnames, these_NM)))
-        if these_mnames not in twoalign.keys():
-          twoalign[these_mnames] = []
-        twoalign[these_mnames].append((lasttagseq, these_NM))
-        count_two += 1
-        if count_two % 5000 == 0:
-          print("{} tags aligning twice".format(count_two))
+      # put the last tag into alignment dict if applicable
+      if(len(these_mnames) <= maxalign):
+        update_aligndict(these_mnames, these_NM, lasttagseq)
+        count += 1
+        if count % 5000 == 0:
+          print("{} tags aligning".format(count))
       # reset variables for new tag
       lasttagseq = tagseq
       these_mnames = [mname]
       these_NM = [NM]
 
 # write the last marker to dict if necessary
-# put the last tag into single alignment dict if applicable
-if(len(these_mnames) == 1):
-  mname_out = these_mnames[0]
-  if mname_out not in onealign.keys():
-    onealign[mname_out] = []
-  onealign[mname_out].append((lasttagseq, these_NM[0]))
-  count_one += 1
-  if count_one % 500 == 0:
-    print("{} tags aligning once".format(count_one))
-# put the last tag into double alignment dict if applicable
-if(len(these_mnames) == 2):
-  these_mnames, these_NM = zip(*sorted(zip(these_mnames, these_NM)))
-  if these_mnames not in twoalign.keys():
-    twoalign[these_mnames] = []
-  twoalign[these_mnames].append((lasttagseq, these_NM))
-  count_two += 1
-  if count_two % 500 == 0:
-    print("{} tags aligning twice".format(count_two))
+if(len(these_mnames) <= maxalign):
+  update_aligndict(these_mnames, these_NM, lasttagseq)
+  count += 1
+print("{} tags aligning".format(count))
 
 # filter to polymorphic sites
-onealign = {k:v for k, v in onealign.items() if len(v) > 1}
-twoalign = {k:v for k, v in twoalign.items() if len(v) > 1}
+aligndict = {k:v for k, v in aligndict.items() if len(v) > 1}
 
 # write to files
-with open(onealign_file, mode = "w", newline = '') as outcon:
-  mywriter = csv.writer(outcon)
-  for mrkr in sorted(onealign.keys()):
-    for tagtup in onealign[mrkr]:
-      mywriter.writerow([mrkr] + list(tagtup))
-
-with open(twoalign_file, mode = "w", newline = '') as outcon:
-  mywriter = csv.writer(outcon)
-  for mrkrs in sorted(twoalign.keys()):
-    for tagtup in twoalign[mrkrs]:
-      mywriter.writerow(list(mrkrs) + [tagtup[0]] + list(tagtup[1]))
+# with open(onealign_file, mode = "w", newline = '') as outcon:
+#   mywriter = csv.writer(outcon)
+#   for mrkr in sorted(onealign.keys()):
+#     for tagtup in onealign[mrkr]:
+#       mywriter.writerow([mrkr] + list(tagtup))
+#
+# with open(twoalign_file, mode = "w", newline = '') as outcon:
+#   mywriter = csv.writer(outcon)
+#   for mrkrs in sorted(twoalign.keys()):
+#     for tagtup in twoalign[mrkrs]:
+#       mywriter.writerow(list(mrkrs) + [tagtup[0]] + list(tagtup[1]))
