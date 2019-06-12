@@ -111,15 +111,16 @@ def extractTTD(tags, ttdfile):
   "Extract a given set of tags from the TTD file"
   # set up output matrix for TagTaxaDist
   ttd_mat = [[tag] for tag in tags]
+  ntags = len(tags) # number of tags
   # sort tags for binary search
-  sorted_tags, tagindex = zip(*sorted(zip(tags, range(len(tags)))))
+  sorted_tags, tagindex = zip(*sorted(zip(tags, range(ntags))))
   with open(ttdfile, mode = 'r') as mycon:
     header = next(mycon).split()[1:]
     for line in mycon:
       row = line.split()
       tag = row[0]
-      ti = bisect.bisect(sorted_tags, tag)
-      if sorted_tags[ti] != tag:
+      ti = bisect.bisect_left(sorted_tags, tag)
+      if ti == ntags or sorted_tags[ti] != tag:
         continue # skip if this is not a tag we wanted to keep
       ti2 = tagindex[ti]
       ttd_mat[ti2].extend([int(d) for d in row[1:]])
