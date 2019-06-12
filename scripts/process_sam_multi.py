@@ -26,6 +26,8 @@ parser.add_argument("--chunks", "-c", nargs = 1, type = int, default = 1,
 parser.add_argument("--min_ind_with_reads", "-m", nargs = 1, type = int,
                     default = 100,
                     help = "Minimum number of samples with sequencing reads needed to retain a tag set.")
+parser.add_argument("--samples", "-s", nargs = 1, default = "",
+                    help = "File listing names of samples to retain (one name per line).")
 args = parser.parse_args()
 mysam = args.sam
 myttd = args.ttd
@@ -33,6 +35,21 @@ outbase = args.out
 maxalign = args.subgenomes
 nchunks = args.chunks
 min_ind_with_reads = args.min_ind_with_reads
+samples_file = args.samples
+
+# Read in samples to keep, if provided, and confirm that they are
+# present in TTD file.
+with open(myttd, mode = 'r') as mycon:
+  ttd_samples = next(mycon).split()[1:]
+if samples_file == "":
+  samples = ttd_samples
+  sample_index = [i for i in range(len(samples))]
+else:
+  with open(samples_file, mode = 'r') as mycon:
+    samples = mycon.read().splitlines()
+  if any([s not in ttd_samples for s in samples]):
+    raise Exception("Samples from {} not found in TagTaxaDist".format(samples_file))
+  sample_index = [ttd_samples.index(s) for s in samples]
 
 #mysam = "D:/TASSELGBS_Msa/190517aligned_tags_multi.sam"
 # dictionary to store alignments
@@ -107,7 +124,7 @@ aligndict = {k:v for k, v in aligndict.items() if len(v) > 1}
 
 ## Part two: reading TagTaxaDist, filtering, and export
 
-def extractTTD(tags, ttdfile):
+def extractTTD(tags, ttdfile, sample_index):
   "Extract a given set of tags from the TTD file"
   # set up output matrix for TagTaxaDist
   ttd_mat = [[tag] for tag in tags]
@@ -116,6 +133,7 @@ def extractTTD(tags, ttdfile):
   sorted_tags, tagindex = zip(*sorted(zip(tags, range(ntags))))
   with open(ttdfile, mode = 'r') as mycon:
     header = next(mycon).split()[1:]
+    header = [header[i] for i in sample_index]
     for line in mycon:
       row = line.split()
       tag = row[0]
@@ -123,7 +141,7 @@ def extractTTD(tags, ttdfile):
       if ti == ntags or sorted_tags[ti] != tag:
         continue # skip if this is not a tag we wanted to keep
       ti2 = tagindex[ti]
-      ttd_mat[ti2].extend([int(d) for d in row[1:]])
+      ttd_mat[ti2].extend([int(row[i+1]) for i in sample_index])
   if any([len(ttd) == 1 for ttd in ttd_mat]):
     raise Exception("Tag not found in TagTaxaDist file. Do SAM and TagTaxaDist match?")
   return header, ttd_mat
@@ -164,7 +182,7 @@ for chnk in range(nchunks):
   # extract all tag sequences
   these_tags = [tt[maxalign] for tt in tag_table]
   # extract read depth for these tags
-  ttdheader, this_ttd = extractTTD(these_tags, myttd)
+  ttdheader, this_ttd = extractTTD(these_tags, myttd, sample_index)
   # determine which markers (rows) to keep
   markers_kept = [keepMarker([this_ttd[ti] for ti in table_row_per_marker[mi]],
                              min_ind_with_reads) for mi in range(nm)]
