@@ -124,6 +124,8 @@ def extractTTD(tags, ttdfile):
         continue # skip if this is not a tag we wanted to keep
       ti2 = tagindex[ti]
       ttd_mat[ti2].extend([int(d) for d in row[1:]])
+  if any([len(ttd) == 1 for ttd in ttd_mat]):
+    raise Exception("Tag not found in TagTaxaDist file. Do SAM and TagTaxaDist match?")
   return header, ttd_mat
 
 def keepMarker(depths, min_ind_with_reads):
