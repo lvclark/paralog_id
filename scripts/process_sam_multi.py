@@ -152,13 +152,41 @@ def keepMarker(depths, min_ind_with_reads):
   ind_with_reads = [any([d[i] > 0 for d in depths]) for i in range(nind)]
   return sum(ind_with_reads) >= min_ind_with_reads
 
+def makeChunks(all_markers, nchunks):
+  '''Get indices for starting and ending points for chunks, putting the
+  breakpoints between chromosomes if possible.'''
+  # chromosome name for first alignment
+  all_chrom = [m[0][:m[0].find('-')] for m in all_markers]
+  m_per_chunk = len(all_markers) // nchunks
+  chunk_ranges = [[0,0] for i in range(nchunks)]
+  for chnk in range(nchunks):
+    if chnk > 0:
+      # next chunk starts where last one ended
+      chunk_ranges[chnk][0] = chunk_ranges[chnk - 1][1]
+    if chnk == nchunks - 1:
+      # end of all markers
+      chunk_ranges[chnk][1] = len(all_markers)
+    else:
+      # find a good breakpoint
+      endm = chunk_ranges[chnk][0] + m_per_chunk
+      thischr = all_chrom[endm - 1]
+      for i in range(m_per_chunk // 2):
+        if all_chrom[endm - 1 - i] != thischr:
+          endm = endm - i
+          break
+        if all_chrom[endm + i] != thischr:
+          endm = endm + i
+          break
+      chunk_ranges[chnk][1] = endm
+  return chunk_ranges
+
 # divide into chunks and process TTD
 print("Sorting alignment locations and processing TagTaxaDist")
 all_markers = sorted(aligndict.keys())
-m_per_chunk = len(all_markers) % nchunks
+# set up markers for each chunk
+chunk_ranges = makeChunks(all_markers, nchunks)
 for chnk in range(nchunks):
-  endm = len(these_markers) if chnk == nchunks - 1 else (chnk + 1) * m_per_chunk
-  these_markers = all_markers[chnk * m_per_chunk : endm]
+  these_markers = all_markers[chunk_ranges[chnk][0]:chunk_ranges[chnk][1]]
   nm = len(these_markers)
   tag_table = [] # to hold tag info in spreadsheet-like format
   # to index rows that correspond to given markers, same order as these_markers
