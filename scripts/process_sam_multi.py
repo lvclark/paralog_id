@@ -57,6 +57,7 @@ count = 0
 # lists to store marker data for the current tag
 these_mnames = [] # marker names
 these_NM = [] # number of mutational steps between tag and reference
+lasttagseq = "" # tag sequence
 
 # subroutine for updating the alignment dictionary
 def update_aligndict(these_mnames, these_NM, lasttagseq):
@@ -95,6 +96,10 @@ with open(mysam, mode = "r") as samcon:
     else:
       assert row[16].startswith("NM:i:")
       NM = int(row[16][5:])
+    if lasttagseq == "": # first sequence
+      lasttagseq = tagseq
+      these_mnames = [mname]
+      these_NM = [NM]
 
     secondary = flag & 256 == 256
     if secondary: # add alignments to the list
