@@ -152,8 +152,8 @@ def extractTTD(tags, ttdfile, sample_index):
 
 def keepMarker(depths, min_ind_with_reads):
   "Determine whether to keep a marker, based on missing data rate."
-  nind = len(depths[0])
-  ind_with_reads = [any([d[i] > 0 for d in depths]) for i in range(nind)]
+  nind = len(depths[0]) - 1 # first item is tag sequence
+  ind_with_reads = [any([d[i + 1] > 0 for d in depths]) for i in range(nind)]
   return sum(ind_with_reads) >= min_ind_with_reads
 
 def makeChunks(all_markers, nchunks):
@@ -216,7 +216,7 @@ for chnk in range(nchunks):
     nt = len(m_tags) # number of tags for this marker
     assert len(m_NM) == nt
     # add to table
-    tag_table.extend([m_exp + m_tags[i] + m_NM[i] for i in range(nt)])
+    tag_table.extend([m_exp + [m_tags[i]] + m_NM[i] for i in range(nt)])
     table_row_per_marker[mi] = range(curr_row, curr_row + nt)
     curr_row += nt
   # extract all tag sequences
@@ -226,7 +226,7 @@ for chnk in range(nchunks):
   # determine which markers (rows) to keep
   markers_kept = [keepMarker([this_ttd[ti] for ti in table_row_per_marker[mi]],
                              min_ind_with_reads) for mi in range(nm)]
-  rows_kept = [ti for ti in table_row_per_marker[mi] for mi in range(nm) \
+  rows_kept = [ti for mi in range(nm) for ti in table_row_per_marker[mi] \
                if markers_kept[mi]]
   # subset tag table and depth table
   tag_table = [tag_table[ti] for ti in rows_kept]
