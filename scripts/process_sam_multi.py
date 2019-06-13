@@ -1,11 +1,5 @@
 #!/usr/bin/env python3
 
-# Process a SAM file of alignment of M. sacchariflorus tags to the M. sinensis
-# reference.  Output tags that align once, and tags that align twice.  Include
-# NM, the number of mutational steps from the reference for each alignment
-# location.
-# Bowtie2 was run with -k 8 to generate the SAM file.
-
 import csv
 import re
 import argparse
@@ -15,7 +9,8 @@ parser = argparse.ArgumentParser(description =
 '''Process a SAM file reporting multiple alignments, and output one or more CSV
 files that list tag sequences organized by sets of aligment locations.  A
 TagTaxaDist file output by TASSEL is also processed to extract read depth for
-the same tags.''')
+the same tags.  Filtering by missing data rate is performed.  The output files
+can then be used for sorting tags into isoloci.''')
 parser.add_argument("sam", nargs = 1, help = "Path to SAM file.")
 parser.add_argument("ttd", nargs = 1, help = "Path to TagTaxaDist file.")
 parser.add_argument("out", nargs = 1, help = "Base file name for output.")
