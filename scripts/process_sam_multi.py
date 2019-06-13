@@ -228,16 +228,15 @@ for chnk in range(nchunks):
   tag_table = [tag_table[ti] for ti in rows_kept]
   this_ttd = [this_ttd[ti] for ti in rows_kept]
   # export to files
-
-# write to files
-# with open(onealign_file, mode = "w", newline = '') as outcon:
-#   mywriter = csv.writer(outcon)
-#   for mrkr in sorted(onealign.keys()):
-#     for tagtup in onealign[mrkr]:
-#       mywriter.writerow([mrkr] + list(tagtup))
-#
-# with open(twoalign_file, mode = "w", newline = '') as outcon:
-#   mywriter = csv.writer(outcon)
-#   for mrkrs in sorted(twoalign.keys()):
-#     for tagtup in twoalign[mrkrs]:
-#       mywriter.writerow(list(mrkrs) + [tagtup[0]] + list(tagtup[1]))
+  alignout = "{}_{}_align.csv".format(outbase, chnk + 1)
+  ttdout = "{}_{}_depth.csv".format(outbase, chnk + 1)
+  with open(alignout, mode = 'w', newline = '') as outcon:
+    mywriter = csv.writer(outcon)
+    alignheader = ["Alignment {}".format(i + 1) for i in range(maxalign)] + \
+    ["Tag sequence"] + ["NM {}".format(i + 1) for in in range(maxalign)]
+    mywriter.writerow(alignheader)
+    [mywriter.writerow(tt) for tt in tag_table]
+  with open(ttdout, mode = 'w', newline = '') as outcon:
+    mywriter = csv.writer(outcon)
+    mywriter.writerow(["Tag sequence"] + ttdheader)
+    [mywriter.writerow(tt) for tt in this_ttd]
