@@ -228,7 +228,7 @@ for chnk in range(nchunks):
   with open(alignout, mode = 'w', newline = '') as outcon:
     mywriter = csv.writer(outcon)
     alignheader = ["Alignment {}".format(i + 1) for i in range(maxalign)] + \
-    ["Tag sequence"] + ["NM {}".format(i + 1) for in in range(maxalign)]
+    ["Tag sequence"] + ["NM {}".format(i + 1) for i in range(maxalign)]
     mywriter.writerow(alignheader)
     [mywriter.writerow(tt) for tt in tag_table]
   with open(ttdout, mode = 'w', newline = '') as outcon:
