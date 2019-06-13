@@ -48,7 +48,9 @@ else:
   with open(samples_file, mode = 'r') as mycon:
     samples = mycon.read().splitlines()
   if any([s not in ttd_samples for s in samples]):
-    raise Exception("Samples from {} not found in TagTaxaDist".format(samples_file))
+    print("Names of samples not found in TagTaxaDist:")
+    [print(s) for s in samples if s not in ttd_samples]
+    raise Exception("Samples from {} not found in TagTaxaDist.".format(samples_file))
   sample_index = [ttd_samples.index(s) for s in samples]
 
 #mysam = "D:/TASSELGBS_Msa/190517aligned_tags_multi.sam"
