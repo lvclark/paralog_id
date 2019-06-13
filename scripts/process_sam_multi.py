@@ -66,6 +66,7 @@ def update_aligndict(these_mnames, these_NM, lasttagseq):
   aligndict[these_mnames].append((lasttagseq, these_NM))
 
 # read the sam file and process to aligndict
+print("Processing SAM...")
 with open(mysam, mode = "r") as samcon:
   for line in samcon:
     if line[0] == "@": # header lines
@@ -104,7 +105,7 @@ with open(mysam, mode = "r") as samcon:
       if(len(these_mnames) <= maxalign):
         update_aligndict(these_mnames, these_NM, lasttagseq)
         count += 1
-        if count % 5000 == 0:
+        if count % 10000 == 0:
           print("{} tags aligning".format(count))
       # reset variables for new tag
       lasttagseq = tagseq
@@ -191,6 +192,8 @@ all_markers = sorted(aligndict.keys())
 chunk_ranges = makeChunks(all_markers, nchunks)
 for chnk in range(nchunks):
   these_markers = all_markers[chunk_ranges[chnk][0]:chunk_ranges[chnk][1]]
+  print("Chunk {}".format(chnk + 1))
+  print("{} to {}".format(these_markers[0], these_markers[-1]))
   nm = len(these_markers)
   tag_table = [] # to hold tag info in spreadsheet-like format
   # to index rows that correspond to given markers, same order as these_markers
