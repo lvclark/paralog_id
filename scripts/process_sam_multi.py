@@ -10,18 +10,19 @@ parser = argparse.ArgumentParser(description =
 files that list tag sequences organized by sets of aligment locations.  A
 TagTaxaDist file output by TASSEL is also processed to extract read depth for
 the same tags.  Filtering by missing data rate is performed.  The output files
-can then be used for sorting tags into isoloci.''')
-parser.add_argument("sam", nargs = 1, help = "Path to SAM file.")
-parser.add_argument("ttd", nargs = 1, help = "Path to TagTaxaDist file.")
-parser.add_argument("out", nargs = 1, help = "Base file name for output.")
-parser.add_argument("--subgenomes", "-g", nargs = 1, type = int, default = 2,
+can then be used for sorting tags into isoloci.''',
+formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser.add_argument("sam", nargs = '?', help = "Path to SAM file.")
+parser.add_argument("ttd", nargs = '?', help = "Path to TagTaxaDist file.")
+parser.add_argument("out", nargs = '?', help = "Base file name for output.")
+parser.add_argument("--subgenomes", "-g", nargs = '?', type = int, default = 2,
                     help = "Number of subgenomes, i.e. maximum number of alignments expected per tag.")
-parser.add_argument("--chunks", "-c", nargs = 1, type = int, default = 1,
+parser.add_argument("--chunks", "-c", nargs = '?', type = int, default = 1,
                     help = "Number of files to split the output into.")
-parser.add_argument("--min_ind_with_reads", "-m", nargs = 1, type = int,
+parser.add_argument("--min_ind_with_reads", "-m", nargs = '?', type = int,
                     default = 100,
                     help = "Minimum number of samples with sequencing reads needed to retain a tag set.")
-parser.add_argument("--samples", "-s", nargs = 1, default = "",
+parser.add_argument("--samples", "-s", nargs = '?', default = "",
                     help = "File listing names of samples to retain (one name per line).")
 args = parser.parse_args()
 mysam = args.sam
