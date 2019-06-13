@@ -4,9 +4,31 @@ import csv
 import math
 
 ## Script to process tag depth and sort haplotypes into isoloci ##
+parser = argparse.ArgumentParser(description =
+'''Process the output of one chunk from process_sam_multi.py.  Estimate
+Hind/He both to filter markers and to determine which groups of tags could be
+adjusted in terms of assignment of tags to isoloci.  For groups of tags needing
+adjustment, analyze allele correlations to identify groups that putatively
+belong to the same isolocus, then perform tabu search to find groups of tags
+within Hind/He expections that minimize number of mutations from the reference
+sequence.  Output read depth and assignment of alleles to loci, for import by
+polyRAD.''',
+formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser.add_argument("alignfile", nargs = '?',
+                    help = "Path to alignment file output by process_sam_multi.py.")
+parser.add_argument("depthfile", nargs = '?',
+                    help = "Path to read depth file output by process_sam_multi.py.")
+parser.add_argument("out", nargs = '?',
+                    help = "Base file name for output.") # tack on number from input files if present
+parser.add_argument("--ploidy", "-p", nargs = '?', type = int, default = 2,
+                    help = "Expected ploidy after splitting isoloci.")
+parser.add_argument("--self", "-s", nargs = '?', type = float, default = 0.0,
+                    help = "Self-fertilization rate, ranging from 0 to 1.")
+parser.add_argument("--logfile", "-l", nargs = '?', defaults = "",
+                    help = "Optional path to file where log should be written.")
 
 # variables to set up as command line args later
-maxisoloci = 2  # how many subgenomes are there
+maxisoloci = 2  # how many subgenomes are there ### extract from alignment file
 ploidy = 4      # expected ploidy after sorting
 alignfile = "../marker_CSV/190525twoalign_Chr1Chr2.csv" # alignment locations
 depthfile = "../marker_CSV/190523tetraploid_Chr1Chr2.csv"  # read depth
@@ -50,7 +72,10 @@ def ProcessRowGroup(alignrows, depthrows, nisoloci, thresh, expHindHe, logcon):
 try:
   depthcon = open(depthfile, newline = '', mode = 'r')
   aligncon = open(alignfile, newline = '', mode = 'r')
-  logcon = open(logfile, mode = 'w')
+  if logfile = "":
+    logcon = None
+  else:
+    logcon = open(logfile, mode = 'w')
   depthreader = csv.reader(depthcon)
   alignreader = csv.reader(aligncon)
 
