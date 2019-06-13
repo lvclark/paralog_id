@@ -165,18 +165,24 @@ def makeChunks(all_markers, nchunks):
     if chnk > 0:
       # next chunk starts where last one ended
       chunk_ranges[chnk][0] = chunk_ranges[chnk - 1][1]
+      # cut chunks short if we have reached end
+      if chunk_ranges[chnk][0] == len(all_markers):
+        chunk_ranges = chunk_ranges[:chnk]
+        break
     if chnk == nchunks - 1:
       # end of all markers
       chunk_ranges[chnk][1] = len(all_markers)
     else:
       # find a good breakpoint
       endm = chunk_ranges[chnk][0] + m_per_chunk
+      if endm > len(all_markers): # don't go past end
+        endm = len(all_markers)
       thischr = all_chrom[endm - 1]
-      for i in range(m_per_chunk // 2):
+      for i in range(m_per_chunk // 2): # search to left and right
         if all_chrom[endm - 1 - i] != thischr:
           endm = endm - i
           break
-        if all_chrom[endm + i] != thischr:
+        if endm + i < len(all_markers) and all_chrom[endm + i] != thischr:
           endm = endm + i
           break
       chunk_ranges[chnk][1] = endm
