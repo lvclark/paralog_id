@@ -27,12 +27,13 @@ parser.add_argument("--inbreeding", "-f", nargs = '?', type = float, default = 0
 parser.add_argument("--logfile", "-l", nargs = '?', defaults = "",
                     help = "Optional path to file where log should be written.")
 
-# variables to set up as command line args later
-maxisoloci = 2  # how many subgenomes are there ### extract from alignment file
-ploidy = 4      # expected ploidy after sorting
-alignfile = "../marker_CSV/190525twoalign_Chr1Chr2.csv" # alignment locations
-depthfile = "../marker_CSV/190523tetraploid_Chr1Chr2.csv"  # read depth
-logfile = "../log/190607tabu_log_long_tetra.txt"
+args = parser.args()
+alignfile = args.alignfile
+depthfile = args.depthfile
+outbase = args.out
+ploidy = args.ploidy
+inbreeding = args.inbreeding
+logfile = args.logfile
 
 # maximum tolerable Hind/He: halfway between this and the next ploidy, on a log scale
 p2 = ploidy * 2
@@ -79,9 +80,13 @@ try:
   depthreader = csv.reader(depthcon)
   alignreader = csv.reader(aligncon)
 
-  # header info from tag file
-  header = next(depthreader)
-  samples = header[1:]
+  # header info from files
+  depthheader = next(depthreader)
+  samples = depthheader[1:]
+  alignheader = next(alignreader)
+  maxisoloci = sum([h.startswith("Alignment") for h in alignheader])
+  if maxisoloci == 0:
+    raise Exception("Columns starting with 'Alignment' not found in " + alignfile)
 
   currdepthrows = [next(depthreader)]
   curralignrows = [next(alignreader)]
