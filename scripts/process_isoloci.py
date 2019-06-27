@@ -62,18 +62,28 @@ def ProcessRowGroup(alignrows, depthrows, nisoloci, thresh, expHindHe,
       logcon.write("Insufficient read depth.\n")
     return None
   depths, alignrows = zip(*packed)
-  # check if the marker should be split
-  hindheUnsplit = isoloci_fun.HindHe(depths)
-  logcon.write("Hind/He without splitting: {}\n".format(hindheUnsplit))
-  if hindheUnsplit <= thresh:
+
+  # detect if fewer alignments than max isoloci
+  nalign = sum([a != '' for a in alignrows[0][:nisoloci]])
+  if nalign == 1: # only one isolocus
+    hapAssign = [list(range(len(depths)))]
+  else:
+    # number of mutations from reference locations
+    NM = [[int(row[nisoloci + 1 + i]) for row in alignrows] for i in range(nalign)]
+    # workhorse function for making assignments
+    hapAssign = isoloci_fun.TabuLocus(depths, NM, expHindHe, logcon = logcon)
+  hindhe = isoloci_fun.HindHeByIsolocus(depths, hapAssign)
+
+  # filter down to isoloci that don't exceed max Hind/He
+  packed2 = [(hapAssign[i], alignrows[0][i]) for i in range(nalign)
+             if hindhe[i] != None and hindhe[i] <= thresh]
+  if len(packed2) == 0: # if no isoloci should be kept
     return None
+  hapAssign, aligns = zip(*packed2)
+  # write to file
+  for i in range(len(aligns)):
+    [outwriter.writerow([aligns[i]] + depthrows[j]) for j in hapAssign[i]]
 
-  # number of mutations from reference locations
-  NM = [[int(row[nisoloci + 1 + i]) for row in alignrows] for i in range(nisoloci)]
-  #seqlen = max([len(row[0]) for row in depthrows]) # maximum tag length
-
-  #hapAssign = isoloci_fun.AnnealLocus(depths, NM, seqlen, expHindHe, T0 = 0.10, rho = 0.95, logcon = logcon)
-  hapAssign = isoloci_fun.TabuLocus(depths, NM, expHindHe, logcon = logcon)
   return None
 
 # files need to already have tags in the same order, grouped by alignment location
