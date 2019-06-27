@@ -2,6 +2,7 @@
 import isoloci_fun
 import csv
 import math
+import argparse
 
 ## Script to process tag depth and sort haplotypes into isoloci ##
 parser = argparse.ArgumentParser(description =
@@ -18,29 +19,34 @@ parser.add_argument("alignfile", nargs = '?',
                     help = "Path to alignment file output by process_sam_multi.py.")
 parser.add_argument("depthfile", nargs = '?',
                     help = "Path to read depth file output by process_sam_multi.py.")
-parser.add_argument("out", nargs = '?',
-                    help = "Base file name for output.") # tack on number from input files if present
+parser.add_argument("--out", "-o", nargs = '?', default = "",
+                    help = "File name for output.  Generated from input files if not provided.")
 parser.add_argument("--ploidy", "-p", nargs = '?', type = int, default = 2,
                     help = "Expected ploidy after splitting isoloci.")
 parser.add_argument("--inbreeding", "-f", nargs = '?', type = float, default = 0.0,
                     help = "Inbreeding coefficient, ranging from 0 to 1.")
-parser.add_argument("--logfile", "-l", nargs = '?', defaults = "",
+parser.add_argument("--logfile", "-l", nargs = '?', default = "",
                     help = "Optional path to file where log should be written.")
 
-args = parser.args()
+args = parser.parse_args()
 alignfile = args.alignfile
 depthfile = args.depthfile
-outbase = args.out
+outfile = args.out
 ploidy = args.ploidy
 inbreeding = args.inbreeding
 logfile = args.logfile
+
+# generate output file name if not provided
+if outfile == "":
+  outfile = alignfile.replace("align", "sorted")
 
 # maximum tolerable Hind/He: halfway between this and the next ploidy, on a log scale
 p2 = ploidy * 2
 maxHindHe = math.exp((math.log((ploidy - 1)/ploidy) + math.log((p2 - 1)/p2) + 2 * math.log(1 - inbreeding))/2)
 expHindHe = (ploidy - 1)/ploidy * (1 - inbreeding)
 
-def ProcessRowGroup(alignrows, depthrows, nisoloci, thresh, expHindHe, logcon):
+def ProcessRowGroup(alignrows, depthrows, nisoloci, thresh, expHindHe,
+                    outwriter, logcon):
   '''Process two matching groups of rows showing alignment and depth for a
   group of tags corresponding to one set of alignment locations.'''
   # write marker being analyzed to log
@@ -73,12 +79,14 @@ def ProcessRowGroup(alignrows, depthrows, nisoloci, thresh, expHindHe, logcon):
 try:
   depthcon = open(depthfile, newline = '', mode = 'r')
   aligncon = open(alignfile, newline = '', mode = 'r')
-  if logfile = "":
+  outcon = open(outfile, newline = '', mode = 'w')
+  if logfile == "":
     logcon = None
   else:
     logcon = open(logfile, mode = 'w')
   depthreader = csv.reader(depthcon)
   alignreader = csv.reader(aligncon)
+  outwriter = csv.writer(outcon)
 
   # header info from files
   depthheader = next(depthreader)
@@ -87,6 +95,8 @@ try:
   maxisoloci = sum([h.startswith("Alignment") for h in alignheader])
   if maxisoloci == 0:
     raise Exception("Columns starting with 'Alignment' not found in " + alignfile)
+  # write header to output
+  outwriter.writerow(["Marker"] + depthheader)
 
   currdepthrows = [next(depthreader)]
   curralignrows = [next(alignreader)]
@@ -102,7 +112,8 @@ try:
       currdepthrows.append(newdepthrow)
       curralignrows.append(newalignrow)
     else: # new alignment; process last one and start new
-      ProcessRowGroup(curralignrows, currdepthrows, maxisoloci, maxHindHe, expHindHe, logcon)
+      ProcessRowGroup(curralignrows, currdepthrows, maxisoloci, maxHindHe,
+                      expHindHe, outwriter, logcon)
       currdepthrows = [newdepthrow]
       curralignrows = [newalignrow]
     rowcount += 1
@@ -110,8 +121,10 @@ try:
     #    break
     if rowcount % 1000 == 0:
       print(rowcount)
-  ProcessRowGroup(curralignrows, currdepthrows, maxisoloci, maxHindHe, expHindHe, logcon)
+  ProcessRowGroup(curralignrows, currdepthrows, maxisoloci, maxHindHe,
+                  expHindHe, outwriter, logcon)
 finally:
   depthcon.close()
   aligncon.close()
   logcon.close()
+  outcon.close()
