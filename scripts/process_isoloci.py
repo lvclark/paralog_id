@@ -50,14 +50,16 @@ def ProcessRowGroup(alignrows, depthrows, nisoloci, thresh, expHindHe,
   '''Process two matching groups of rows showing alignment and depth for a
   group of tags corresponding to one set of alignment locations.'''
   # write marker being analyzed to log
-  logcon.write(" ".join(alignrows[0][:nisoloci]) + "\n")
+  if logcon != None:
+    logcon.write(" ".join(alignrows[0][:nisoloci]) + "\n")
   assert len(depthrows) > 1
 
   depths = [[int(d) for d in row[1:]] for row in depthrows] # integer depths
   # filter out any alleles without depth
   packed = [(dep, ar) for dep, ar in zip(depths, alignrows) if not all([d < 2 for d in dep])]
   if len(packed) < 2:
-    logcon.write("Insufficient read depth.\n")
+    if logcon != None:
+      logcon.write("Insufficient read depth.\n")
     return None
   depths, alignrows = zip(*packed)
   # check if the marker should be split
@@ -126,5 +128,6 @@ try:
 finally:
   depthcon.close()
   aligncon.close()
-  logcon.close()
   outcon.close()
+  if logcon != None:
+    logcon.close()
