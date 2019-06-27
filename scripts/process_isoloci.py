@@ -22,8 +22,8 @@ parser.add_argument("out", nargs = '?',
                     help = "Base file name for output.") # tack on number from input files if present
 parser.add_argument("--ploidy", "-p", nargs = '?', type = int, default = 2,
                     help = "Expected ploidy after splitting isoloci.")
-parser.add_argument("--self", "-s", nargs = '?', type = float, default = 0.0,
-                    help = "Self-fertilization rate, ranging from 0 to 1.")
+parser.add_argument("--inbreeding", "-f", nargs = '?', type = float, default = 0.0,
+                    help = "Inbreeding coefficient, ranging from 0 to 1.")
 parser.add_argument("--logfile", "-l", nargs = '?', defaults = "",
                     help = "Optional path to file where log should be written.")
 
@@ -36,8 +36,8 @@ logfile = "../log/190607tabu_log_long_tetra.txt"
 
 # maximum tolerable Hind/He: halfway between this and the next ploidy, on a log scale
 p2 = ploidy * 2
-maxHindHe = math.exp((math.log((ploidy - 1)/ploidy) + math.log((p2 - 1)/p2))/2)
-expHindHe = (ploidy - 1)/ploidy
+maxHindHe = math.exp((math.log((ploidy - 1)/ploidy) + math.log((p2 - 1)/p2) + 2 * math.log(1 - inbreeding))/2)
+expHindHe = (ploidy - 1)/ploidy * (1 - inbreeding)
 
 def ProcessRowGroup(alignrows, depthrows, nisoloci, thresh, expHindHe, logcon):
   '''Process two matching groups of rows showing alignment and depth for a
