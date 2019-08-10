@@ -3,6 +3,10 @@ from numpy.random import choice
 from scipy.stats import kendalltau
 from copy import deepcopy
 import math
+import sys
+
+if sys.version_info.major < 3:
+    raise Exeption("Python 3 required.")
 
 # functions for sorting out isoloci
 

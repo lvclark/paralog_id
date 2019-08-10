@@ -4,6 +4,10 @@ import csv
 import re
 import argparse
 import bisect
+import sys
+
+if sys.version_info.major < 3:
+    raise Exeption("Python 3 required.")
 
 parser = argparse.ArgumentParser(description =
 '''Process a SAM file reporting multiple alignments, and output one or more CSV
