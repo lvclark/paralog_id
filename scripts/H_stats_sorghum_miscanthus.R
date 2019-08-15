@@ -146,8 +146,11 @@ ggplot(dip_df, aes(x = log(Depth), y = log2(Scaled_ratio))) +
   geom_vline(xintercept = log(5 * nrow(diploid_mat)), col = "green") + # reasonable minimum depth
   facet_wrap(~ Reference)
 
-ggplot(dip_df[dip_df$Depth >= 5 * nrow(diploid_mat),], 
-       aes(x = log2(Scaled_ratio), by = Reference,
+ggplot(dip_df[dip_df$Depth >= 5 * nrow(diploid_mat) & dip_df$Scaled_ratio > 0,], 
+       aes(x = Scaled_ratio, by = Reference,
            color = Reference)) +
-  geom_density() +
-  geom_vline(xintercept = -1)
+  geom_density(lwd = 1) +
+  geom_vline(xintercept = 0.5, lty = 2) +
+  scale_x_continuous(expression(H[ind] / H[E]),
+                   c(0.25, 0.5, 0.75, 1), limits = c(0, 1.5))
+ggsave("hindhegraph_190815.tiff", compression = "lzw")
