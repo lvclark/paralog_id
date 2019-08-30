@@ -1,8 +1,5 @@
 # Thoughts on a general protocol for sorting paralogs
 
-He is now based on depth ratios rather than raw depth, so the Word document should
-be updated.
-
 Each tag is aligned to the reference using Bowtie2, but instead of only returning
 the top hit, two (or more) top hits are returned.  Many paralogs are going to be
 highly similar or indistiguishable between subgenomes, so we need to accept that
