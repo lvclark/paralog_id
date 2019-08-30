@@ -22,7 +22,7 @@ question is omitted from the denominator of the depth ratio of a given allele.
 A p-value threshold is lowered until groups are identified that don't violate
 Hind/HE expectations.
 
-An algorithm like simulated annealing or MCMC is used to shuffle tags between the
+An tabu search is used to shuffle tags between the
 two or more isoloci.  The goal is to minimize Hind/HE for both/all isoloci.
 The chance of moving a tag from one isolocus to another is influenced somewhat
 by similarity to the reference.  After Hind/HE is below the expected value for
@@ -30,13 +30,13 @@ all isoloci, the algorithm tries to find solutions where haplotypes are most
 similar to the reference for their assigned isolocus.  If there were groups
 identified with Kendall's Tau, the algorithm tries to keep them together.
 
-Perhaps this is all done in a Python script before import to polyRAD.  It will
-necessitate looping through loci, which will be slow as molasses in R unless
+This is all done in a Python script before import to polyRAD.  It will
+necessitate looping through loci, which would be slow as molasses in R unless
 Rcpp is used very heavily.
 
 If one tag belongs to multiple isoloci, either the whole marker has to be
 discarded, or polyRAD needs better models for dealing with allopolyploidy.
 This will certainly happen, so there should be mechanisms in place for
-recognizing it.
+recognizing it.  (Not implemented yet.)
 
 Will need to cite polyDog (doi: 10.1186/1471-2156-16-S2-S4)
