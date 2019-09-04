@@ -1,0 +1,108 @@
+---
+title: "Using Hind/He to identify paralogs"
+author: "Lindsay Clark"
+date: "September 4, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Dataset and code for this example
+
+We'll load the example *Miscanthus sinensis* diversity panel data that comes
+with polyRAD.
+
+```{r message = FALSE}
+library(polyRAD)
+myfile <- system.file("extdata", "Msi01genes.vcf", package = "polyRAD")
+myRAD <- myRAD <- VCF2RADdata(myfile, possiblePloidies = list(2))
+```
+
+We'll also load the R function for estimating Hind/He.  This is a wrapper for
+an Rcpp function implemented in `simpson.cpp`.  I'll plan to add this to polyRAD
+once I have a preprint up for the methodology.
+
+```{r}
+source("hindhe.R")
+```
+
+## Estimating Hind/He
+
+We will now run the function on the dataset.  By default it will ignore any
+blank taxa.
+
+```{r}
+myHindHe <- HindHe(myRAD)
+```
+
+## Interpreting the results
+
+We can look at the distribution of values.
+
+```{r}
+hist(myHindHe)
+abline(v = 0.5, col = "red")
+```
+
+With no inbreeding or population structure, the expected value is 
+(ploidy - 1)/ploidy, which in this case is 0.5 for a diploid.
+(The expected value for an autotetraploid is 0.75).  Inbreeding and
+population structure lower this expected value slightly.  With a larger
+set of markers, you can expect to see more well defined peaks, giving you a
+better estimate of what value is reasonable and what markers should be
+filtered out.
+
+Let's look at individual markers.
+
+```{r}
+myHindHe
+```
+
+S01_150928 has a value close to what was expected.  Let's look at read depth
+distribution for that marker.
+
+```{r}
+myRAD$alleleDepth[1:50,myRAD$alleles2loc == match("S01_150928", GetLoci(myRAD))]
+```
+
+There's a little bit of contamination, but generally when we see an apparently
+heterozygous individual, the read depth ratios are fairly even and only belong
+to two alleles.
+
+S01_535898 has a value much higher than expected, and S01_535839 much lower than
+expected.  In both of these cases, the read depth may simply be too low to get
+an accurate estimate.
+
+```{r}
+myRAD$alleleDepth[1:50,myRAD$alleles2loc == match("S01_535898", GetLoci(myRAD))]
+```
+
+```{r}
+myRAD$alleleDepth[1:50,myRAD$alleles2loc == match("S01_535839", GetLoci(myRAD))]
+```
+
+## A simulated example
+
+To artificially create some paralogous loci, let's scramble the assignment of
+alleles to loci.
+
+```{r}
+set.seed(904) # to keep the same randomization.
+myRAD2 <- myRAD
+myRAD2$alleles2loc <- sample(myRAD2$alleles2loc)
+myHindHe2 <- HindHe(myRAD2)
+hist(myHindHe2, breaks = 10)
+```
+
+Now let's look at the marker with the highest value.
+
+```{r}
+highmarker <- which(myHindHe2 > 0.8)
+hmdepth <- myRAD2$alleleDepth[,myRAD2$alleles2loc == highmarker]
+hmdepth[rowSums(hmdepth) > 0,][1:50,]
+```
+
+Here we see an overabundance of apparent heterozygotes, and they don't follow
+expected read depth ratios very well.
