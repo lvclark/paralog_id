@@ -18,7 +18,8 @@ double GiniSimpson(NumericVector counts) {
 // Function to get Hind/He on allelic read depth as encoded in polyRAD.
 // Returns a vector of values, one per locus
 // [[Rcpp::export]]
-NumericVector HindHeByLoc(IntegerMatrix alleleDepth, NumericMatrix depthRatio, IntegerVector alleles2loc, int nLoci){
+NumericVector HindHeByLoc(IntegerMatrix alleleDepth, NumericMatrix depthRatio,
+                          IntegerVector alleles2loc, int nLoci){
   int nTaxa = alleleDepth.nrow();
   IntegerVector alleles = seq(0, alleles2loc.size() - 1);
   IntegerVector thesecol;
