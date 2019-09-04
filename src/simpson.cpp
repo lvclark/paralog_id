@@ -15,37 +15,48 @@ double GiniSimpson(NumericVector counts) {
   return out;
 }
 
-// Function to get the Simpson index on allelic read depth as encoded in polyRAD.
-// Returns a matrix of taxa x loci, as well as a vector for the total across taxa.
+// Function to get Hind/He on allelic read depth as encoded in polyRAD.
+// Returns a vector of values, one per locus
 // [[Rcpp::export]]
-List HReadDepth(IntegerMatrix alleleDepth, IntegerVector alleles2loc, int nLoci){
+NumericVector HindHeByLoc(IntegerMatrix alleleDepth, NumericMatrix depthRatios, IntegerVector alleles2loc, int nLoci){
   int nTaxa = alleleDepth.nrow();
   IntegerVector alleles = seq(0, alleles2loc.size() - 1);
   IntegerVector thesecol;
   IntegerVector thesecounts;
-  IntegerVector thesetotcounts;
   int thesenal;
-  NumericMatrix Hind(nTaxa, nLoci);
-  NumericVector He(nLoci);
+  int thisdepth;
+  NumericVector thesefreq;
+  double thisHind;
+  double thisHe;
+  double thisHindHeTot;
+  double thisNTaxa;
+  NumericVector HindHeMean(nLoci);
   
   for(int L = 0; L < nLoci; L++){
     thesecol = alleles[alleles2loc == L + 1];
     thesenal = thesecol.size();
     thesecounts = IntegerVector(thesenal);
-    thesetotcounts = IntegerVector(thesenal);
+    thesefreq = NumericVector(thesenal);
+    // Add something here to fill in allele frequencies from depth ratios
+    thisHe = GiniSimpson(thesefreq);
+    // set up to get mean Hind/He
+    thisHindHeTot = 0;
+    thisNTaxa = 0;
     
     for(int t = 0; t < nTaxa; t++){
       // For this taxon and locus, copy to temporary vector
       // and add to vector for total across taxa.
       for(int a = 0; a < thesenal; a++){
         thesecounts[a] = alleleDepth(t, thesecol[a]);
-        thesetotcounts[a] += thesecounts[a];
       }
-      Hind(t, L) = Simpson(thesecounts); // H for t x L
+      thisdepth = sum(thesecounts);
+      // insert something to skip this if thisdepth < 2
+      thisHind = GiniSimpson(thesecounts); // H for t x L
+      thisHindHeTot += thisHind / thisHe * thisdepth / (thisdepth - 1);
+      thisNTaxa += 1
     }
-    He[L] = Simpson(thesetotcounts); // H for locus
+    HindHeMean[L] = thisHindHeTot / thisNTaxa;
   }
   
-  List outlist = List::create(Hind, He);
-  return outlist;
+  return HindHeMean;
 }
