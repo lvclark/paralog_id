@@ -4,7 +4,7 @@ using namespace Rcpp;
 // Function to get the Simpson index, for a group of sequencing reads or
 // anything else.
 // [[Rcpp::export]]
-double Simpson(IntegerVector counts) {
+double GiniSimpson(NumericVector counts) {
   double N = sum(counts);
   double out = 1.0;
   
