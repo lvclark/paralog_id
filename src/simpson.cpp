@@ -18,11 +18,11 @@ double GiniSimpson(NumericVector counts) {
 // Function to get Hind/He on allelic read depth as encoded in polyRAD.
 // Returns a vector of values, one per locus
 // [[Rcpp::export]]
-NumericVector HindHeByLoc(IntegerMatrix alleleDepth, NumericMatrix depthRatios, IntegerVector alleles2loc, int nLoci){
+NumericVector HindHeByLoc(IntegerMatrix alleleDepth, NumericMatrix depthRatio, IntegerVector alleles2loc, int nLoci){
   int nTaxa = alleleDepth.nrow();
   IntegerVector alleles = seq(0, alleles2loc.size() - 1);
   IntegerVector thesecol;
-  IntegerVector thesecounts;
+  NumericVector thesecounts;
   int thesenal;
   int thisdepth;
   NumericVector thesefreq;
@@ -35,9 +35,12 @@ NumericVector HindHeByLoc(IntegerMatrix alleleDepth, NumericMatrix depthRatios, 
   for(int L = 0; L < nLoci; L++){
     thesecol = alleles[alleles2loc == L + 1];
     thesenal = thesecol.size();
-    thesecounts = IntegerVector(thesenal);
+    thesecounts = NumericVector(thesenal);
     thesefreq = NumericVector(thesenal);
-    // Add something here to fill in allele frequencies from depth ratios
+    // fill in allele frequencies from depth ratios
+    for(int a = 0; a < thesenal; a++){
+      thesefreq[a] = mean(na_omit(depthRatio( _ , thesecol[a])));
+    }
     thisHe = GiniSimpson(thesefreq);
     // set up to get mean Hind/He
     thisHindHeTot = 0;
@@ -50,10 +53,12 @@ NumericVector HindHeByLoc(IntegerMatrix alleleDepth, NumericMatrix depthRatios, 
         thesecounts[a] = alleleDepth(t, thesecol[a]);
       }
       thisdepth = sum(thesecounts);
-      // insert something to skip this if thisdepth < 2
+      if(thisdepth < 2){
+        continue; // can't calculate for depth below 2
+      }
       thisHind = GiniSimpson(thesecounts); // H for t x L
       thisHindHeTot += thisHind / thisHe * thisdepth / (thisdepth - 1);
-      thisNTaxa += 1
+      thisNTaxa += 1;
     }
     HindHeMean[L] = thisHindHeTot / thisNTaxa;
   }

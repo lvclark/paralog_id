@@ -1,5 +1,5 @@
 Rcpp::sourceCpp('src/simpson.cpp')
-load("Msa_tetraploids_Chr05_RADdata.RData") # tetraploid Msa data
+load("~/Excellence in Breeding/Msa_4x_Chr05_GWAS/Msa_tetraploids_Chr05_RADdata.RData") # tetraploid Msa data
 library(polyRAD)
 library(ggplot2)
 library(viridis)
@@ -8,6 +8,14 @@ library(viridis)
 myfile <- system.file("extdata", "Msi01genes.vcf", package = "polyRAD")
 myRAD <- VCF2RADdata(myfile, possiblePloidies = list(2))
 
+# test Rcpp estimation of HindHe, which should resemble Python estimation
+myHindHe <- HindHeByLoc(myRAD$alleleDepth, myRAD$depthRatio, myRAD$alleles2loc, nLoci(myRAD))
+hist(myHindHe, breaks = 50)
+abline(v = 0.75, col = "red")
+abline(v = 0.5, col = "blue")
+# for tetraploids, peak at 0.63, indicating F of 0.16
+
+# old stuff for old version of functions ####
 ## compare Simpson index (~=He) of reads from pop vs. reads from individuals
 
 test <- HReadDepth(myRAD$alleleDepth, myRAD$alleles2loc, nLoci(myRAD))

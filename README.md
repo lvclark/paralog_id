@@ -28,11 +28,11 @@ in the above file.
 
 ### Code
 
-`src/simpson.cpp` contains two Rcpp functions.  The first, `Simpson`, calculates
+`src/simpson.cpp` contains two Rcpp functions.  The first, `GiniSimpson`, calculates
 the Gini-Simpson index (AKA expected heterozygosity, or the probability that if
 two items are drawn at random that they will be different) across a set of counts.
-The second, `HReadDepth`, applies `Simpson` across a GBS dataset to estimate
-$H_{ind}$ for each individual * locus, and $H_E$ for each locus.
+The second, `HindHeByLoc`, uses some of the slots of a `RADdata` object to
+estimate $H_{ind}/H_E$ for each locus.
 
 `scripts/simpson_test.R` is a preliminary script for testing `simpson.cpp`,
 using data available at
