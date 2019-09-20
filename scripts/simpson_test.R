@@ -1,4 +1,4 @@
-Rcpp::sourceCpp('src/simpson.cpp')
+source('src/hindhe.R') # have to do manually to get file structure right
 load("~/Excellence in Breeding/Msa_4x_Chr05_GWAS/Msa_tetraploids_Chr05_RADdata.RData") # tetraploid Msa data
 library(polyRAD)
 library(ggplot2)
@@ -9,7 +9,7 @@ myfile <- system.file("extdata", "Msi01genes.vcf", package = "polyRAD")
 myRAD <- VCF2RADdata(myfile, possiblePloidies = list(2))
 
 # test Rcpp estimation of HindHe, which should resemble Python estimation
-myHindHe <- HindHeByLoc(myRAD$alleleDepth, myRAD$depthRatio, myRAD$alleles2loc, nLoci(myRAD))
+myHindHe <- colMeans(HindHe(myRAD), na.rm = TRUE)
 hist(myHindHe, breaks = 50)
 abline(v = 0.75, col = "red")
 abline(v = 0.5, col = "blue")
@@ -99,35 +99,31 @@ HindT <- rowMeans(Hindmat, na.rm = TRUE)
 plot(log(TotDepthT), HindT)
 
 # Look at mix of diploids and tetraploids to see if distinguishable ####
+library(VariantAnnotation)
 myRAD <- VCF2RADdata("~/DOE Msa study/Seq/GBSv2_180110/180208Msa_filtered.vcf.bgz",
                      svparam = ScanVcfParam(fixed = "ALT", info = NA, geno = "AD",
                                             which = GRanges("05", IRanges(1, 112e6))),
                      yieldSize = NA)
 
-test <- HReadDepth(myRAD$alleleDepth, myRAD$alleles2loc, nLoci(myRAD))
-Hpop <- test[[2]]
-names(Hpop) <- GetLoci(myRAD)
-Hindmat <- test[[1]]
-dimnames(Hindmat) <- list(GetTaxa(myRAD), GetLoci(myRAD))
-Hind <- colMeans(Hindmat, na.rm = TRUE)
+myHindHe <- HindHe(myRAD)
 
 TotDepthT <- rowSums(myRAD$locDepth)
-HindT <- rowMeans(Hindmat, na.rm = TRUE)
-plot(log(TotDepthT), HindT)
+
+myHindHeByInd <- rowMeans(myHindHe, na.rm = TRUE)
 
 accessions <- read.csv("~/DOE Msa study/Seq/GBSv2_180110/all_accession_names.csv",
                        stringsAsFactors = FALSE)
-ploidies <- accessions$Ploidy[match(names(HindT), accessions$Accession)]
+ploidies <- accessions$Ploidy[match(names(myHindHeByInd), accessions$Accession)]
 
-ggplot(mapping = aes(x = TotDepthT, y = HindT, color = ploidies)) +
+ggplot(mapping = aes(x = TotDepthT, y = myHindHeByInd, color = ploidies)) +
   geom_point() +
   scale_x_log10()
 
-hist(HindT, breaks = 50)
+hist(myHindHeByInd, breaks = 50)
 # bimodal distribution, not perfect but could be very helpful
 
-ggplot(data.frame(Depth = TotDepthT, Hind = HindT, Ploidy = ploidies)[ploidies %in% c("2x", "3x", "4x"),],
-       mapping = aes(x = Depth, y = Hind, color = Ploidy)) +
+ggplot(data.frame(Depth = TotDepthT, HindHe = myHindHeByInd, Ploidy = ploidies)[ploidies %in% c("2x", "3x", "4x"),],
+       mapping = aes(x = Depth, y = HindHe, color = Ploidy)) +
   geom_point() +
   scale_x_log10() +
   facet_wrap(~ Ploidy)
