@@ -7,9 +7,10 @@ HindHe <- function(object, ...){
 HindHe.RADdata <- function(object, omitTaxa = GetBlankTaxa(object), ...){
   taxa <- GetTaxa(object)[!GetTaxa(object) %in% omitTaxa]
   
-  hindhe <- HindHeByLoc(object$alleleDepth[taxa,, drop = FALSE],
-                        object$depthRatio[taxa,, drop = FALSE],
-                        object$alleles2loc, nLoci(object))
-  names(hindhe) <- GetLoci(object)
+  hindhe <- HindHeMat(object$alleleDepth[taxa,, drop = FALSE],
+                      object$depthRatio[taxa,, drop = FALSE],
+                      object$alleles2loc, nLoci(object))
+  colnames(hindhe) <- GetLoci(object)
+  rownames(hindhe) <- taxa
   return(hindhe)
 }

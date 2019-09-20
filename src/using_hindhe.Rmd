@@ -35,6 +35,7 @@ blank taxa.
 
 ```{r}
 myHindHe <- HindHe(myRAD)
+myHindHeByLoc <- colMeans(myHindHe, na.rm = TRUE)
 ```
 
 ## Interpreting the results
@@ -42,7 +43,7 @@ myHindHe <- HindHe(myRAD)
 We can look at the distribution of values.
 
 ```{r}
-hist(myHindHe)
+hist(myHindHeByLoc)
 abline(v = 0.5, col = "red")
 ```
 
@@ -93,13 +94,14 @@ set.seed(904) # to keep the same randomization.
 myRAD2 <- myRAD
 myRAD2$alleles2loc <- sample(myRAD2$alleles2loc)
 myHindHe2 <- HindHe(myRAD2)
-hist(myHindHe2, breaks = 10)
+myHindHeByLoc2 <- colMeans(myHindHe2, na.rm = TRUE)
+hist(myHindHeByLoc2, breaks = 10)
 ```
 
 Now let's look at the marker with the highest value.
 
 ```{r}
-highmarker <- which(myHindHe2 > 0.8)
+highmarker <- which(myHindHeByLoc2 > 0.8)
 hmdepth <- myRAD2$alleleDepth[,myRAD2$alleles2loc == highmarker]
 hmdepth[rowSums(hmdepth) > 0,][1:50,]
 ```
