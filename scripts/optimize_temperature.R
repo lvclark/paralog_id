@@ -431,12 +431,18 @@ dfTabu2$FinalExcess_HindHe <- rowMeans(final_excess_hindhe, na.rm = TRUE)
 
 head(dfTabu2)
 
+tiff("~/Presentations/tabu2x.tiff", width = 2100, height = 2100, res = 450,
+     compression = "lzw")
 ggplot(dfTabu2, aes(x = InitMax_HindHe, y = FinalMax_HindHe, col = Reps)) +
   geom_point() +
   geom_hline(yintercept = 1/2) +
   geom_vline(xintercept = 1/2) +
   geom_abline(slope = 1, intercept = 0) +
-  scale_color_viridis()
+  scale_color_viridis() +
+  labs(x = "Initial Hind/He (max out of two isoloci)",
+       y = "Final Hind/He (max out of two isoloci)",
+       col = "Tabu reps")
+dev.off()
 
 ggplot(dfTabu2, aes(x = InitExcess_HindHe, y = FinalExcess_HindHe, col = Reps)) +
   geom_point() +
@@ -463,12 +469,19 @@ final_excess_hindhe <- as.matrix(dfTabu4x[,c("Final1_HindHe", "Final2_HindHe")])
 final_excess_hindhe[final_excess_hindhe < 0] <- 0
 dfTabu4x$FinalExcess_HindHe <- rowMeans(final_excess_hindhe, na.rm = TRUE)
 
-ggplot(dfTabu4x, aes(x = InitMax_HindHe, y = FinalMax_HindHe, col = Reps)) +
+tiff("~/Presentations/tabu4x.tiff", width = 2100, height = 2100, res = 450,
+     compression = "lzw")
+ggplot(dfTabu4x[is.finite(dfTabu4x$FinalMax_HindHe),],
+       aes(x = InitMax_HindHe, y = FinalMax_HindHe, col = Reps)) +
   geom_point() +
   geom_hline(yintercept = 3/4) +
   geom_vline(xintercept = 3/4) +
   geom_abline(slope = 1, intercept = 0) +
-  scale_color_viridis()
+  scale_color_viridis() +
+  labs(x = "Initial Hind/He (max out of two isoloci)",
+       y = "Final Hind/He (max out of two isoloci)",
+       col = "Tabu reps")
+dev.off()
 
 # w00+, it also works for tetraploids.
 
