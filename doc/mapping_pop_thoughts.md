@@ -29,3 +29,31 @@ AABB x AABB |                0.5 |                          5/9
 1/36  BBBB * 0
 
 = 4/36 + 12/36 + 4/36 = 5/9
+
+What we need is:
+
+prob that two alleles drawn come from parent 1 * prob of two alleles from parent 1 being the same +
+same for parent 2 +
+prob that two alleles drawn come from different parents * prob of different alleles from two parents
+
+If we do this with replacement, so ploidy doesn't matter:
+
+AA x BB: A = 0.25 * 1 + 0.25 * 0 + 0.5 * 0 = 0.25; B = 0.25; Hind = 1 - 0.25 - 0.25 = 0.5
+AA x AB: A = 0.25 * 1 + 0.25 * 0.5 + 0.5 * 0.5 = 0.5; B = 0.25 * 0 + 0.25 * 0.5 + 0.5 * 0 = 0.125
+  Hind = 1 - 0.5 - 0.125 = 0.375
+  
+Nah, probably still needs to be ploidy-aware.
+Prob that a pair of alleles, with replacment, both came from parent 1, parent 2, or different
+parents, depends on ploidy, backcrossing, and inbreeding.
+
+With replacement
+| Ploidy | Generation | Both al. from p. 1 | Both al. from p. 2 | Al from diff. parents |
+-----------------------------------------------------------------------------------------
+| 2x     |         F1 |                  0 |                  0 |                     1 |
+| 2x     |         F2 |              0.25  |              0.25  |                  0.5  |
+| 2x     |         F3 |              0.375 |              0.375 |                  0.25 |
+| 2x     |        BC1 |              0.5   |              0     |                  0.5  |
+| 4x     |         F1 |                1/6 |                1/6 |                   4/6 |
+| 4x     |
+
+Maybe recursive functions to get gamete proportions, then calc from there.
