@@ -45,5 +45,9 @@
                          (ploidy:0) / ploidy * c(0:(ploidy - 1), ploidy - 1) / (ploidy - 1) +
                            (0:ploidy)/ ploidy * c(ploidy - 1, (ploidy - 1):0) / (ploidy - 1)),
                        byrow = TRUE, nrow = 3, ncol = ploidy + 1)
-  return(allprobmat %*% progfreqs)
+  return(as.vector(allprobmat %*% progfreqs))
 }
+
+# The above calculated frequencies will work for an entire dataset (across all loci).
+# They can get passed to a function that will use parental estimated genotypes or
+# to get an expected value for Hind.
