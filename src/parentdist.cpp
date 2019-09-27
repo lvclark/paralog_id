@@ -34,28 +34,3 @@ double ParentDist(IntegerVector counts1, IntegerVector counts2,
   
   return out;
 }
-
-// Function to determine prob of sampling two alleles from recurrent parent,
-// two alleles from donor parent, or two alleles from different parents, with
-// replacment, in a progeny.
-// [[Rcpp::export]]
-NumericVector ProgAlProbs(int ploidy = 2, int gen_backcrossing = 0, int gen_selfing = 0){
-  NumericVector probs(3);
-  int hap = ploidy / 2;
-  double shiftval;
-  int i;
-  
-  // Probabilities for F1
-  probs[0] = 0.5 * (hap - 1) / (ploidy - 1); // both drawn from recurrent parent
-  probs[1] = probs[0];                       // both drawn from donor parent
-  probs[2] = 1 - probs[0] - probs[1];        // drawn from different parents
-  
-  // Backcross
-  for(i = 0; i < gen_backcrossing; i++){
-    shiftval = probs[2] / 2;
-    probs[2] = shiftval;
-    probs[0] += shiftval;
-  }
-  
-  return probs;
-}
