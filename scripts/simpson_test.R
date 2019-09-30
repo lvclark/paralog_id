@@ -122,8 +122,14 @@ ggplot(mapping = aes(x = TotDepthT, y = myHindHeByInd, color = ploidies)) +
 hist(myHindHeByInd, breaks = 50)
 # bimodal distribution, not perfect but could be very helpful
 
+tiff("MsaPloidyID.tiff", width = 1800, height = 1200, res = 300, compression = "lzw",
+     pointsize = 16)
 ggplot(data.frame(Depth = TotDepthT, HindHe = myHindHeByInd, Ploidy = ploidies)[ploidies %in% c("2x", "3x", "4x"),],
        mapping = aes(x = Depth, y = HindHe, color = Ploidy)) +
   geom_point() +
   scale_x_log10() +
-  facet_wrap(~ Ploidy)
+  facet_wrap(~ Ploidy) +
+  geom_hline(data = data.frame(Ploidy = c("2x", "3x", "4x"),
+                               ExpHindHe = c(1/2, 2/3, 3/4)),
+             mapping = aes(yintercept = ExpHindHe), lty = 2)
+dev.off()
