@@ -178,6 +178,16 @@ HindHeMapping.RADdata <- function(object, n.gen.backcrossing = 0,
   # Get probabilities of pairs of alleles from a random progeny coming from
   # different locus copies one parent or the other, or from different parents.
   progAlProbs <- .progAlProbs(ploidy, n.gen.backcrossing, n.gen.selfing)
+  
+  # Identify loci where multiallelic genotypes can be determined
+  goodLocDon <- tapply(object$likelyGeno_donor[as.character(ploidy),],
+                       object$alleles2loc,
+                       function(x) !any(is.na(x)) && sum(x) == ploidy)
+  goodLocRec <- tapply(object$likelyGeno_recurrent[as.character(ploidy),],
+                       object$alleles2loc,
+                       function(x) !any(is.na(x)) && sum(x) == ploidy)
+  keeploc <- which(goodLocDon & goodLocRec)
+  
   # Get within- and across- parent probabilties of sampling two different alleles.
   
   
