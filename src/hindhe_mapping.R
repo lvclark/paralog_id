@@ -79,6 +79,7 @@ library(polyRAD) # 1.2 with some functions updated and made separate
 }
 # Probability that, depending on the generation, two alleles sampled in a progeny
 # are different locus copies from the same parent, or from different parents.
+# If there is backcrossing, parent 1 is the recurrent parent.
 # (No double reduction.)
 # Can take a few seconds to run if there are many generations, but it is only
 # intended to be run once for the whole dataset.
@@ -173,22 +174,29 @@ HindHeMapping.RADdata <- function(object, n.gen.backcrossing = 0,
                                       n.gen.selfing = n.gen.selfing,
                                       n.gen.intermating = n.gen.intermating,
                                       minLikelihoodRatio = minLikelihoodRatio,
-                                      donorParentPloidies = ploidy,
-                                      recurrentParentPloidies = ploidy)
+                                      donorParentPloidies = list(ploidy),
+                                      recurrentParentPloidies = list(ploidy))
+  likelyGenDon <- object$likelyGeno_donor[as.character(ploidy),]
+  likelyGenRec <- object$likelyGeno_recurrent[as.character(ploidy),]
   # Get probabilities of pairs of alleles from a random progeny coming from
   # different locus copies one parent or the other, or from different parents.
   progAlProbs <- .progAlProbs(ploidy, n.gen.backcrossing, n.gen.selfing)
   
   # Identify loci where multiallelic genotypes can be determined
-  goodLocDon <- tapply(object$likelyGeno_donor[as.character(ploidy),],
-                       object$alleles2loc,
+  goodLocDon <- tapply(likelyGenDon, object$alleles2loc,
                        function(x) !any(is.na(x)) && sum(x) == ploidy)
-  goodLocRec <- tapply(object$likelyGeno_recurrent[as.character(ploidy),],
-                       object$alleles2loc,
+  goodLocRec <- tapply(likelyGenRec, object$alleles2loc,
                        function(x) !any(is.na(x)) && sum(x) == ploidy)
   keeploc <- which(goodLocDon & goodLocRec)
   
   # Get within- and across- parent probabilties of sampling two different alleles.
-  
+  parentHo <- matrix(c(HoOneParent(likelyGenRec, object$alleles2loc, keeploc, ploidy),
+                       HoOneParent(likelyGenDon, object$alleles2loc, keeploc, ploidy),
+                       HoTwoParents(likelyGenRec, likelyGenDon, object$alleles2loc,
+                                    keeploc, ploidy)),
+                     byrow = TRUE, ncol = length(keeploc), nrow = 3)
+  # Get per-locus 'He' values, which indicate the probability of two alleles sampled
+  # without replacement from one progeny being different.
+  heByLoc <- progAlProbs %*% parentHo
   
 }
