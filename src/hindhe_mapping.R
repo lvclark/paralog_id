@@ -27,7 +27,7 @@ library(polyRAD) # 1.2 with some functions updated and made separate
 .progenyProb2 <- function(gam1, gam2){
   allprog <- cbind(gam1[rep(1:nrow(gam1), each = nrow(gam2)),],
                    gam2[rep(1:nrow(gam2), times = nrow(gam1)),])
-  allprog <- t(apply(allprog, 1, sort))
+  allprog <- t(apply(allprog, 1, sort)) # could be sped up with Rcpp
   # set up output
   outprog <- matrix(allprog[1,], nrow = 1, ncol = ncol(allprog))
   outprob <- 1/nrow(allprog)
