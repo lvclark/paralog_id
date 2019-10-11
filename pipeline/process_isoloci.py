@@ -80,9 +80,24 @@ def ProcessRowGroup(alignrows, depthrows, nisoloci, thresh, expHindHe,
   if len(packed2) == 0: # if no isoloci should be kept
     return None
   hapAssign, aligns = zip(*packed2)
+
+  # get strings and starting positions for variable regions
+  alNucs = [[] for i in range(len(hapAssign))]
+  varpos = [0 for i in range(len(hapAssign))]
+  for i in range(len(hapAssign)):
+    # index the alignment position for this set of tags
+    locind = alignrows[0][:nisoloci].index(aligns[i])
+    cigars = [alignrows[j][nisoloci * 2 + 1 + locind] for j in hapAssign[i]]
+    tags = [alignrows[j][nisoloci] for j in hapAssign[i]]
+    pos = int(aligns[i].split('-')[1])
+    strand = aligns[i].split('-')[2]
+    alNucs[i], varpos[i] = isoloci_fun.MakeAlleleStrings(tags, cigars, pos, strand)
+
   # write to file
   for i in range(len(aligns)):
-    [outwriter.writerow([aligns[i]] + depthrows[j]) for j in hapAssign[i]]
+    depthrowsOut = [depthrows[j] for j in hapAssign[i]]
+    [outwriter.writerow([aligns[i], varpos[i], alNucs[i][j]] + depthrowsOut[j]) \
+     for j in range(len(hapAssign[i]))]
 
   return None
 
@@ -108,7 +123,7 @@ try:
   if maxisoloci == 0:
     raise Exception("Columns starting with 'Alignment' not found in " + alignfile)
   # write header to output
-  outwriter.writerow(["Marker"] + depthheader)
+  outwriter.writerow(["Marker", "Variable site", "Allele string"] + depthheader)
 
   currdepthrows = [next(depthreader)]
   curralignrows = [next(alignreader)]
