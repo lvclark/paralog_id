@@ -294,3 +294,13 @@ reps = 25, maxTabu = 5, corrstartP = 0.01, logcon = None):
     logcon.write("Rep where best solution found: {}\n".format(best_rep))
 
   return hapAssign_best
+
+def MakeAlleleStrings(tags, cigars, pos, strand):
+    '''Taking tag sequences, CIGAR strings, a position for the alignment
+    starting at the cut site, and a strand (top or bot), make a set of
+    strings just showing the variable portion of the tags, and also return a
+    position for the beginning of those strings in the reference genome.'''
+    # Get reverse complement for bottom strand
+    assert strand == 'top' or strand == 'bot'
+    if strand == bot:
+        
