@@ -64,11 +64,11 @@ these_NM = [] # number of mutational steps between tag and reference
 lasttagseq = "" # tag sequence
 
 # subroutine for updating the alignment dictionary
-def update_aligndict(these_mnames, these_NM, lasttagseq):
-  these_mnames, these_NM = zip(*sorted(zip(these_mnames, these_NM)))
+def update_aligndict(these_mnames, these_NM, these_CIGAR, lasttagseq):
+  these_mnames, these_NM, these_CIGAR = zip(*sorted(zip(these_mnames, these_NM)))
   if these_mnames not in aligndict.keys():
     aligndict[these_mnames] = []
-  aligndict[these_mnames].append((lasttagseq, these_NM))
+  aligndict[these_mnames].append((lasttagseq, these_NM, these_CIGAR))
 
 # read the sam file and process to aligndict
 print("Processing SAM...")
@@ -104,11 +104,13 @@ with open(mysam, mode = "r") as samcon:
       lasttagseq = tagseq
       these_mnames = [mname]
       these_NM = [NM]
+      these_CIGAR = [cigar]
 
     secondary = flag & 256 == 256
     if secondary: # add alignments to the list
       these_mnames.append(mname)
       these_NM.append(NM)
+      these_CIGAR.append(cigar)
     else: # start a new tag
       # put the last tag into alignment dict if applicable
       if(len(these_mnames) <= maxalign):
@@ -120,10 +122,11 @@ with open(mysam, mode = "r") as samcon:
       lasttagseq = tagseq
       these_mnames = [mname]
       these_NM = [NM]
+      these_CIGAR = [cigar]
 
 # write the last marker to dict if necessary
 if(len(these_mnames) <= maxalign):
-  update_aligndict(these_mnames, these_NM, lasttagseq)
+  update_aligndict(these_mnames, these_NM, these_CIGAR, lasttagseq)
   count += 1
 print("{} tags aligning".format(count))
 
@@ -214,13 +217,14 @@ for chnk in range(nchunks):
     # pad out marker names to maximum
     npad = maxalign - len(m)
     m_exp = list(m) + ['' for i in range(npad)]
-    # get tags and NM
+    # get tags, NM, and CIGAR
     m_tags = [tup[0] for tup in aligndict[m]]
     m_NM = [list(tup[1]) + ['' for i in range(npad)] for tup in aligndict[m]]
+    m_CIGAR = [list(tup[2]) + ['' for i in range(npad)] for tup in aligndict[m]]
     nt = len(m_tags) # number of tags for this marker
     assert len(m_NM) == nt
     # add to table
-    tag_table.extend([m_exp + [m_tags[i]] + m_NM[i] for i in range(nt)])
+    tag_table.extend([m_exp + [m_tags[i]] + m_NM[i] + m_CIGAR[i] for i in range(nt)])
     table_row_per_marker[mi] = range(curr_row, curr_row + nt)
     curr_row += nt
   # extract all tag sequences
@@ -241,7 +245,8 @@ for chnk in range(nchunks):
   with open(alignout, mode = 'w', newline = '') as outcon:
     mywriter = csv.writer(outcon)
     alignheader = ["Alignment {}".format(i + 1) for i in range(maxalign)] + \
-    ["Tag sequence"] + ["NM {}".format(i + 1) for i in range(maxalign)]
+    ["Tag sequence"] + ["NM {}".format(i + 1) for i in range(maxalign)] + \
+    ["CIGAR {}".format(i + 1) for i in range(maxalign)]
     mywriter.writerow(alignheader)
     [mywriter.writerow(tt) for tt in tag_table]
   with open(ttdout, mode = 'w', newline = '') as outcon:
