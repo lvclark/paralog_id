@@ -4,6 +4,7 @@ from scipy.stats import kendalltau
 from copy import deepcopy
 import math
 import sys
+import re
 
 if sys.version_info.major < 3:
     raise Exeption("Python 3 required.")
@@ -295,12 +296,92 @@ reps = 25, maxTabu = 5, corrstartP = 0.01, logcon = None):
 
   return hapAssign_best
 
+def CigarsToNucPos(tags, cigars, pos, strand):
+  '''Take a set of CIGAR strings, along with the position of the leftmost
+  nucleotide of a tag and to what strand that tag aligned, and get the genomic
+  position of each nucleotide in each tag.'''
+  nucpos = [[0 for p in range(len(t))] for t in tags]
+  for ti in range(len(tags)):
+    # split cigar string into values of interest
+    cigsplit = re.findall("\d+[MIDNSHP=X]", cigars[ti])
+    currpos = 0
+    currnuc = 0
+    for cs in cigsplit:
+      n = int(cs[:-1])
+      let = cs[-1]
+      if let in 'M=X':
+        for i in range(n):
+          nucpos[ti][currnuc] = currpos
+          currpos += 1
+          currnuc += 1
+      if let in 'DN':
+        currpos += n
+      if let in 'IS':
+        for i in range(n):
+          nucpos[ti][currnuc] = currpos
+          currnuc += 1
+  assert all([len(tags[ti]) == len(nucpos[ti]) for ti in range(len(tags))])
+  # number from reference rather than starting at zero
+  if strand == 'top':
+    nucpos = [[p + pos for p in np] for np in nucpos]
+  else:
+    ends = [np[-1] for np in nucpos]
+    nucpos = [[p - ends[ti] + pos for p in nucpos[ti]] for ti in range(len(nucpos))]
+  return nucpos
+
+def PadPosition(tagnucs):
+  '''Taking a set of nucleotides matching one position, pad them to represent
+  insertions or deletions.'''
+  # use - for deletions, or missing sequence trimmed from read
+  tagnucs = ['-' if tn == '' else tn for tn in tagnucs]
+  # find where insertions happened, and represent with .
+  nuclens = [len(tn) for tn in tagnucs]
+  maxlen = max(nuclens)
+  if maxlen > 1:
+    tagnucs = ['.' * (maxlen - nuclens[ti]) + tagnucs[ti] for ti in range(len(tagnucs))]
+  return tagnucs
+
 def MakeAlleleStrings(tags, cigars, pos, strand):
-    '''Taking tag sequences, CIGAR strings, a position for the alignment
-    starting at the cut site, and a strand (top or bot), make a set of
-    strings just showing the variable portion of the tags, and also return a
-    position for the beginning of those strings in the reference genome.'''
+  '''Taking tag sequences, CIGAR strings, a position for the alignment
+  starting at the cut site, and a strand (top or bot), make a set of
+  strings just showing the variable portion of the tags, and also return a
+  position for the beginning of those strings in the reference genome.'''
+  # Note: if ALL tags have an insertion with respect to the reference, it
+  # won't be obvious from the output of this function.
+
+  assert strand == 'top' or strand == 'bot'
+  if strand == 'bot':
     # Get reverse complement for bottom strand
-    assert strand == 'top' or strand == 'bot'
-    if strand == bot:
-        
+    trans = {ord('A'): 'T', ord('C'): 'G', ord('G'): 'C', ord('T'): 'A'}
+    tags = [t.translate(trans)[::-1] for t in tags]
+
+  # Get position for each nucleotide
+  nucpos = CigarsToNucPos(tags, cigars, pos, strand)
+  # set up allele strings
+  alstrings = ['' for t in tags]
+  # get starting and stopping position to examine
+  start = min([min(np) for np in nucpos])
+  end = max([max(np) for np in nucpos])
+  # starting and stopping positions of the variable region (to update)
+  foundvar = False
+  endvar = 0
+  outpos = start
+  # go through and build allele strings
+  for p in range(start, end + 1):
+    nucind = [[pi for pi in range(len(np)) if np[pi] == p] for np in nucpos]
+    tagnucs = [tags[ti][nucind[ti][0]:(nucind[ti][-1] + 1)] \
+               if len(nucind[ti]) > 0 else '' for ti in range(len(tags))]
+    if foundvar: # add nucleotides to existing strings
+      tagnucs = PadPosition(tagnucs)
+      alstrings = [alstrings[ti] + tagnucs[ti] for ti in range(len(tags))]
+      if len(set(tagnucs)) > 1:
+        endvar = len(alstrings[0])
+    elif len(set(tagnucs)) > 1: # found first variable site
+      foundvar = True
+      tagnucs = PadPosition(tagnucs)
+      alstrings = tagnucs
+      outpos = p
+      endvar = len(alstrings[0])
+  alstrings = [st[:endvar] for st in alstrings]
+
+  return alstrings, outpos
