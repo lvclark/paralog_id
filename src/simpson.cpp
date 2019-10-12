@@ -1,8 +1,8 @@
 #include <Rcpp.h>
 using namespace Rcpp;
 
-// Function to get the Simpson index, for a group of sequencing reads or
-// anything else.
+// Function to get the Gini-Simpson index, for a group of sequencing reads or
+// anything else.  Calculated WITH replacement.
 // [[Rcpp::export]]
 double GiniSimpson(NumericVector counts) {
   double N = sum(counts);
@@ -16,10 +16,12 @@ double GiniSimpson(NumericVector counts) {
 }
 
 // Function to get Hind/He on allelic read depth as encoded in polyRAD.
-// Returns a vector of values, individual x locus
+// Returns a vector of values, individual x locus.
+// He is calculated on the fly for natural populations and diversity panels,
+// or input for mapping populations.
 // [[Rcpp::export]]
 NumericMatrix HindHeMat(IntegerMatrix alleleDepth, NumericMatrix depthRatio,
-                        IntegerVector alleles2loc, int nLoci){
+                        IntegerVector alleles2loc, int nLoci, NumericVector He){
   int nTaxa = alleleDepth.nrow();
   IntegerVector alleles = seq(0, alleles2loc.size() - 1);
   IntegerVector thesecol;
@@ -29,18 +31,23 @@ NumericMatrix HindHeMat(IntegerMatrix alleleDepth, NumericMatrix depthRatio,
   NumericVector thesefreq;
   double thisHind;
   double thisHe;
+  bool calcHe = He.size() == 0;
   NumericMatrix HindHe(nTaxa, nLoci);
   
   for(int L = 0; L < nLoci; L++){
     thesecol = alleles[alleles2loc == L + 1];
     thesenal = thesecol.size();
     thesecounts = NumericVector(thesenal);
-    thesefreq = NumericVector(thesenal);
-    // fill in allele frequencies from depth ratios
-    for(int a = 0; a < thesenal; a++){
-      thesefreq[a] = mean(na_omit(depthRatio( _ , thesecol[a])));
+    if(calcHe){
+      thesefreq = NumericVector(thesenal);
+      // fill in allele frequencies from depth ratios
+      for(int a = 0; a < thesenal; a++){
+        thesefreq[a] = mean(na_omit(depthRatio( _ , thesecol[a])));
+      }
+      thisHe = GiniSimpson(thesefreq);
+    } else {
+      thisHe = He[L];
     }
-    thisHe = GiniSimpson(thesefreq);
     
     for(int t = 0; t < nTaxa; t++){
       // For this taxon and locus, copy to temporary vector

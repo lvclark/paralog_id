@@ -159,7 +159,11 @@ HindHeMapping <- function(object, ...){
 HindHeMapping.RADdata <- function(object, n.gen.backcrossing = 0,
                                   n.gen.intermating = 0, n.gen.selfing = 0,
                                   ploidy = object$possiblePloidies[[1]],
-                                  minLikelihoodRatio = 10){
+                                  minLikelihoodRatio = 10,
+                                  progeny = GetTaxa(object)[!GetTaxa(object) %in%
+                                                              c(GetDonorParent(object), 
+                                                                GetRecurrentParent(object), 
+                                                                GetBlankTaxa(object))]){
   if(length(ploidy) != 1){
     stop("Current implementation for autopolyploids only")
   }
@@ -188,6 +192,7 @@ HindHeMapping.RADdata <- function(object, n.gen.backcrossing = 0,
   goodLocRec <- tapply(likelyGenRec, object$alleles2loc,
                        function(x) !any(is.na(x)) && sum(x) == ploidy)
   keeploc <- which(goodLocDon & goodLocRec)
+  object <- SubsetByLocus(object, keeploc)
   
   # Get within- and across- parent probabilties of sampling two different alleles.
   parentHo <- matrix(c(HoOneParent(likelyGenRec, object$alleles2loc, keeploc, ploidy),
@@ -199,4 +204,13 @@ HindHeMapping.RADdata <- function(object, n.gen.backcrossing = 0,
   # without replacement from one progeny being different.
   heByLoc <- progAlProbs %*% parentHo
   
+  # Get Hind/He matrix
+  outmat <- HindHeMat(object$alleleDepth[progeny,, drop = FALSE],
+                      object$depthRatio[progeny,, drop = FALSE],
+                      object$alleles2loc, nLoci(object), heByLoc)
+  outmat[is.infinite(outmat)] <- NaN
+  colnames(outmat) <- GetLoci(object)
+  rownames(outmat) <- progeny
+  
+  return(outmat)
 }
