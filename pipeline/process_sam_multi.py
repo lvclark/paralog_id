@@ -65,7 +65,7 @@ lasttagseq = "" # tag sequence
 
 # subroutine for updating the alignment dictionary
 def update_aligndict(these_mnames, these_NM, these_CIGAR, lasttagseq):
-  these_mnames, these_NM, these_CIGAR = zip(*sorted(zip(these_mnames, these_NM)))
+  these_mnames, these_NM, these_CIGAR = zip(*sorted(zip(these_mnames, these_NM, these_CIGAR)))
   if these_mnames not in aligndict.keys():
     aligndict[these_mnames] = []
   aligndict[these_mnames].append((lasttagseq, these_NM, these_CIGAR))
