@@ -148,7 +148,7 @@ with open(mysam, mode = "r") as samcon:
     else: # start a new tag
       # put the last tag into alignment dict if applicable
       if(len(these_mnames) <= maxalign):
-        update_aligndict(these_mnames, these_NM, lasttagseq)
+        update_aligndict(these_mnames, these_NM, these_CIGAR, lasttagseq)
         count += 1
         if count % 10000 == 0:
           print("{} tags aligning".format(count))
