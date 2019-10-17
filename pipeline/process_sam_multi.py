@@ -68,40 +68,52 @@ def update_aligndict(these_mnames, these_NM, these_CIGAR, lasttagseq):
   these_mnames, these_NM, these_CIGAR = zip(*sorted(zip(these_mnames, these_NM, these_CIGAR)))
   dummy_NM = 999 # what NM should be if there is not an actual alignment
   if these_mnames not in aligndict.keys():
-    # see if this set of alignment positions is a subset of any existing one
-    superset_mnames = [k for k in aligndict.keys() if set(k) > set(these_mnames)]
-    if len(superset_mnames) == 1:
-      # pad out the input alignment data to match the superset
-      m_index = [superset_mnames[0].index(m) for m in these_mnames]
-      new_NM = [dummy_NM for i in range(len(superset_mnames[0]))]
-      new_CIGAR = ['' for i in range(len(superset_mnames[0]))]
-      for i in range(len(m_index)):
-        mi = m_index[i]
-        new_NM[mi] = these_NM[i]
-        new_CIGAR[mi] = these_CIGAR[i]
-      these_mnames = superset_mnames[0]
-      these_NM = tuple(new_NM)
-      these_CIGAR = tuple(new_CIGAR)
-    else:
-      # see if this set of alignment positions is a superset of any existing one
-      subset_mnames = [k for k in aligndict.keys() if set(k) < set(these_mnames)]
-      if len(subset_mnames) == 1:
-        # pad out the existing alignment data to match the new alignment set
-        old_mnames = subset_mnames[0]
-        m_index = [these_mnames.index(m) for m in old_mnames]
-        aligndict[these_mnames] = []
-        for aligninfo in aligndict[old_mnames]:
-          new_NM = [dummy_NM for i in range(len(these_mnames))]
-          new_CIGAR = ['' for i in range(len(these_mnames))]
-          for i in range(len(aligninfo[1])):
-            mi = m_index[i]
-            new_NM[mi] = aligninfo[1][i]
-            new_CIGAR[mi] = aligninfo[2][i]
-          aligndict[these_mnames].append((aligninfo[0], tuple(new_NM), tuple(new_CIGAR)))
-        # remove alignment set that was too small
-        del aligndict[old_mnames]
+    # see if any of these alignment locations have been found before
+    mnames_index = [bisect_left(locsfound, m) for m in these_mnames]
+    anyoverlap = False
+    for mi in range(len(these_mnames)):
+      if mnames_index[mi] < len(locsfound) and \
+      locsfound[mnames_index[mi]] == these_mnames[mi]: # match
+        anyoverlap = True
+      else: # add to list if no match
+        locsfound.insert(mnames_index[mi], these_mnames[mi])
+    if anyoverlap:
+      # see if this set of alignment positions is a subset of any existing one
+      superset_mnames = [k for k in aligndict.keys() if set(k) > set(these_mnames)]
+      if len(superset_mnames) == 1:
+        # pad out the input alignment data to match the superset
+        m_index = [superset_mnames[0].index(m) for m in these_mnames]
+        new_NM = [dummy_NM for i in range(len(superset_mnames[0]))]
+        new_CIGAR = ['' for i in range(len(superset_mnames[0]))]
+        for i in range(len(m_index)):
+          mi = m_index[i]
+          new_NM[mi] = these_NM[i]
+          new_CIGAR[mi] = these_CIGAR[i]
+        these_mnames = superset_mnames[0]
+        these_NM = tuple(new_NM)
+        these_CIGAR = tuple(new_CIGAR)
       else:
-        aligndict[these_mnames] = [] # new marker
+        # see if this set of alignment positions is a superset of any existing one
+        subset_mnames = [k for k in aligndict.keys() if set(k) < set(these_mnames)]
+        if len(subset_mnames) == 1:
+          # pad out the existing alignment data to match the new alignment set
+          old_mnames = subset_mnames[0]
+          m_index = [these_mnames.index(m) for m in old_mnames]
+          aligndict[these_mnames] = []
+          for aligninfo in aligndict[old_mnames]:
+            new_NM = [dummy_NM for i in range(len(these_mnames))]
+            new_CIGAR = ['' for i in range(len(these_mnames))]
+            for i in range(len(aligninfo[1])):
+              mi = m_index[i]
+              new_NM[mi] = aligninfo[1][i]
+              new_CIGAR[mi] = aligninfo[2][i]
+            aligndict[these_mnames].append((aligninfo[0], tuple(new_NM), tuple(new_CIGAR)))
+          # remove alignment set that was too small
+          del aligndict[old_mnames]
+        else:
+          aligndict[these_mnames] = [] # new marker
+    else:
+      aligndict[these_mnames] = [] # new marker
   aligndict[these_mnames].append((lasttagseq, these_NM, these_CIGAR))
 
 # read the sam file and process to aligndict
