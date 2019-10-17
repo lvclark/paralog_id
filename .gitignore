@@ -47,6 +47,7 @@ marker_CSV/190523tetraploid_Chr1Chr2.csv
 marker_CSV/190525twoalign_Chr1Chr2.csv
 marker_CSV/test.csv
 log/*
+*test*
 
 # Python compiled code
 *.pyc
@@ -54,4 +55,3 @@ log/*
 # Figures
 *.png
 *.tiff
-

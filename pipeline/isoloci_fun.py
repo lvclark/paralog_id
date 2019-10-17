@@ -7,7 +7,7 @@ import sys
 import re
 
 if sys.version_info.major < 3:
-    raise Exeption("Python 3 required.")
+  raise Exeption("Python 3 required.")
 
 # functions for sorting out isoloci
 
@@ -124,7 +124,14 @@ def AlleleAssociations(countsmat):
       outP[h2][h1] = pout
   return(outP)
 
-def GroupByAlAssociations(countsmat, expHindHe, startP = 0.1):
+def GrpAllowedAligns(grp, NMmat):
+  '''Because some haplotypes may not have actually aligned to some locations,
+  find allowable locations for a group, where every haplotype aligned.'''
+  nalign = len(NMmat[0])
+  dummy_NM = 999 # NM if there was really no alignment
+  return [all([NMmat[h][a] != dummy_NM for h in grp]) for a in range(nalign)]
+
+def GroupByAlAssociations(countsmat, NMmat, expHindHe, startP = 0.1):
   '''Find groups of alleles that are significantly negatively associated, and
   don't exceed the expected value of Hind/He.'''
   nHap = len(countsmat)
@@ -137,6 +144,8 @@ def GroupByAlAssociations(countsmat, expHindHe, startP = 0.1):
       for h2 in range(h1 + 1, nHap):
         if pvals[h1][h2] > currP:
           continue # doesn't meet threshold, don't add to group
+        if not any(GrpAllowedAligns({h1, h2}, NMmat)):
+          continue # there are no subgenomes to which both aligned
         if len(grps) == 0: # first group
           grps.append({h1, h2})
           continue
@@ -147,11 +156,14 @@ def GroupByAlAssociations(countsmat, expHindHe, startP = 0.1):
         assert len(h2grp) < 2
         if len(h1grp) == 0 and len(h2grp) == 0:
           grps.append({h1, h2}) # new group
-        elif len(h1grp) == 1 and len(h2grp) == 0:
+        elif len(h1grp) == 1 and len(h2grp) == 0 and \
+        any(GrpAllowedAligns(grps[h1grp[0]] | {h2}, NMmat)):
           grps[h1grp[0]].add(h2) # add to existing group
-        elif len(h1grp) == 0 and len(h2grp) == 1:
+        elif len(h1grp) == 0 and len(h2grp) == 1 and \
+        any(GrpAllowedAligns(grps[h2grp[0]] | {h1}, NMmat)):
           grps[h2grp[0]].add(h1) # add to existing group
-        elif len(h1grp) == 1 and len(h2grp) == 1 and h1grp[0] != h2grp[0]:
+        elif len(h1grp) == 1 and len(h2grp) == 1 and h1grp[0] != h2grp[0] and \
+        any(GrpAllowedAligns(grps[h1grp[0]] | grps[h2grp[0]], NMmat)):
           # merge groups
           grps[h1grp[0]].update(grps[h2grp[0]])
           grps.pop(h2grp[0])
@@ -164,7 +176,7 @@ def GroupByAlAssociations(countsmat, expHindHe, startP = 0.1):
     currP = currP / 10
   return([grps, currP])
 
-def AdjustHapAssignByAlAssociations(grps, hapAssign):
+def AdjustHapAssignByAlAssociations(grps, hapAssign, NMmat):
   '''Adjust hapAssign if necessary so that each group that was made based on
   negative associations between alleles is in just one haplotype group.'''
   nLoc = len(hapAssign)
@@ -174,8 +186,11 @@ def AdjustHapAssignByAlAssociations(grps, hapAssign):
     haInGrp = [i for i in range(nLoc) if numPerHA[i] > 0]
     if len(haInGrp) == 1:
       continue # no rearrangement needed
+    # get alignment locations allowable for this group
+    allowed = GrpAllowedAligns(grp, NMmat)
+    haInGrp = [i for i in haInGrp if allowed[i]]
     # go to the isolocus where most of these are, or a random one.
-    maxPerHA = max(numPerHA)
+    maxPerHA = max([numPerHA[i] for i in haInGrp])
     matchmax = [i for i in haInGrp if numPerHA[i] == maxPerHA]
     if len(matchmax) == 1:
       targetLoc = matchmax[0]
@@ -196,7 +211,7 @@ def HindHeExcess(hindhe, expHindHe):
   else:
     return mean(excess)
 
-def FindNeighbors(hapAssign, corrgrps, tabu):
+def FindNeighbors(hapAssign, corrgrps, NMmat, tabu):
   '''For the Tabu Search algorithm, find neighboring solutions to the current
   one that have not recently been examined.  corrgrps is a list of groups of
   haplotypes that can be swapped together, including all individual haplotypes
@@ -211,7 +226,9 @@ def FindNeighbors(hapAssign, corrgrps, tabu):
         [[ha.remove(g) for g in grp if g in ha] for ha in hapAssign_new]
         hapAssign_new[loc].extend(grp)
         haInd = IndexHapAssign(hapAssign_new)
-        if haInd not in tabu:
+        allowed = [GrpAllowedAligns(ha, NMmat) for ha in hapAssign_new]
+        if haInd not in tabu and \
+        all([allowed[i][i] for i in range(nLoc)]):
           haList.append(hapAssign_new)
   return haList
 
@@ -232,8 +249,8 @@ reps = 25, maxTabu = 5, corrstartP = 0.01, logcon = None):
     return hapAssign
 
   # get groups based on allele correlations, and adjust hapAssign if needed
-  corrgrps, corrP = GroupByAlAssociations(countsmat, expHindHe, startP = corrstartP)
-  hapAssign = AdjustHapAssignByAlAssociations(corrgrps, hapAssign)
+  corrgrps, corrP = GroupByAlAssociations(countsmat, NMmat, expHindHe, startP = corrstartP)
+  hapAssign = AdjustHapAssignByAlAssociations(corrgrps, hapAssign, NMmat)
   hindhe = HindHeByIsolocus(countsmat, hapAssign)
   # if everything ok after adjusting by corrgrps, don't do search
   if all([h == None or h < expHindHe for h in hindhe]):
@@ -259,7 +276,7 @@ reps = 25, maxTabu = 5, corrstartP = 0.01, logcon = None):
   # tabu search algorithm
   for rep in range(reps):
     # get all non-tabu neighbors and choose the best
-    neighbors = FindNeighbors(hapAssign, corrgrps, tabu)
+    neighbors = FindNeighbors(hapAssign, corrgrps, NMmat, tabu)
     if len(neighbors) == 0:
       break
     hindhe_neighbors = [HindHeByIsolocus(countsmat, ha) for ha in neighbors]
