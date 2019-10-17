@@ -5,6 +5,7 @@ import re
 import argparse
 import bisect
 import sys
+from bisect import bisect_left
 
 if sys.version_info.major < 3:
     raise Exeption("Python 3 required.")
@@ -57,6 +58,7 @@ else:
 # dictionary to store alignments
 aligndict = dict()
 count = 0
+locsfound = [] # list of all alignment locations, for binary search
 
 # lists to store marker data for the current tag
 these_mnames = [] # marker names
