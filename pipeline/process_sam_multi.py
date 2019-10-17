@@ -66,7 +66,7 @@ lasttagseq = "" # tag sequence
 # subroutine for updating the alignment dictionary
 def update_aligndict(these_mnames, these_NM, these_CIGAR, lasttagseq):
   these_mnames, these_NM, these_CIGAR = zip(*sorted(zip(these_mnames, these_NM, these_CIGAR)))
-  dummy_NM = 99 # what NM should be if there is not an actual alignment
+  dummy_NM = 999 # what NM should be if there is not an actual alignment
   if these_mnames not in aligndict.keys():
     # see if this set of alignment positions is a subset of any existing one
     superset_mnames = [k for k in aligndict.keys() if set(k) > set(these_mnames)]
