@@ -170,11 +170,6 @@ with open(mysam, mode = "r") as samcon:
     else:
       assert row[16].startswith("NM:i:")
       NM = int(row[16][5:])
-    if lasttagseq == "": # first sequence
-      lasttagseq = tagseq
-      these_mnames = [mname]
-      these_NM = [NM]
-      these_CIGAR = [cigar]
 
     secondary = flag & 256 == 256
     if secondary: # add alignments to the list
@@ -183,7 +178,7 @@ with open(mysam, mode = "r") as samcon:
       these_CIGAR.append(cigar)
     else: # start a new tag
       # put the last tag into alignment dict if applicable
-      if(len(these_mnames) <= maxalign):
+      if(len(these_mnames) <= maxalign and lasttagseq != ""):
         update_aligndict(these_mnames, these_NM, these_CIGAR, lasttagseq)
         count += 1
         if count % 10000 == 0:
