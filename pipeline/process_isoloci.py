@@ -27,6 +27,8 @@ parser.add_argument("--inbreeding", "-f", nargs = '?', type = float, default = 0
                     help = "Inbreeding coefficient, ranging from 0 to 1.")
 parser.add_argument("--logfile", "-l", nargs = '?', default = "",
                     help = "Optional path to file where log should be written.")
+parser.add_argument("--samples", "-s", nargs = '?', default = "",
+                    help = "File listing names of samples to analyze and retain (one name per line).")
 
 args = parser.parse_args()
 alignfile = args.alignfile
@@ -35,6 +37,7 @@ outfile = args.out
 ploidy = args.ploidy
 inbreeding = args.inbreeding
 logfile = args.logfile
+samples_file = args.samples
 
 # generate output file name if not provided
 if outfile == "":
@@ -117,15 +120,32 @@ try:
 
   # header info from files
   depthheader = next(depthreader)
-  samples = depthheader[1:]
+  ttd_samples = depthheader[1:]
   alignheader = next(alignreader)
   maxisoloci = sum([h.startswith("Alignment") for h in alignheader])
   if maxisoloci == 0:
     raise Exception("Columns starting with 'Alignment' not found in " + alignfile)
+    
+  # import samples if provided
+  if samples_file == "":
+    samples = ttd_samples
+    sample_index = [i for i in range(len(samples))]
+  else:
+    with open(samples_file, mode = 'r') as mycon:
+      samples = mycon.read().splitlines()
+    if any([s not in ttd_samples for s in samples]):
+      print("Names of samples not found in TagTaxaDist:")
+      [print(s) for s in samples if s not in ttd_samples]
+      raise Exception("Samples from {} not found in depth file.".format(samples_file))
+    sample_index = [ttd_samples.index(s) for s in samples]
+  
   # write header to output
-  outwriter.writerow(["Marker", "Variable site", "Allele string"] + depthheader)
+  outwriter.writerow(["Marker", "Variable site", "Allele string"] + [depthheader[0]] +\
+  samples)
 
-  currdepthrows = [next(depthreader)]
+  newdepthrow = next(depthreader)
+  newdepthrow = [newdepthrow[0]] + [newdepthrow[si + 1] for si in sample_index]
+  currdepthrows = [newdepthrow]
   curralignrows = [next(alignreader)]
 
   rowcount = 0 # for testing, to prevent going thru whole file
@@ -133,6 +153,7 @@ try:
   for row in alignreader:
     newalignrow = row
     newdepthrow = next(depthreader)
+    newdepthrow = [newdepthrow[0]] + [newdepthrow[si + 1] for si in sample_index]
     tag = newdepthrow[0] # tag sequence
     assert newalignrow[maxisoloci] == tag
     if newalignrow[:maxisoloci] == curralignrows[0][:maxisoloci]: # same alignment
