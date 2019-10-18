@@ -198,6 +198,9 @@ def extractTTD(tags, ttdfile, sample_index):
       ti2 = tagindex[ti]
       ttd_mat[ti2].extend([int(row[i+1]) for i in sample_index])
   if any([len(ttd) == 1 for ttd in ttd_mat]):
+    tagsnotfound = [ttd[0] for ttd in ttd_mat if len(ttd) == 1]
+    for i in range(min([10, len(tagsnotfound)])):
+      print(tagsnotfound[i])
     raise Exception("Tag not found in TagTaxaDist file. Do SAM and TagTaxaDist match?")
   return header, ttd_mat
 
