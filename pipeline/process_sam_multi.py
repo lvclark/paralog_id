@@ -5,7 +5,6 @@ import re
 import argparse
 import bisect
 import sys
-from bisect import bisect_left
 
 if sys.version_info.major < 3:
     raise Exeption("Python 3 required.")
@@ -58,7 +57,7 @@ else:
 # dictionary to store alignments
 aligndict = dict()
 count = 0
-locsfound = [] # list of all alignment locations, for binary search
+locsfound = set() # set of all alignment locations, for lookup
 
 # lists to store marker data for the current tag
 these_mnames = [] # marker names
@@ -71,14 +70,11 @@ def update_aligndict(these_mnames, these_NM, these_CIGAR, lasttagseq):
   dummy_NM = 999 # what NM should be if there is not an actual alignment
   if these_mnames not in aligndict.keys():
     # see if any of these alignment locations have been found before
-    mnames_index = [bisect_left(locsfound, m) for m in these_mnames]
-    anyoverlap = False
+    mnames_match = [m in locsfound for m in these_mnames]
+    anyoverlap = any(mnames_match)
     for mi in range(len(these_mnames)):
-      if mnames_index[mi] < len(locsfound) and \
-      locsfound[mnames_index[mi]] == these_mnames[mi]: # match
-        anyoverlap = True
-      else: # add to list if no match
-        locsfound.insert(mnames_index[mi], these_mnames[mi])
+      if not mnames_match[mi]:
+        locsfound.add(these_mnames[mi])
     if anyoverlap:
       # see if this set of alignment positions is a subset of any existing one
       superset_mnames = [k for k in aligndict.keys() if set(k) > set(these_mnames)]
