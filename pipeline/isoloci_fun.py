@@ -127,9 +127,9 @@ def AlleleAssociations(countsmat):
 def GrpAllowedAligns(grp, NMmat):
   '''Because some haplotypes may not have actually aligned to some locations,
   find allowable locations for a group, where every haplotype aligned.'''
-  nalign = len(NMmat[0])
+  nalign = len(NMmat)
   dummy_NM = 999 # NM if there was really no alignment
-  return [all([NMmat[h][a] != dummy_NM for h in grp]) for a in range(nalign)]
+  return [all([NMmat[a][h] != dummy_NM for h in grp]) for a in range(nalign)]
 
 def GroupByAlAssociations(countsmat, NMmat, expHindHe, startP = 0.1):
   '''Find groups of alleles that are significantly negatively associated, and
@@ -188,10 +188,9 @@ def AdjustHapAssignByAlAssociations(grps, hapAssign, NMmat):
       continue # no rearrangement needed
     # get alignment locations allowable for this group
     allowed = GrpAllowedAligns(grp, NMmat)
-    haInGrp = [i for i in haInGrp if allowed[i]]
     # go to the isolocus where most of these are, or a random one.
-    maxPerHA = max([numPerHA[i] for i in haInGrp])
-    matchmax = [i for i in haInGrp if numPerHA[i] == maxPerHA]
+    maxPerHA = max([numPerHA[i] for i in haInGrp if allowed[i]])
+    matchmax = [i for i in haInGrp if numPerHA[i] == maxPerHA and allowed[i]]
     if len(matchmax) == 1:
       targetLoc = matchmax[0]
     else:
