@@ -25,7 +25,7 @@ def GiniSimpson(counts, N = None):
   freq = [c/N for c in counts]
   return 1.0 - sum([f**2 for f in freq])
 
-def HindHe(countsmat):
+def HindHe(countsmat, debug = False):
   '''For one marker, estimate Hind/He.
   countsmat is a list of lists, with the first dimension representing alleles
   and the second dimension representing taxa. Each cell is read depth.
@@ -44,6 +44,9 @@ def HindHe(countsmat):
   meanDepthRatios = [sum(x)/nind for x in zip(*depthRatios)] # mean by allele
   He = GiniSimpson(meanDepthRatios, N = 1)
   assert He > 0
+  if debug:
+    print(meanDepthRatios)
+    print(He)
 
   HindHeByInd = [GiniSimpson(countsmatT[i], N = depthByInd[i]) * \
                  depthByInd[i] / (depthByInd[i] - 1)/ He for i in range(nind) if depthByInd[i] > 1]
@@ -69,11 +72,11 @@ def InitHapAssign(NMmat):
 
   return hapAssign
 
-def HindHeByIsolocus(countsmat, hapAssign):
+def HindHeByIsolocus(countsmat, hapAssign, debug = False):
   '''For a given set of assignments of haplotypes to isoloci, estimate Hind/He
   for each isolocus.  countsmat and hapAssign are as defined above.'''
   splitcounts = [[countsmat[h] for h in isolocus] for isolocus in hapAssign]
-  return [HindHe(c) for c in splitcounts]
+  return [HindHe(c, debug = debug) for c in splitcounts]
 
 def MeanNMperLoc(NMmat, hapAssign):
   '''Get mean number of mutations per locus across all haplotypes versus their
