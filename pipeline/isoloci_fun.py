@@ -41,7 +41,7 @@ def HindHe(countsmat, debug = False):
     return None
 
   depthRatios = [[c / depthByInd[i] for c in countsmatT[i]] for i in range(nind) if depthByInd[i] > 0]
-  meanDepthRatios = [sum(x)/nind for x in zip(*depthRatios)] # mean by allele
+  meanDepthRatios = [sum(x)/len(x) for x in zip(*depthRatios)] # mean by allele
   He = GiniSimpson(meanDepthRatios, N = 1)
   assert He > 0
   if debug:
