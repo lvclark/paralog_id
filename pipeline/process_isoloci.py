@@ -56,8 +56,6 @@ def ProcessRowGroup(alignrows, depthrows, nisoloci, thresh, expHindHe,
   if logcon != None:
     logcon.write(" ".join(alignrows[0][:nisoloci]) + "\n")
   assert len(depthrows) > 1
-  
-  debug = "Chr01-000260386-top" in alignrows[0][:nisoloci]
 
   depths = [[int(d) for d in row[1:]] for row in depthrows] # integer depths
   # filter out any alleles without depth
@@ -77,7 +75,7 @@ def ProcessRowGroup(alignrows, depthrows, nisoloci, thresh, expHindHe,
     NM = [[int(row[nisoloci + 1 + i]) for row in alignrows] for i in range(nalign)]
     # workhorse function for making assignments
     hapAssign = isoloci_fun.TabuLocus(depths, NM, expHindHe, logcon = logcon)
-  hindhe = isoloci_fun.HindHeByIsolocus(depths, hapAssign, debug = debug)
+  hindhe = isoloci_fun.HindHeByIsolocus(depths, hapAssign)
 
   # filter down to isoloci that don't exceed max Hind/He
   packed2 = [(hapAssign[i], alignrows[0][i]) for i in range(nalign)
