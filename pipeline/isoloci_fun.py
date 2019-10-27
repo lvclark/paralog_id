@@ -51,7 +51,7 @@ def HindHe(countsmat, debug = False):
   HindHeByInd = [GiniSimpson(countsmatT[i], N = depthByInd[i]) * \
                  depthByInd[i] / (depthByInd[i] - 1)/ He for i in range(nind) if depthByInd[i] > 1]
 
-  m = sum(HindHeByInd)/nind
+  m = sum(HindHeByInd)/len(HindHeByInd)
   return m
 
 def InitHapAssign(NMmat):
