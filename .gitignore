@@ -48,6 +48,7 @@ marker_CSV/190525twoalign_Chr1Chr2.csv
 marker_CSV/test.csv
 log/*
 *test*
+!dart_test.R
 
 # Python compiled code
 *.pyc
