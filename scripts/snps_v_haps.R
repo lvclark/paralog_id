@@ -41,3 +41,10 @@ hist(rowMeans(hh2, na.rm = TRUE), breaks = 30)
 
 var(as.vector(hh1), na.rm = TRUE) # 1.37
 var(as.vector(hh2), na.rm = TRUE) # 3.58
+
+# identify regions with collapsed paralogs?
+library(ggplot2)
+
+ggplot(mapping = aes(x = mydata1$locTable$Pos, y = hh1loc)) +
+  geom_point() +
+  geom_smooth()
