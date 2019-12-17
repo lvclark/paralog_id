@@ -4,9 +4,9 @@
 # Can we use this statistic to distinguish good loci from paralogs?
 load("workspaces/190515counts_matrices.RData")
 tagtab <- read.csv("marker_CSV/190515paralog_tags.csv", stringsAsFactors = FALSE)
-Rcpp::sourceCpp('src/simpson.cpp')
 library(ggplot2)
 library(viridis)
+library(polyRAD)
 
 # set up alleles2loc vectors
 alleles2locM <- match(tagtab$Miscanthus, unique(tagtab$Miscanthus))
@@ -38,74 +38,53 @@ tetraploid_mat <- tetraploid_mat[,keep]
 alleles2locM <- match(tagtab$Miscanthus, unique(tagtab$Miscanthus))
 alleles2locS <- match(tagtab$Sorghum, unique(tagtab$Sorghum))
 
-# function to get He based on depth ratio instead of counts
-He_depth_ratio <- function(alleleDepth, alleles2loc){
-  nloc <- max(alleles2loc)
-  out <- numeric(nloc)
-  for(i in 1:nloc){
-    thesecol <- which(alleles2loc == i)
-    depthRatios <- sweep(alleleDepth[,thesecol, drop = FALSE],
-                         1, rowSums(alleleDepth[,thesecol, drop = FALSE]), "/")
-    freq <- colMeans(depthRatios, na.rm = TRUE)
-    out[i] <- 1 - sum(freq ^ 2)
-  }
-  return(out)
-}
+# RADdata objects and Hind/He
+radM2 <- RADdata(diploid_mat, alleles2locM,
+                 data.frame(row.names = unique(tagtab$Miscanthus)),
+                 list(2), 0.001, tagtab$TagSeq)
+hhM2 <- HindHe(radM2)
+rm(radM2)
 
-# get depth ratios
-DepthRatio <- function(alleleDepth, alleles2loc){
-  locDepth <- t(apply(alleleDepth, 1, function(x) tapply(x, alleles2loc, sum)))
-  expandedLocDepth <- locDepth[,as.character(alleles2loc), drop = FALSE]
-  depthRatio <- alleleDepth/expandedLocDepth
-  return(depthRatio)
-}
+radS2 <- RADdata(diploid_mat, alleles2locS,
+                 data.frame(row.names = unique(tagtab$Sorghum)),
+                 list(2), 0.001, tagtab$TagSeq)
+hhS2 <- HindHe(radS2)
+rm(radS2)
 
-depthrat_dip_M <- DepthRatio(diploid_mat, alleles2locM)
-depthrat_dip_S <- DepthRatio(diploid_mat, alleles2locS)
+radM4 <- RADdata(tetraploid_mat, alleles2locM,
+                 data.frame(row.names = unique(tagtab$Miscanthus)),
+                 list(4), 0.001, tagtab$TagSeq)
+hhM4 <- HindHe(radM4)
+rm(radM4)
+
+radS4 <- RADdata(tetraploid_mat, alleles2locS,
+                 data.frame(row.names = unique(tagtab$Sorghum)),
+                 list(4), 0.001, tagtab$TagSeq)
+hhS4 <- HindHe(radS4)
+rm(radS4)
 
 # compare miscanthus and sorghum for diploids
 Depth_dip_M <- tapply(colSums(diploid_mat), alleles2locM, sum)
 
-HindHe_dip_Misc <- HindHeByLoc(diploid_mat, depthrat_dip_M, alleles2locM, max(alleles2locM))
-He_dip_Misc <- He_depth_ratio(diploid_mat, alleles2locM)
-Hind_dip_Misc <- HindHe_dip_Misc * He_dip_Misc
+HindHe_dip_Misc <- colMeans(hhM2, na.rm = TRUE)
 
-ggplot(mapping = aes(x = He_dip_Misc, y = Hind_dip_Misc,
-                     col = log(Depth_dip_M))) +
-  geom_point() +
-  scale_color_viridis(option = "magma") +
-  geom_abline(slope = 1/2, intercept = 0) +
-  labs(x = "He", y = "Hind", title = "Diploids with Miscanthus reference")
-
-hist(log2(HindHe_dip_Misc))
 hist(HindHe_dip_Misc[HindHe_dip_Misc < 2], breaks = 50)
-mean(HindHe_dip_Misc > 1/2, na.rm = TRUE) # 24% exceed expectations (30% when corrected for size)
+
+mean(HindHe_dip_Misc > 1/2, na.rm = TRUE) # 30% exceed expectations
 
 Depth_dip_S <- tapply(colSums(diploid_mat), alleles2locS, sum)
 
-HindHe_dip_Sorg <- HindHeByLoc(diploid_mat, depthrat_dip_S, alleles2locS, max(alleles2locS))
-He_dip_Sorg <- He_depth_ratio(diploid_mat, alleles2locS)
-Hind_dip_Sorg <- HindHe_dip_Sorg * He_dip_Sorg
+HindHe_dip_Sorg <- colMeans(hhS2, na.rm = TRUE)
 
-ggplot(mapping = aes(x = He_dip_Sorg, y = Hind_dip_Sorg,
-                     col = log(Depth_dip_S))) +
-  geom_point() +
-  scale_color_viridis(option = "magma") +
-  geom_abline(slope = 1/2, intercept = 0) +
-  labs(x = "He", y = "Hind", title = "Diploids with Sorghum reference")
-
-hist(log2(HindHe_dip_Sorg))
 hist(HindHe_dip_Sorg[HindHe_dip_Sorg < 2], breaks = 50)
-mean(HindHe_dip_Sorg > 1/2, na.rm = TRUE) # 32% exceed expectations (38% corrected for size)
+mean(HindHe_dip_Sorg > 1/2, na.rm = TRUE) # 39% exceed expectations
 
 # put into data frame to compare distributions
-dip_df <- data.frame(Reference = c(rep("Miscanthus", length(Hind_dip_Misc)),
-                                   rep("Sorghum", length(Hind_dip_Sorg))),
-                     He = c(He_dip_Misc, He_dip_Sorg),
-                     Hind = c(Hind_dip_Misc, Hind_dip_Sorg),
+dip_df <- data.frame(Reference = c(rep("Miscanthus", length(HindHe_dip_Misc)),
+                                   rep("Sorghum", length(HindHe_dip_Sorg))),
                      HindHe = c(HindHe_dip_Misc, HindHe_dip_Sorg),
                      Depth = c(Depth_dip_M, Depth_dip_S))
-dip_df <- dip_df[which(dip_df$Depth > 0 & dip_df$He > 0),]
+dip_df <- dip_df[which(dip_df$Depth > 0 & !is.na(dip_df$HindHe)),]
 
 ggplot(dip_df, aes(x = Depth, y = HindHe, color = Reference)) +
   geom_point() +
@@ -127,15 +106,6 @@ ggplot(dip_df, aes(x = HindHe, by = Reference,
                    color = Reference)) +
   geom_density() +
   geom_vline(xintercept = 0.5)
-
-# how to properly scale by depth?
-# He is prob of sampling two different reads in population
-
-# (Deleted old code for scaling since that is now built into Rcpp function)
-
-# If I have one read He is reduced to zero.
-# If I have two reads, and He is 0.5, I get 0.5 * 0 + 0.5 * 0.5 which is 0.25
-# If I have three reads, I get 1/4 * 0 + 3/4 * 0.4444 = 1/3
 
 head(dip_df)
 
