@@ -18,6 +18,26 @@ tagtab[1:20,2:3]
 alleles2locS <- match(tagtab$Sorghum, unique(tagtab$Sorghum))
 alleles2locS[1:20]
 
+# sanity check, and filter markers that don't actually have two alignment locations
+keep <- logical(nrow(tagtab))
+for(i in 1:max(alleles2locS)){
+  thiscol <- which(alleles2locS == i)
+  if(length(unique(alleles2locM[thiscol])) != 2){
+    print(i)
+    print(unique(tagtab$Sorghum[thiscol]))
+    print(unique(tagtab$Miscanthus[thiscol]))
+  } else {
+    keep[thiscol] <- TRUE
+  }
+}
+
+tagtab <- tagtab[keep,]
+diploid_mat <- diploid_mat[,keep]
+tetraploid_mat <- tetraploid_mat[,keep]
+
+alleles2locM <- match(tagtab$Miscanthus, unique(tagtab$Miscanthus))
+alleles2locS <- match(tagtab$Sorghum, unique(tagtab$Sorghum))
+
 # function to get He based on depth ratio instead of counts
 He_depth_ratio <- function(alleleDepth, alleles2loc){
   nloc <- max(alleles2loc)
