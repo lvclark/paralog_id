@@ -126,12 +126,15 @@ ggplot(dip_df, aes(x = log2(HindHe), by = Reference,
   geom_density() +
   geom_vline(xintercept = -1)
 
-ggplot(dip_df, aes(x = log(Depth), y = log2(HindHe))) +
+hd2 <- ggplot(dip_df, aes(x = Depth / nrow(diploid_mat), y = HindHe)) +
   geom_point() +
   geom_density2d(col = "blue") +
-  geom_hline(yintercept = -1, color = "red") + # expected max ratio
-  geom_vline(xintercept = log(5 * nrow(diploid_mat)), col = "green") + # reasonable minimum depth
-  facet_wrap(~ Reference)
+  geom_hline(yintercept = 0.5, color = "green", lty = 2) + # expected max ratio
+  facet_wrap(~ Reference) +
+  scale_x_continuous("Mean depth", trans = "log",
+                     breaks = c(0.05, 1, 20, 400)) +
+  scale_y_continuous(expression(H[ind] / H[E]), trans = "log2",
+                     breaks = c(0.125, 0.25, 0.5, 1, 2))
 
 p2 <- ggplot(dip_df[dip_df$Depth >= 5 * nrow(diploid_mat) & dip_df$HindHe > 0,], 
        aes(x = HindHe, by = Reference,
@@ -149,6 +152,16 @@ tet_df <- data.frame(Reference = c(rep("Miscanthus", length(HindHe_tet_Misc)),
                      HindHe = c(HindHe_tet_Misc, HindHe_tet_Sorg),
                      Depth = c(Depth_tet_M, Depth_tet_S))
 tet_df <- tet_df[which(tet_df$Depth > 0 & !is.na(tet_df$HindHe)),]
+
+hd4 <- ggplot(tet_df, aes(x = Depth / nrow(tetraploid_mat), y = HindHe)) +
+  geom_point() +
+  geom_density2d(col = "blue") +
+  geom_hline(yintercept = 0.75, color = "green", lty = 2) + # expected max ratio
+  facet_wrap(~ Reference) +
+  scale_x_continuous("Mean depth", trans = "log",
+                     breaks = c(0.05, 1, 20, 400)) +
+  scale_y_continuous(expression(H[ind] / H[E]), trans = "log2",
+                     breaks = c(0.125, 0.25, 0.5, 1, 2))
 
 p4 <- ggplot(tet_df[tet_df$Depth >= 5 * nrow(tetraploid_mat) & tet_df$HindHe > 0,], 
        aes(x = HindHe, by = Reference,
@@ -197,3 +210,10 @@ grid.arrange(arrangeGrob(p2 + theme(legend.position="none") + ggtitle("Diploids"
                          p24, layout_matrix = matrix(c(1,3,2,3), nrow = 2, ncol = 2),
                          widths = c(0.75, 1)))
 #dev.off()
+
+tiff("191218hh_vs_depth.tiff", width = 6.5 * 300, height = 7 * 300, res = 300,
+     compression = "lzw")
+grid.arrange(arrangeGrob(hd2 + ggtitle("Diploids"),
+                          hd4 + ggtitle("Tetraploids"),
+                          nrow = 2))
+dev.off()
