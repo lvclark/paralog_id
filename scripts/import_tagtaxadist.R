@@ -5,11 +5,14 @@
 tagtab <- read.csv("marker_CSV/190515paralog_tags.csv", stringsAsFactors = FALSE)
 
 # table indicating ploidy
-accessions <- read.csv("~/DOE Msa study/Seq/GBSv2_180110/all_accession_names.csv",
+accessions <- read.csv("marker_CSV/all_accession_names.csv",
                        stringsAsFactors = FALSE)
 head(accessions)
 diploids <- accessions$Accession[accessions$Ploidy == "2x"]    # 356
 tetraploids <- accessions$Accession[accessions$Ploidy == "4x"] # 268
+
+writeLines(diploids, con = "marker_CSV/diploids.txt")
+writeLines(tetraploids, con = "marker_CSV/tetraploids.txt")
 
 readTagTaxaDist <- function(tags, diploids, tetraploids,
                             ttdfile = "D:/TASSELGBS_Msa/180813tagtaxadist.txt"){
