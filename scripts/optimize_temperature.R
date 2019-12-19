@@ -16,10 +16,9 @@ extractLog <- function(file, finalTemp = FALSE, tabu = FALSE){
   initHindHeLines <- initHindHeLines[keep]
   finalHindHeLines <- finalHindHeLines[keep]
   
-  markerLines <- initHindHeLines - 2
+  markerLines <- initHindHeLines - 1
   initNMLines <- initHindHeLines + 1
   finalNMLines <- initHindHeLines + 3
-  unsplitHindHeLines <- initHindHeLines - 1
   if(finalTemp){
     finalTempLines <- initHindHeLines + 4
   }
@@ -28,7 +27,6 @@ extractLog <- function(file, finalTemp = FALSE, tabu = FALSE){
   }
   
   # extract numeric values
-  unsplit_HindHe <- as.numeric(sub("Hind/He without splitting: ", "", logout[unsplitHindHeLines]))
   init_NM <- as.numeric(sub("Initial average NM: ", "", logout[initNMLines]))
   final_NM <- as.numeric(sub("Final average NM: ", "", logout[finalNMLines]))
   
@@ -61,7 +59,6 @@ extractLog <- function(file, finalTemp = FALSE, tabu = FALSE){
   
   # construct data frame
   outdf <- data.frame(row.names = logout[markerLines],
-                      Unsplit_HindHe = unsplit_HindHe,
                       Init_NM = init_NM,
                       Final_NM = final_NM,
                       Init1_HindHe = init1_HindHe,
@@ -493,3 +490,57 @@ ggplot(dfTabu4x, aes(x = InitExcess_HindHe, y = FinalExcess_HindHe, col = Reps))
 mean(dfTabu4x$FinalExcess_HindHe == 0, na.rm = TRUE) # 81%
 table(dfTabu4x$Reps[which(dfTabu4x$FinalExcess_HindHe == 0)])
 mean(dfTabu4x$Reps[which(dfTabu4x$FinalExcess_HindHe == 0)] == 0) # 56% corrected in one round
+
+# Tabu search Dec. 2019 ####
+dfTabu2x <- extractLog("log/Msa_1_diploids.log", tabu = TRUE)
+dfTabu4x <- extractLog("log/Msa_1_tetraploids.log", tabu = TRUE)
+
+dfTabu2x <- dfTabu2x[is.finite(dfTabu2x$FinalMax_HindHe),]
+dfTabu4x <- dfTabu4x[is.finite(dfTabu4x$FinalMax_HindHe),]
+
+ggplot(dfTabu2x, aes(x = InitMax_HindHe, y = FinalMax_HindHe, col = Reps)) +
+  geom_point() +
+  geom_hline(yintercept = 1/2 * 0.85, lty = 2) +
+  geom_vline(xintercept = 1/2 * 0.85, lty = 2) +
+  geom_abline(slope = 1, intercept = 0) +
+  scale_color_viridis() +
+  labs(x = expression("Initial" ~ H[ind]/H[E] ~ "(max out of two loci)"),
+       y = expression("Final" ~ H[ind]/H[E] ~ "(max out of two loci)"),
+       col = "Tabu reps")
+
+ggplot(dfTabu4x, aes(x = InitMax_HindHe, y = FinalMax_HindHe, col = Reps)) +
+  geom_point() +
+  geom_hline(yintercept = 3/4 * 0.85, lty = 2) +
+  geom_vline(xintercept = 3/4 * 0.85, lty = 2) +
+  geom_abline(slope = 1, intercept = 0) +
+  scale_color_viridis() +
+  labs(x = expression("Initial" ~ H[ind]/H[E] ~ "(max out of two loci)"),
+       y = expression("Final" ~ H[ind]/H[E] ~ "(max out of two loci)"),
+       col = "Tabu reps")
+
+dfTabuAll <- rbind(dfTabu2x, dfTabu4x)
+dfTabuAll$Ploidy <- rep(c("Diploids", "Tetraploids"), times = c(nrow(dfTabu2x), nrow(dfTabu4x)))
+
+expvals <- data.frame(Ploidy = c("Diploids", "Tetraploids"),
+                      Val = c(1/2 * 0.85, 3/4 * 0.85))
+
+tiff("191219tabu_output.tiff", width = 6.5 * 300, height = 6.5 * 300, res = 300,
+     compression = "lzw")
+ggplot(dfTabuAll, aes(x = InitMax_HindHe, y = FinalMax_HindHe, col = Reps)) +
+  geom_point() +
+  geom_hline(mapping = aes(yintercept = Val), data = expvals, lty = 2) +
+  geom_vline(mapping = aes(xintercept = Val), data = expvals, lty = 2) +
+  geom_abline(slope = 1, intercept = 0) +
+  scale_color_viridis() +
+  labs(x = expression("Initial" ~ H[ind]/H[E] ~ "(max out of two loci)"),
+       y = expression("Final" ~ H[ind]/H[E] ~ "(max out of two loci)"),
+       col = "Tabu reps") +
+  facet_wrap(~ Ploidy, scales = "free_x", nrow = 2, ncol = 1)
+dev.off()
+
+success <- dfTabuAll$FinalMax_HindHe <= ifelse(dfTabuAll$Ploidy == "Diploids", 1/2 * 0.85, 3/4 * 0.85)
+mean(success,
+     na.rm = TRUE)
+mean(dfTabuAll$Reps[success] == 0)
+hist(dfTabuAll$Reps[success])
+table(dfTabuAll$Reps[success])
