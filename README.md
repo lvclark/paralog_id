@@ -28,9 +28,7 @@ in the above file.
 
 ### Code
 
-The `src` folder previously contained code that has now been moved to polyRAD.
-
-`scripts/simpson_test.R` imports *M. sacchariflorus* read depths from a VCF and
+`scripts/hindhe_by_ploidy.R` imports *M. sacchariflorus* read depths from a VCF and
 plots the distribution of Hind/He by ploidy.
 
 `scripts/filter_markers.R` imports `marker_CSV/190513miscanthus_sorghum_match.csv`
@@ -63,7 +61,7 @@ determine an optimum starting temperature for the simulated annealing algorithm.
 
 ### Documentation
 
-`src/using_hindhe.Rmd` contains a brief exploration of the Hind/He statistic
+`doc/using_hindhe.Rmd` contains a brief exploration of the Hind/He statistic
 using an example dataset provided with polyRAD.
 
 `doc/proof_heterozygosity_for_isolocus_detection.docx` is a mathematical proof
