@@ -63,3 +63,4 @@ log/*
 
 # R workspaces
 workspaces/*
+!workspaces/190515counts_matrices.RData
