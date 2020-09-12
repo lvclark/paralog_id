@@ -9,6 +9,10 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+This is an older tutorial from before I had incorporated Hind/He into polyRAD.
+I am keeping it here since it demonstates the inspection of allele depths
+for markers with different values of Hind/He.
+
 ## Dataset and code for this example
 
 We'll load the example *Miscanthus sinensis* diversity panel data that comes
@@ -17,15 +21,7 @@ with polyRAD.
 ```{r message = FALSE}
 library(polyRAD)
 myfile <- system.file("extdata", "Msi01genes.vcf", package = "polyRAD")
-myRAD <- myRAD <- VCF2RADdata(myfile, possiblePloidies = list(2))
-```
-
-We'll also load the R function for estimating Hind/He.  This is a wrapper for
-an Rcpp function implemented in `simpson.cpp`.  I'll plan to add this to polyRAD
-once I have a preprint up for the methodology.
-
-```{r}
-source("hindhe.R")
+myRAD <- VCF2RADdata(myfile, possiblePloidies = list(2))
 ```
 
 ## Estimating Hind/He
@@ -58,7 +54,7 @@ filtered out.
 Let's look at individual markers.
 
 ```{r}
-myHindHe
+myHindHeByLoc
 ```
 
 S01_150928 has a value close to what was expected.  Let's look at read depth

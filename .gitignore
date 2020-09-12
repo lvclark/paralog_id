@@ -56,3 +56,10 @@ log/*
 # Figures
 *.png
 *.tiff
+
+# Genomics
+*.vcf.bgz
+*.tbi
+
+# R workspaces
+workspaces/*
