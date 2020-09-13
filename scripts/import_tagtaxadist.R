@@ -15,7 +15,7 @@ writeLines(diploids, con = "marker_CSV/diploids.txt")
 writeLines(tetraploids, con = "marker_CSV/tetraploids.txt")
 
 readTagTaxaDist <- function(tags, diploids, tetraploids,
-                            ttdfile = "D:/TASSELGBS_Msa/180813tagtaxadist.txt"){
+                            ttdfile = "large_datasets/180813tagtaxadist.txt"){
   # find accessions in tagtaxadist file
   header <- strsplit(readLines(ttdfile, 1), split = "\t")[[1]]
   header[1:50]

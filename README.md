@@ -29,7 +29,8 @@ in the above file.
 ### Code
 
 `scripts/hindhe_by_ploidy.R` imports *M. sacchariflorus* read depths from a VCF and
-plots the distribution of Hind/He by ploidy.
+plots the distribution of Hind/He by ploidy.  This is an older figure used in
+presentations but not included in the manuscript.
 
 `scripts/filter_markers.R` imports `marker_CSV/190513miscanthus_sorghum_match.csv`
 and filters it down to loci that are clearly paralogous, outputting
@@ -47,17 +48,31 @@ tags and just in diploid and tetraploid individuals, then exports the read
 depth matrices to `workspaces/190515counts_matrices.RData`.
 
 `scripts/H_stats_sorghum_miscanthus.R` imports `workspaces/190515counts_matrices.RData`
-and `marker_CSV/190515paralog_tags.csv`, then uses the functions in
-`src/simpson.cpp` to estimate $H_{ind}$ and $H_E$ for all markers.
-The goal is to find a statistic that can clearly distinguish one-copy and
+and `marker_CSV/190515paralog_tags.csv`, then 
+estimates $H_{ind}$ and $H_E$ for all markers.
+The goal is to demonstrate that Hind/He can clearly distinguish one-copy and
 two-copy loci, *i.e.* those aligned to *Miscanthus* vs. those aligned to
-*Sorghum*.
-Exploration is performed as to how the statistics can be adjusted for read depth.
-
-`scripts/allele_correlations.R` explores ways to group tags into isoloci.
+*Sorghum*.  Figures are plotted to compare the distribution of Hind/He
+when tags are aligned to *Miscanthus* vs. *Sorghum*.
 
 `scripts/optimize_temperature.R` examines the output of `process_isoloci.py` to
-determine an optimum starting temperature for the simulated annealing algorithm.
+evaluate the effectiveness of the tabu search algorithm for optimizing Hind/He.
+Figures are plotted to compare Hind/He before and after the tabu search.
+
+`scripts/get_inbreeding.R` tests code to estimate inbreeding from preliminary
+Hind/He distributions, and also plots Hind/He vs. ploidy, depth, and proportion
+_M. sinensis_ ancestry for the manuscript.
+
+`scripts/isoloci_fun_test.py` contains code for testing individual functions
+within the variant calling pipeline.
+
+`scripts/snps_v_haps.R` imports variants from a VCF, with and without phasing
+SNPs into haplotypes.  The distribution and variance of Hind/He is then compared
+between SNPs and haplotypes.  A figure is generated for visualizing the
+distribution.
+
+`scripts/variance_and_bias.R` uses simulated data to explore the impact of
+population and techinical parameters on the variance and bias of Hind/He.
 
 ### Documentation
 
@@ -69,5 +84,4 @@ demonstrating that the average value for $H_{ind}$ is always expected to be
 $\frac{ploidy - 1}{ploidy}H_E$.  It also describes the algorithm implemented
 in the pipeline.
 
-`doc/next_steps.md` describes where I would like to go with this, including
-a final pipeline to sort tags into isoloci.
+`doc/next_steps.md` describes additional work not done yet.

@@ -34,7 +34,7 @@ names(tagseq) <- paralogs$Query
 tagsadded <- 0
 
 # read through SAM file to find sequences
-samfile <- "D:\\TASSELGBS_Msa\\180110alignedtags.sam"
+samfile <- "large_datasets/180110alignedtags.sam"
 samcon <- file(samfile, open = "r")
 while(length(samlines <- readLines(samcon, 10000))){
   # remove header lines

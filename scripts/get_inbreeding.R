@@ -4,10 +4,10 @@ library(polyRAD)
 library(ggplot2)
 library(viridis)
 
-Msa1 <- readProcessSamMulti("Msi_split_1_align.csv")
+Msa1 <- readProcessSamMulti("large_datasets/Msi_split_1_align.csv")
 
-diploids <- readLines("diploids.txt")
-tetraploids <- readLines("tetraploids.txt")
+diploids <- readLines("marker_csv/diploids.txt")
+tetraploids <- readLines("marker_csv/tetraploids.txt")
 
 Msa1_2x <- SubsetByTaxon(Msa1, diploids)
 Msa1_4x <- SubsetByTaxon(Msa1, tetraploids)
@@ -24,7 +24,7 @@ InbreedingFromHindHe(0.65, 4) # 0.13
 # use 0.15 as rough estimate for both
 
 # distinguishing ploidy ####
-Msa1 <- readProcessSamMulti("Msi_split_1_align.csv",
+Msa1 <- readProcessSamMulti("large_datasets/Msi_split_1_align.csv",
                             expectedLoci = 1e4)
 hhAll <- HindHe(Msa1)
 hhInd <- rowMeans(hhAll, na.rm = TRUE)
@@ -36,7 +36,7 @@ nTaxa(Msa1)
 length(diploids) + length(tetraploids)
 
 # get a table with both ploidy and proportion ancestry M. sinensis for plots
-accessions <- read.csv("all_accession_names.csv", stringsAsFactors = FALSE)
+accessions <- read.csv("marker_csv/all_accession_names.csv", stringsAsFactors = FALSE)
 all(names(hhInd) %in% accessions$Accession)
 
 accessions <- accessions[match(names(hhInd), accessions$Accession),]

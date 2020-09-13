@@ -3,7 +3,7 @@ library(polyRAD)
 
 # How do SNPs vs. haplotypes affect variance in Hind/He estimate?
 
-myvcf <- "~/DOE Msa study\\Seq\\GBSv2_180110/180208Msa_filtered.vcf.bgz"
+myvcf <- "large_datasets/180208Msa_filtered.vcf.bgz"
 
 myparam <- ScanVcfParam(fixed = "ALT", info = NA, geno = "AD",
                         which = GRanges("01", IRanges(1, 1e8)))

@@ -46,7 +46,8 @@ marker_CSV/190523diploid_Chr1Chr2.csv
 marker_CSV/190523tetraploid_Chr1Chr2.csv
 marker_CSV/190525twoalign_Chr1Chr2.csv
 marker_CSV/test.csv
-log/*
+log/*.log
+log/*.txt
 *test*
 !dart_test.R
 
