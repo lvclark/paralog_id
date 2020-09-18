@@ -4,7 +4,7 @@
 
 To run the scripts in this repository, download the following files and add
 them to this folder.  These are all from a set of _Miscanthus sacchariflorus_
-variant calls available at [Illinois Data Bank](https://doi.org).
+variant calls available at [Illinois Data Bank](https://doi.org/10.13012/B2IDB-8170405_V1).
 
 `180208Msa_filtered.vcf.bgz` and `180208Msa_filtered.vcf.bgz.tbi`, containing
 allelic read depths from SNPs called in _M. sacchariflorus_.
