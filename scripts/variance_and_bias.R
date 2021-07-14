@@ -255,4 +255,18 @@ for(p in ploidies){
   }
 }
 
-save(testres4, file = "workspaces/variance_estimates_null_alleles.RData")
+#save(testres4, file = "workspaces/variance_estimates_null_alleles.RData")
+load("workspaces/variance_estimates_null_alleles.RData")
+
+testres4$PloidyText <- ifelse(testres4$Ploidy == 2, "Diploid", "Tetraploid")
+
+ggplot(testres4, aes(x = NAF, y = Mean)) +
+  geom_line(aes(lty = as.factor(MAF))) +
+  geom_point() +
+  facet_grid(~ PloidyText) +
+  labs(lty = "MAF", y = "Mean Hind/He", x = "Null allele frequency")
+
+ggplot(testres4, aes(x = NAF, y = Variance)) +
+  geom_line(aes(lty = as.factor(MAF))) +
+  geom_point() +
+  facet_grid(~ PloidyText)
