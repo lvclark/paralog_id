@@ -2,6 +2,7 @@
 library(polyRAD) # v1.3, Sept. 5 2020
 library(ggplot2)
 library(dplyr)
+library(gridExtra)
 
 # function to get an estimate of hind/he and its variance, given biological and technical parameters.
 # MAF = minor allele frequency.  Biallelic loci only.
@@ -80,24 +81,31 @@ load("workspaces/variance_estimates.RData")
 testres$PloidyText <- ifelse(testres$Ploidy == 2, "Diploid", "Tetraploid")
 
 # plot results
-ggplot(testres[testres$Depth < 200,],
+p1 <- ggplot(testres[testres$Depth < 200,],
        aes(x = Depth, y = sqrt(Variance), color = as.factor(MAF), group = MAF)) +
   geom_line() +
   facet_grid(PloidyText ~ N_sam, labeller = labeller(N_sam = function(x) paste("N =", x))) +
   scale_x_continuous(breaks = depths, trans = "log2") +
   labs(y = "Standard deviation of estimate", color = "MAF", x = "Read depth")
-ggsave("~/NSF polyRAD/Year 4 report/fig1a.png",
-       width = 6.5, height = 3.5)
+p1
+# ggsave("~/NSF polyRAD/Year 4 report/fig1a.png",
+#        width = 6.5, height = 3.5)
 
 # bias -- overestimated for rare alleles and small sample size, since so many NA
-ggplot(testres[testres$Depth < 200,],
+p2 <- ggplot(testres[testres$Depth < 200,],
        aes(x = Depth, y = Mean, color = as.factor(MAF), group = MAF)) +
   geom_line() +
   facet_grid(PloidyText ~ N_sam, labeller = labeller(N_sam = function(x) paste("N =", x))) +
   scale_x_continuous(breaks = depths, trans = "log2") +
   labs(y = "Mean estimate", color = "MAF", x = "Read depth")
-ggsave("~/NSF polyRAD/Year 4 report/fig1b.png",
-       width = 6.5, height = 3.5)
+p2
+# ggsave("~/NSF polyRAD/Year 4 report/fig1b.png",
+#        width = 6.5, height = 3.5)
+
+#cairo_pdf("Fig5_samplesize_depth_maf.pdf", width = 6.7, height = 6)
+grid.arrange(arrangeGrob(p1 + ggtitle("A"), p2 + ggtitle("B")))
+#dev.off()
+
 
 # Explore overdispersion.  polyRAD 1.4 June 2021.
 ods <- 5:20
@@ -138,6 +146,15 @@ testres2$PloidyText <- ifelse(testres2$Ploidy == 2, "Diploid", "Tetraploid")
 
 #save(testres2, file = "workspaces/variance_estimates_overdispersion_inbreeding.RData")
 load("workspaces/variance_estimates_overdispersion_inbreeding.RData")
+
+# figure for manuscript
+#cairo_pdf("Fig6_overdispersion_inbreeding.pdf", width = 6.7, height = 3.5)
+ggplot(testres2, mapping = aes(x = Overdispersion, y = Mean, color = Inbreeding, group = paste(Inbreeding, MAF))) +
+  geom_line(aes(lty = as.factor(MAF))) +
+  facet_grid(~ PloidyText, scales = "free_y") +
+  scale_color_viridis_c() +
+  labs(lty = "MAF", y = "Mean estimate")
+#dev.off()
 
 # Do this fig for hexaploids too since there is interest from sweetpotato
 p <- 6L
@@ -260,11 +277,14 @@ load("workspaces/variance_estimates_null_alleles.RData")
 
 testres4$PloidyText <- ifelse(testres4$Ploidy == 2, "Diploid", "Tetraploid")
 
+#cairo_pdf("Fig7_null_alleles.pdf", width = 3.35, height = 5.2)
 ggplot(testres4, aes(x = NAF, y = Mean)) +
   geom_line(aes(lty = as.factor(MAF))) +
   geom_point() +
-  facet_grid(~ PloidyText) +
-  labs(lty = "MAF", y = "Mean Hind/He", x = "Null allele frequency")
+  facet_wrap(~ PloidyText, nrow = 2, scales = "free_y") +
+  labs(lty = "MAF", y = "Mean estimate", x = "Null allele frequency") +
+  theme(legend.position = "bottom")
+#dev.off()
 
 ggplot(testres4, aes(x = NAF, y = Variance)) +
   geom_line(aes(lty = as.factor(MAF))) +
