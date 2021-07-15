@@ -4,7 +4,7 @@ library(polyRAD)
 library(ggplot2)
 library(viridis)
 
-Msa1 <- readProcessSamMulti("large_datasets/Msi_split_1_align.csv")
+Msa1 <- readProcessSamMulti("large_datasets/Msa_split_1_align.csv")
 
 diploids <- readLines("marker_csv/diploids.txt")
 tetraploids <- readLines("marker_csv/tetraploids.txt")
@@ -24,7 +24,8 @@ InbreedingFromHindHe(0.65, 4) # 0.13
 # use 0.15 as rough estimate for both
 
 # distinguishing ploidy ####
-Msa1 <- readProcessSamMulti("large_datasets/Msi_split_1_align.csv",
+set.seed(715)
+Msa1 <- readProcessSamMulti("large_datasets/Msa_split_1_align.csv",
                             expectedLoci = 1e4)
 hhAll <- HindHe(Msa1)
 hhInd <- rowMeans(hhAll, na.rm = TRUE)
@@ -54,8 +55,9 @@ accessions <- accessions[which(accessions$Prop_Msi < 0.5),]
 accessions$Depth <- rowMeans(Msa1$locDepth[accessions$Accession,])
 
 # plot Hind/He vs. ploidy and proportion Msi ancestry
-tiff("191219hindhe_by_ploidy.tiff", width = 6.5 * 300, height = 4 * 300, res = 300,
-     compression = "lzw")
+# tiff("191219hindhe_by_ploidy.tiff", width = 6.5 * 300, height = 4 * 300, res = 300,
+#      compression = "lzw")
+#pdf("Fig4_HindHe_by_ind.pdf", width = 6.7, height = 4)
 ggplot(accessions, aes(x = Depth, y = HindHe, color = Prop_Msi)) +
   geom_point() +
   facet_wrap(~ Ploidy) +
@@ -66,4 +68,4 @@ ggplot(accessions, aes(x = Depth, y = HindHe, color = Prop_Msi)) +
   scale_x_continuous(trans = "log2", breaks = c(5, 10, 20, 40, 80, 160, 320)) +
   geom_hline(data = data.frame(Ploidy = c("2x", "3x", "4x"), ExpectVal = c(0.5, 2/3, 0.75)),
              mapping = aes(yintercept = ExpectVal), lty = 2)
-dev.off()
+#dev.off()

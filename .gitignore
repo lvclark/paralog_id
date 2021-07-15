@@ -50,6 +50,7 @@ log/*.log
 log/*.txt
 *test*
 !dart_test.R
+large_datasets/*
 
 # Python compiled code
 *.pyc
