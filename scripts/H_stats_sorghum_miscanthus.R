@@ -282,8 +282,8 @@ ggplot(mapping = aes(x = HindHe)) +
   facet_grid(rows = vars(Depth_category), cols = vars(Reference)) +
   geom_vline(xintercept = 0.5, lty = 2)
 
-dip_df$Ploidy <- "Diploid"
-tet_df$Ploidy <- "Tetraploid"
+dip_df$Ploidy <- "Diploids"
+tet_df$Ploidy <- "Tetraploids"
 
 all_df_long <- rbind(dip_df, tet_df)
 
@@ -303,7 +303,7 @@ all_df_long_filt_N$Y <- c(4, 2.5, 4.25, 5, 3.5, 6)
 ggplot(all_df_long_filt, mapping = aes(x = HindHe, fill = Depth_category)) +
   geom_density(alpha = 0.5) +
   facet_wrap(~ Ploidy, nrow = 2, scales = "free_y") +
-  geom_vline(data = data.frame(Ploidy = c("Diploid", "Tetraploid"),
+  geom_vline(data = data.frame(Ploidy = c("Diploids", "Tetraploids"),
                                Expected = c(0.5, 0.75)),
              mapping = aes(xintercept = Expected),
              lty = 2) +
