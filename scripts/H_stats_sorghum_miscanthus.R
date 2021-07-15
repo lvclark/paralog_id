@@ -205,15 +205,113 @@ p24 <- ggplot(all_df_filt, aes(x = HindHe_diploids, y = HindHe_tetraploids,
 
 #tiff("191218miscanthus_v_sorghum.tiff", width = 6.5 * 300, height = 5 * 300,
 #     res = 300, compression = "lzw")
+#pdf("Fig2_paralogdetect.pdf", width = 6.7, height = 5.2)
 grid.arrange(arrangeGrob(p2 + theme(legend.position="none") + ggtitle("Diploids"), 
                          p4 + ggtitle("Tetraploids"),
                          p24, layout_matrix = matrix(c(1,3,2,3), nrow = 2, ncol = 2),
                          widths = c(0.75, 1)))
 #dev.off()
 
-tiff("191218hh_vs_depth.tiff", width = 6.5 * 300, height = 7 * 300, res = 300,
-     compression = "lzw")
+# tiff("191218hh_vs_depth.tiff", width = 6.5 * 300, height = 7 * 300, res = 300,
+#      compression = "lzw")
 grid.arrange(arrangeGrob(hd2 + ggtitle("Diploids"),
                           hd4 + ggtitle("Tetraploids"),
                           nrow = 2))
-dev.off()
+#dev.off()
+
+# Get a better summary figure for read depth ####
+dip_df$Mean_depth <- dip_df$Depth / nrow(diploid_mat)
+tet_df$Mean_depth <- tet_df$Depth / nrow(tetraploid_mat)
+
+hist(log2(dip_df$Mean_depth)) # bimodal
+hist(log2(tet_df$Mean_depth)) # bimodal
+
+depth_bins <- matrix(2 ^ c(-7:9, -6:10), nrow = 17, ncol = 2)
+
+max(c(dip_df$Mean_depth, tet_df$Mean_depth))
+
+depth_hindhe_summ <- data.frame(Ploidy = rep(c("Diploid", "Tetraploid"), each = nrow(depth_bins) * 2),
+                                Reference = rep(c("Miscanthus", "Sorghum", "Miscanthus", "Sorghum"), each = nrow(depth_bins)),
+                                Max_mean_depth = rep(depth_bins[,2], times = 4),
+                                N_loci = NA_integer_,
+                                HindHe_mean = NA_real_,
+                                HindHe_var = NA_real_)
+
+for(i in 1:nrow(depth_hindhe_summ)){
+  i2 <- i %% nrow(depth_bins)
+  if(depth_hindhe_summ$Ploidy[i] == "Diploid"){
+    hh <- dip_df$HindHe[dip_df$Mean_depth > depth_bins[i2,1] & dip_df$Mean_depth <= depth_bins[i2,2] &
+                          dip_df$Reference == depth_hindhe_summ$Reference[i]]
+  }
+  if(depth_hindhe_summ$Ploidy[i] == "Tetraploid"){
+    hh <- tet_df$HindHe[tet_df$Mean_depth > depth_bins[i2,1] & tet_df$Mean_depth <= depth_bins[i2,2] &
+                          tet_df$Reference == depth_hindhe_summ$Reference[i]]
+  }
+  depth_hindhe_summ$N_loci[i] <- length(hh)
+  depth_hindhe_summ$HindHe_mean[i] <- mean(hh)
+  depth_hindhe_summ$HindHe_var[i] <- var(hh)
+}
+
+pd <- ggplot(depth_hindhe_summ, aes(x = Max_mean_depth, lty = Ploidy, color = Reference)) +
+  scale_x_continuous(trans = "log2")
+
+pd + geom_line(aes(y = N_loci))
+pd + geom_line(aes(y = HindHe_mean)) + geom_vline(xintercept = c(5, 10, 100))
+pd + geom_line(aes(y = HindHe_var))
+
+categorize_depth <- function(depth, lowcut = 5, highcut = 100){
+  out <- rep("", length(depth))
+  levs <- c(paste("depth <", lowcut),
+            paste(lowcut, "\u2264 depth <", highcut),
+            paste("depth >", highcut))
+  out[depth < lowcut] <- levs[1]
+  out[depth >= lowcut & depth < highcut] <- levs[2]
+  out[depth >= highcut] <- levs[3]
+  out <- factor(out, levels = levs)
+  return(out)
+}
+
+dip_df$Depth_category <- categorize_depth(dip_df$Mean_depth, highcut = 100)
+table(dip_df$Depth_category)
+tet_df$Depth_category <- categorize_depth(tet_df$Mean_depth)
+table(tet_df$Depth_category)
+
+dip_df %>% filter(HindHe < 1.5) %>%
+ggplot(mapping = aes(x = HindHe)) +
+  geom_density() +
+  facet_grid(rows = vars(Depth_category), cols = vars(Reference)) +
+  geom_vline(xintercept = 0.5, lty = 2)
+
+dip_df$Ploidy <- "Diploid"
+tet_df$Ploidy <- "Tetraploid"
+
+all_df_long <- rbind(dip_df, tet_df)
+
+all_df_long %>%
+  filter(Reference == "Miscanthus") %>%
+  filter(HindHe < 1.1) -> all_df_long_filt
+
+all_df_long_filt_N <- 
+  all_df_long_filt %>%
+  group_by(Ploidy, Depth_category) %>%
+  summarize(N = n(),
+            MedHH = median(HindHe))
+all_df_long_filt_N$X <- c(0.2, 0.32, 0.85, 0.2, 0.55, 0.6)
+all_df_long_filt_N$Y <- c(4, 2.5, 4.25, 5, 3.5, 6)
+
+#cairo_pdf("Fig1_HindHe_by_depth.pdf", width = 3.35, height = 5.2)
+ggplot(all_df_long_filt, mapping = aes(x = HindHe, fill = Depth_category)) +
+  geom_density(alpha = 0.5) +
+  facet_wrap(~ Ploidy, nrow = 2, scales = "free_y") +
+  geom_vline(data = data.frame(Ploidy = c("Diploid", "Tetraploid"),
+                               Expected = c(0.5, 0.75)),
+             mapping = aes(xintercept = Expected),
+             lty = 2) +
+  geom_text(data = all_df_long_filt_N,
+            mapping = aes(x = X, label = paste("N =", N),
+                          col = Depth_category, y = Y)) +
+  theme(legend.position = "bottom") +
+  scale_fill_discrete(guide = guide_legend(nrow = 3)) +
+  labs(fill = "Depth category", color = "Depth category",
+       x = expression(H[ind] / H[E]))
+#dev.off()
