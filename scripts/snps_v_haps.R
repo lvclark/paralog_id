@@ -74,11 +74,20 @@ df <- data.frame(HindHe = c(hh1loc_2x, hh2loc_2x, hh1loc_4x, hh2loc_4x),
 expvals <- data.frame(Ploidy = c("Diploids", "Tetraploids"),
                       Val = c(1/2, 3/4))
 
-tiff("191219snp_vs_hap.tiff", width = 6.5 * 300, height = 4 * 300, res = 300,
-     compression = "lzw")
+# tiff("191219snp_vs_hap.tiff", width = 6.5 * 300, height = 4 * 300, res = 300,
+#      compression = "lzw")
 ggplot(df, aes(x = HindHe, color = Marker)) +
   geom_density() +
   facet_wrap(~ Ploidy) +
   geom_vline(aes(xintercept = Val), data = expvals, lty = 2) +
   labs(color = "Marker type")
+# dev.off()
+
+cairo_pdf("Fig3_SNPs_vs_haps.pdf", width = 3.35, height = 4.5)
+ggplot(df, aes(x = HindHe, color = Marker)) +
+  geom_density() +
+  facet_wrap(~ Ploidy, nrow = 2) +
+  geom_vline(aes(xintercept = Val), data = expvals, lty = 2) +
+  labs(color = "Marker type", x = expression(H[ind] / H[E])) +
+  theme(legend.position = "bottom")
 dev.off()
