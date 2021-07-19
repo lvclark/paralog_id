@@ -106,3 +106,6 @@ ggplot(locres5, aes(x = Estimate, color = Cross_type)) +
   facet_wrap(~ Ploidy, scales = "free_x") +
   scale_color_manual(values = dittoSeq::dittoColors(1))
 #dev.off()
+
+testres5
+sqrt(testres5$Variance) # standard deviation of estimate
