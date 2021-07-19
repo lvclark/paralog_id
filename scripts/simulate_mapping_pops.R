@@ -100,7 +100,7 @@ locres5 %>% filter(Ploidy == "Tetraploid") %>%
   geom_histogram() +
   facet_wrap(~ Cross_type)
 
-#cairo_pdf("Fig8_mapping.pdf", width = 6.7, height = 3.5)
+#cairo_pdf("Fig5_mapping.pdf", width = 6.7, height = 3.5)
 ggplot(locres5, aes(x = Estimate, color = Cross_type)) +
   geom_density() +
   facet_wrap(~ Ploidy, scales = "free_x") +

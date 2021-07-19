@@ -102,7 +102,7 @@ p2
 # ggsave("~/NSF polyRAD/Year 4 report/fig1b.png",
 #        width = 6.5, height = 3.5)
 
-#cairo_pdf("Fig5_samplesize_depth_maf.pdf", width = 6.7, height = 6)
+#cairo_pdf("Fig4_samplesize_depth_maf.pdf", width = 6.7, height = 6)
 grid.arrange(arrangeGrob(p1 + ggtitle("A"), p2 + ggtitle("B")))
 #dev.off()
 
@@ -148,13 +148,15 @@ testres2$PloidyText <- ifelse(testres2$Ploidy == 2, "Diploid", "Tetraploid")
 load("workspaces/variance_estimates_overdispersion_inbreeding.RData")
 
 # figure for manuscript
-#cairo_pdf("Fig6_overdispersion_inbreeding.pdf", width = 6.7, height = 3.5)
+#cairo_pdf("SuppFig2_overdispersion_inbreeding.pdf", width = 6.7, height = 3.5)
+# tiff("SuppFig2_overdispersion_inbreeding.tiff", width = 6.7 * 300, height = 3.5 * 300,
+#      res = 300, compression = "lzw")
 ggplot(testres2, mapping = aes(x = Overdispersion, y = Mean, color = Inbreeding, group = paste(Inbreeding, MAF))) +
   geom_line(aes(lty = as.factor(MAF))) +
   facet_grid(~ PloidyText, scales = "free_y") +
   scale_color_viridis_c() +
   labs(lty = "MAF", y = "Mean estimate")
-#dev.off()
+# dev.off()
 
 # Do this fig for hexaploids too since there is interest from sweetpotato
 p <- 6L
@@ -277,14 +279,16 @@ load("workspaces/variance_estimates_null_alleles.RData")
 
 testres4$PloidyText <- ifelse(testres4$Ploidy == 2, "Diploid", "Tetraploid")
 
-#cairo_pdf("Fig7_null_alleles.pdf", width = 3.35, height = 5.2)
+#cairo_pdf("SuppFig3_null_alleles.pdf", width = 3.35, height = 5.2)
+# tiff("SuppFig3_null_alleles.tiff", width = 3.35 * 300, height = 5.2 * 300,
+#      res = 300, compression = "lzw")
 ggplot(testres4, aes(x = NAF, y = Mean)) +
   geom_line(aes(lty = as.factor(MAF))) +
   geom_point() +
   facet_wrap(~ PloidyText, nrow = 2, scales = "free_y") +
   labs(lty = "MAF", y = "Mean estimate", x = "Null allele frequency") +
   theme(legend.position = "bottom")
-#dev.off()
+# dev.off()
 
 ggplot(testres4, aes(x = NAF, y = Variance)) +
   geom_line(aes(lty = as.factor(MAF))) +

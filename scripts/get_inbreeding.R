@@ -57,7 +57,7 @@ accessions$Depth <- rowMeans(Msa1$locDepth[accessions$Accession,])
 # plot Hind/He vs. ploidy and proportion Msi ancestry
 # tiff("191219hindhe_by_ploidy.tiff", width = 6.5 * 300, height = 4 * 300, res = 300,
 #      compression = "lzw")
-#pdf("Fig4_HindHe_by_ind.pdf", width = 6.7, height = 4)
+#pdf("Fig3_HindHe_by_ind.pdf", width = 6.7, height = 4)
 ggplot(accessions, aes(x = Depth, y = HindHe, color = Prop_Msi)) +
   geom_point() +
   facet_wrap(~ Ploidy) +
