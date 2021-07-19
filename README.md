@@ -75,6 +75,9 @@ distribution.
 `scripts/variance_and_bias.R` uses simulated data to explore the impact of
 population and techinical parameters on the variance and bias of Hind/He.
 
+`scripts/simulate_mapping_pops.R` uses simulated data to explore the variance
+of Hind/He in diploid and tetraploid F1 mapping populations.
+
 ### Documentation
 
 `doc/using_hindhe.Rmd` contains a brief exploration of the Hind/He statistic
