@@ -1,7 +1,5 @@
 ## Large genomics files
 
-**Need to add DOI links once the data are published**
-
 To run the scripts in this repository, download the following files and add
 them to this folder.  These are all from a set of _Miscanthus sacchariflorus_
 variant calls available at [Illinois Data Bank](https://doi.org/10.13012/B2IDB-8170405_V1).
@@ -15,7 +13,7 @@ alignment locations of sequence tags from the above _M. sacchariflorus_ dataset.
 `180813tagtaxadist.txt`, containing read depth for each tag in each sample.
 
 Additional files from a separate repository on
-[Illinois Data Bank](https://doi.org)
+[Illinois Data Bank](https://doi.org/10.13012/B2IDB-4814898_V1)
 specific to the testing of the Hind/He statistic:
 
 `Msi_split_1_align.csv` and `Msi_split_1_depths.csv`, containing read depths
