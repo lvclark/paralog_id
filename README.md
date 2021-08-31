@@ -86,11 +86,6 @@ generates Fig. 5 of the main manuscript.
 ### Documentation
 
 `doc/using_hindhe.Rmd` contains a brief exploration of the Hind/He statistic
-using an example dataset provided with polyRAD.
-
-`doc/proof_heterozygosity_for_isolocus_detection.docx` is a mathematical proof
-demonstrating that the average value for $H_{ind}$ is always expected to be
-$\frac{ploidy - 1}{ploidy}H_E$.  It also describes the algorithm implemented
-in the pipeline.
-
-`doc/next_steps.md` describes additional work not done yet.
+using an example dataset provided with polyRAD.  This was superseded by the
+tutorials incorporated into polyRAD, but is kept here for exploration of
+read depth as it relates to Hind/He.
