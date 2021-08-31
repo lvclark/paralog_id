@@ -315,3 +315,27 @@ ggplot(all_df_long_filt, mapping = aes(x = HindHe, fill = Depth_category)) +
   labs(fill = "Depth category", color = "Depth category",
        x = expression(H[ind] / H[E]))
 #dev.off()
+
+# Expected Hind/He for these populations ####
+
+radM2 <- RemoveMonomorphicLoci(radM2)
+temp <- GetLocDepth(radM2)
+keeplocM2 <- colnames(temp)[colMeans(temp) > 5]
+radM2 <- SubsetByLocus(radM2, keeplocM2)
+
+ehhM2 <- ExpectedHindHe(radM2, ploidy = 2L,
+               inbreeding = 0.15, overdispersion = 9)
+
+radM4 <- RemoveMonomorphicLoci(radM4)
+temp <- GetLocDepth(radM4)
+keeplocM4 <- colnames(temp)[colMeans(temp) > 5]
+radM4 <- SubsetByLocus(radM4, keeplocM4)
+
+ehhM4 <- ExpectedHindHe(radM4, ploidy = 4L,
+                        inbreeding = 0.05, overdispersion = 9)
+
+# What proportion alleles retained?
+mean(!is.na(HindHe_dip_Misc[keeplocM2]) & HindHe_dip_Misc[keeplocM2] > 0.26 & HindHe_dip_Misc[keeplocM2] < 0.57)
+# 47.0%
+mean(!is.na(HindHe_tet_Misc[keeplocM4]) & HindHe_tet_Misc[keeplocM4] > 0.54 & HindHe_tet_Misc[keeplocM4] < 0.78)
+# 50.0%
