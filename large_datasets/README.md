@@ -16,6 +16,6 @@ Additional files from a separate repository on
 [Illinois Data Bank](https://doi.org/10.13012/B2IDB-4814898_V1)
 specific to the testing of the Hind/He statistic:
 
-`Msi_split_1_align.csv` and `Msi_split_1_depths.csv`, containing read depths
+`Msa_split_1_align.csv` and `Msa_split_1_depths.csv`, containing read depths
 and alignment locations output by `process_sam_multi.py` in the polyRAD
 variant calling pipeline, used by `scripts/get_inbreeding.R`.
