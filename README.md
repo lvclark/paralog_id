@@ -10,6 +10,9 @@ in the *Sorghum bicolor* v3 reference genome, but two locations in the
 on appropriate chromosomes given the known synteny between *S. bicolor* and
 *M. sinensis*.
 
+This code is archived on Zenodo:
+[![DOI](https://zenodo.org/badge/187055720.svg)](https://zenodo.org/badge/latestdoi/187055720)
+
 ## File descriptions
 
 ### CSV files
