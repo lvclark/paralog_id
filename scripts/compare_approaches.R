@@ -34,7 +34,7 @@ for(i in seq_len(nloci)){
 # generate a second set of allele freqs with no MAF restrictions,
 # to represent the paralogous locus.
 nloci2 <- nloci %/% 2L
-allelesPerLoc2 <- sample(1:8, nloci2)
+allelesPerLoc2 <- sample(1:8, nloci2, replace = TRUE)
 alFreqList2 <- vector(mode = "list", length = nloci2)
 
 for(i in seq_len(nloci2)){
@@ -43,4 +43,25 @@ for(i in seq_len(nloci2)){
     af <- rgamma(allelesPerLoc2[i] - 1L, shape = shape, scale = scale)
   }
   alFreqList2[[i]] <- c(af, 1 - sum(af))
+}
+
+# simulate locus depth ####
+
+# parameters and from SimulateRADReads.R; https://doi.org/10.13012/B2IDB-9729830_V2
+mndepth_shape = 3.2
+mndepth_scale = 8
+inddepth_scale = 10
+
+nsam <- 200L
+
+locDepth <- matrix(NA, nrow = nsam, ncol = nloci + nloci2)
+
+for(i in seq_len(nloci + nloci2)){
+  # randomly select a mean read depth for this locus
+  meanDepth <- ceiling(rgamma(1, shape = mndepth_shape, scale = mndepth_scale))
+  inddepth_shape <- meanDepth/inddepth_scale
+  # randomly generate total locus depth for each taxon
+  indDepth <- as.integer(round(rgamma(nsam, shape = inddepth_shape, scale = inddepth_scale)))
+  
+  locDepth[,i] <- indDepth
 }
