@@ -33,8 +33,8 @@ for(i in seq_len(nloci)){
 }
 
 # generate a second set of allele freqs with no MAF restrictions,
-# to represent the paralogous locus.
-nloci2 <- nloci %/% 2L
+# to represent paralogous loci.
+nloci2 <- nloci * 2L
 allelesPerLoc2 <- sample(1:8, nloci2, replace = TRUE)
 alFreqList2 <- vector(mode = "list", length = nloci2)
 
@@ -114,12 +114,14 @@ colnames(ADdip2) <- colnames(ADtet2) <-
 alnuc <- do.call(paste0,
                  lapply(1:10, function(x) sample(c("A", "C", "G", "T"), ncol(ADdip1) + ncol(ADdip2), replace = TRUE)))
 
-RADdip <- RADdata(cbind(ADdip1, ADdip2), c(alleles2loc1, alleles2loc2),
-                  data.frame(row.names = paste0("loc", seq_len(nloci))),
+alleles2loc_combined <- c(alleles2loc1, (alleles2loc2 + 1L) %/% 2L + nloci)
+
+RADdip <- RADdata(cbind(ADdip1, ADdip2), alleles2loc_combined,
+                  data.frame(row.names = paste0("loc", seq_len(nloci * 2))),
                   list(2L), 0.001, alnuc)
 
-RADtet <- RADdata(cbind(ADtet1, ADtet2), c(alleles2loc1, alleles2loc2),
-                  data.frame(row.names = paste0("loc", seq_len(nloci))),
+RADtet <- RADdata(cbind(ADtet1, ADtet2), alleles2loc_combined,
+                  data.frame(row.names = paste0("loc", seq_len(nloci * 2))),
                   list(4L), 0.001, alnuc)
 
 RADdip <- IterateHWE(RADdip)
@@ -134,10 +136,10 @@ hhTet <- colMeans(HindHe(RADtet), na.rm = TRUE)
 genoDip <- GetProbableGenotypes(RADdip, omit1allelePerLocus = FALSE, multiallelic = "na")[[1]]
 genoTet <- GetProbableGenotypes(RADtet, omit1allelePerLocus = FALSE, multiallelic = "na")[[1]]
 
-mean(is.na(genoDip[,RADdip$alleles2loc <= nloci2])) # 57% of paralogs don't have allele copy num adding up
-mean(is.na(genoDip[,RADdip$alleles2loc > nloci2]))  # only 3% of non-paralogs have that issue
-mean(is.na(genoTet[,RADtet$alleles2loc <= nloci2])) # 56%
-mean(is.na(genoTet[,RADtet$alleles2loc > nloci2]))  # 26%
+mean(is.na(genoDip[,RADdip$alleles2loc > nloci]))  # 54% of paralogs don't have allele copy num adding up
+mean(is.na(genoDip[,RADdip$alleles2loc <= nloci])) # only 3% of non-paralogs have that issue
+mean(is.na(genoTet[,RADtet$alleles2loc > nloci]))  # 55%
+mean(is.na(genoTet[,RADtet$alleles2loc <= nloci])) # 26%
 
 oeDip <- colMeans(HoHe(genoDip, RADdip$alleles2loc, 2L), na.rm = TRUE)
 oeTet <- colMeans(HoHe(genoTet, RADtet$alleles2loc, 4L), na.rm = TRUE)
@@ -149,27 +151,44 @@ depthDip <- colMeans(GetLocDepth(RADdip))
 depthTet <- colMeans(GetLocDepth(RADtet))
 
 ggplot(mapping = aes(x = hhDip,
-                     fill = rep(c("Paralog", "Mendelian"),
-                                 times = c(nloci2, nloci - nloci2)))) +
+                     fill = rep(c("Mendelian", "Paralog"),
+                                 each = nloci))) +
   geom_density(alpha = 0.5) +
   labs(x = "Hind/He", fill = "Locus type")
 
 ggplot(mapping = aes(x = oeDip,
-                     fill = rep(c("Paralog", "Mendelian"),
-                                times = c(nloci2, nloci - nloci2)))) +
+                     fill = rep(c("Mendelian", "Paralog"),
+                                 each = nloci))) +
   geom_density(alpha = 0.5) +
   labs(x = "Ho/He", fill = "Locus type")
 
 ggplot(mapping = aes(x = hapDip,
-                     fill = rep(c("Paralog", "Mendelian"),
-                                times = c(nloci2, nloci - nloci2)))) +
+                     fill = rep(c("Mendelian", "Paralog"),
+                                each = nloci))) +
   geom_density(alpha = 0.5) +
   labs(x = "Proportion samples with more haplotypes than expected", fill = "Locus type") +
   scale_x_continuous(trans = "log1p")
 
 ggplot(mapping = aes(x = hapTet,
-                     fill = rep(c("Paralog", "Mendelian"),
-                                times = c(nloci2, nloci - nloci2)))) +
+                     fill = rep(c("Mendelian", "Paralog"),
+                                each = nloci))) +
   geom_density(alpha = 0.5) +
   labs(x = "Proportion samples with more haplotypes than expected", fill = "Locus type") +
   scale_x_continuous(trans = "log1p")
+
+# Summarize approach efficiency ####
+# Get 95th percentile for Mendelian markers. How many paralogs would be filtered at that cutoff?
+quantile(hhDip[1:nloci], 0.95)
+
+summtab <- data.frame(Approach = rep(c("Hind/He", "Ho/He", "Haplotypes", "Depth"), each = 2),
+                      Ploidy = rep(c("Diploid", "Tetraploid"), times = 4),
+                      Mendelian95 = NA_real_,
+                      ParalogsFiltered = NA_real_)
+
+for(i in seq_len(nrow(summtab))){
+  x <- list(hhDip, hhTet, oeDip, oeTet, hapDip, hapTet, depthDip, depthTet)[[i]]
+  q <- quantile(x[1:nloci], 0.95,  na.rm = TRUE)
+  p <- mean(x[(1:nloci) + nloci] > q, na.rm = TRUE)
+  summtab$Mendelian95[i] <- q
+  summtab$ParalogsFiltered[i] <- p
+}
