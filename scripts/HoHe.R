@@ -13,18 +13,10 @@ HoHe <- function(genmat, alleles2loc, ploidy){
     stop("Allele frequencies don't add up. Was omit1allelePerLocus not set to FALSE? Is ploidy correct?")
   }
   
-  out <- matrix(NA_real_, nrow = nsam, ncol = nloc)
-  
-  # Consider implementation in Rcpp if using for more than just this test
-  for(L in seq_len(nloc)){
-    thesecol <- which(alleles2loc == L)
-    He <- 1 - sum(alleleFreq[thesecol] ^ 2)
-    for(s in seq_len(nsam)){
-      # probability of drawing two different alleles, without replacement
-      Ho <- (1 - sum(genfreq[s,thesecol] ^ 2)) * sc
-      out[s,L] <- Ho / He
-    }
-  }
+  He <- tapply(alleleFreq, alleles2loc,
+               function(x) 1 - sum(x ^ 2))
+  Ho <- (1 - t(rowsum(t(genfreq ^ 2), alleles2loc))) * sc
+  out <- sweep(Ho, 2, He, "/")
   
   return(out)
 }
