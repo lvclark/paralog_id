@@ -183,7 +183,8 @@ quantile(hhDip[1:nloci], 0.95)
 summtab <- data.frame(Approach = rep(c("Hind/He", "Ho/He", "Haplotypes", "Depth"), each = 2),
                       Ploidy = rep(c("Diploid", "Tetraploid"), times = 4),
                       Mendelian95 = NA_real_,
-                      ParalogsFiltered = NA_real_)
+                      ParalogsFiltered = NA_real_,
+                      SE = NA_real_)
 
 for(i in seq_len(nrow(summtab))){
   x <- list(hhDip, hhTet, oeDip, oeTet, hapDip, hapTet, depthDip, depthTet)[[i]]
@@ -191,4 +192,5 @@ for(i in seq_len(nrow(summtab))){
   p <- mean(x[(1:nloci) + nloci] > q, na.rm = TRUE)
   summtab$Mendelian95[i] <- q
   summtab$ParalogsFiltered[i] <- p
+  summtab$SE[i] <- sqrt(p * (1 - p) / sum(!is.na(x[(1:nloci) + nloci])))
 }
