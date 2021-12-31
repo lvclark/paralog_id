@@ -2,7 +2,7 @@
 
 # Observed over Expected heterozygosity
 HoHe <- function(genmat, alleles2loc, ploidy){
-  alleleFreq <- colMeans(genmat) / ploidy
+  alleleFreq <- colMeans(genmat, na.rm = TRUE) / ploidy
   nloc <- max(alleles2loc)
   nsam <- nrow(genmat)
   genfreq <- genmat / ploidy

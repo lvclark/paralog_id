@@ -115,11 +115,11 @@ alnuc <- do.call(paste0,
                  lapply(1:10, function(x) sample(c("A", "C", "G", "T"), ncol(ADdip1) + ncol(ADdip2), replace = TRUE)))
 
 RADdip <- RADdata(cbind(ADdip1, ADdip2), c(alleles2loc1, alleles2loc2),
-                  data.frame(row.names = paste("loc", seq_len(nloci))),
+                  data.frame(row.names = paste0("loc", seq_len(nloci))),
                   list(2L), 0.001, alnuc)
 
 RADtet <- RADdata(cbind(ADtet1, ADtet2), c(alleles2loc1, alleles2loc2),
-                  data.frame(row.names = paste("loc", seq_len(nloci))),
+                  data.frame(row.names = paste0("loc", seq_len(nloci))),
                   list(4L), 0.001, alnuc)
 
 RADdip <- IterateHWE(RADdip)
@@ -131,11 +131,22 @@ source("scripts/HoHe.R")
 hhDip <- colMeans(HindHe(RADdip), na.rm = TRUE)
 hhTet <- colMeans(HindHe(RADtet), na.rm = TRUE)
 
-oeDip <- colMeans(HoHe(GetProbableGenotypes(RADdip, omit1allelePerLocus = FALSE)[[1]],
-                       RADdip$alleles2loc, 2L))
+genoDip <- GetProbableGenotypes(RADdip, omit1allelePerLocus = FALSE, multiallelic = "na")[[1]]
+genoTet <- GetProbableGenotypes(RADtet, omit1allelePerLocus = FALSE, multiallelic = "na")[[1]]
+
+mean(is.na(genoDip[,RADdip$alleles2loc <= nloci2])) # 57% of paralogs don't have allele copy num adding up
+mean(is.na(genoDip[,RADdip$alleles2loc > nloci2]))  # only 3% of non-paralogs have that issue
+mean(is.na(genoTet[,RADtet$alleles2loc <= nloci2])) # 56%
+mean(is.na(genoTet[,RADtet$alleles2loc > nloci2]))  # 26%
+
+oeDip <- colMeans(HoHe(genoDip, RADdip$alleles2loc, 2L), na.rm = TRUE)
+oeTet <- colMeans(HoHe(genoTet, RADtet$alleles2loc, 4L), na.rm = TRUE)
 
 hapDip <- colMeans(HapPerGen(RADdip$alleleDepth, RADdip$alleles2loc) > 2L)
 hapTet <- colMeans(HapPerGen(RADtet$alleleDepth, RADtet$alleles2loc) > 4L)
+
+depthDip <- colMeans(GetLocDepth(RADdip))
+depthTet <- colMeans(GetLocDepth(RADtet))
 
 ggplot(mapping = aes(x = hhDip,
                      fill = rep(c("Paralog", "Mendelian"),
