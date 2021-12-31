@@ -105,9 +105,11 @@ rownames(ADdip1) <- rownames(ADdip2) <- rownames(ADtet1) <- rownames(ADtet2) <-
 colnames(ADdip1) <- colnames(ADtet1) <-
   paste0("loc", alleles2loc1, "_", unlist(lapply(allelesPerLoc, seq_len)))
 
+# combine pairs of adjacent loci into single loci
 colnames(ADdip2) <- colnames(ADtet2) <-
-  paste0("loc", alleles2loc2, "_", unlist(lapply(allelesPerLoc2, seq_len)) +
-           allelesPerLoc[alleles2loc2])
+  paste0("loc", (alleles2loc2 + 1L) %/% 2L + nloci, "_",
+         unlist(lapply(allelesPerLoc2[seq(1, nloci2 - 1, by = 2)] +
+                         allelesPerLoc2[seq(2, nloci2, by = 2)], seq_len)))
 
 # Build RADdata objects and call genotypes ####
 # random allele nucleotides
