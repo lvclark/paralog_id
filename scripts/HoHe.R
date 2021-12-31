@@ -35,15 +35,10 @@ HoHe <- function(genmat, alleles2loc, ploidy){
 # Outputs a sample x locus matrix; do colMeans(out > ploidy) as a metric for
 # locus filtering.
 HapPerGen <- function(countsmat, alleles2loc, minreads = 3L){
-  nloc <- max(alleles2loc)
-  nsam <- nrow(genmat)
+  tfmat <- t(countsmat >= minreads)
+  mode(tfmat) <- "double"
   
-  out <- matrix(NA_integer_, nrow = nsam, ncol = nloc)
-  
-  for(L in seq_len(nloc)){
-    thesecol <- which(alleles2loc == L)
-    out[,L] <- rowSums(countsmat[,thesecol] >= minreads)
-  }
+  out <- t(rowsum(tfmat, alleles2loc))
   
   return(out)
 }
