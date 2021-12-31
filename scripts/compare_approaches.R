@@ -68,7 +68,7 @@ for(i in seq_len(nloci + nloci2)){
 }
 
 # Simulate genotypes ####
-inbr <- 0.3 # inbreeding level
+inbr <- 0.1 # inbreeding level
 
 alleles2loc1 <- rep(seq_len(nloci), times = allelesPerLoc)
 alleles2loc2 <- rep(seq_len(nloci2), times = allelesPerLoc2)
