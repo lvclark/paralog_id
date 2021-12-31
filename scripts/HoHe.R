@@ -34,3 +34,33 @@ HapPerGen <- function(countsmat, alleles2loc, minreads = 3L){
   
   return(out)
 }
+
+# Z-score for read depth ratios
+# Based on McKinney et al. (2017; doi: 10.1111/1755-0998.12613)
+# Find heterozygous genotypes, sum up read counts, and see how
+# much it deviates from expectations.
+# To expand to multiallelic genotypes and ploidies higher than two, look just
+# at genotypes where the most common allele has ploidy - 1 copies.
+Zscore <- function(countsmat, genmat, alleles2loc, ploidy){
+  nloc <- max(alleles2loc)
+  out <- numeric(nloc)
+  ht <- ploidy - 1L
+  p <- ht / ploidy
+  q <- 1 / ploidy
+  pq <- p * q
+  
+  for(i in seq_len(nloc)){
+    thesecol <- which(alleles2loc == i)
+    thesegen <- genmat[,thesecol]
+    thesecounts <- countsmat[,thesecol]
+    commonAl <- which.max(colSums(thesegen == ht, na.rm = TRUE))
+    hetsam <- which(thesegen[,commonAl] == ht)
+    readsAl <- sum(thesecounts[hetsam,commonAl])
+    readsLoc <- sum(thesecounts[hetsam,])
+    sd <- sqrt(readsLoc * pq)
+    z <- (p * readsLoc - readsAl) / sd
+    out[i] <- z
+  }
+  
+  return(out)
+}

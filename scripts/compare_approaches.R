@@ -127,6 +127,8 @@ RADtet <- RADdata(cbind(ADtet1, ADtet2), alleles2loc_combined,
 RADdip <- IterateHWE(RADdip)
 RADtet <- IterateHWE(RADtet)
 
+# consider also simulating with null alleles to make the data messier
+
 # Run statistics on loci ####
 source("scripts/HoHe.R")
 
@@ -149,6 +151,9 @@ hapTet <- colMeans(HapPerGen(RADtet$alleleDepth, RADtet$alleles2loc) > 4L)
 
 depthDip <- colMeans(GetLocDepth(RADdip))
 depthTet <- colMeans(GetLocDepth(RADtet))
+
+Zdip <- abs(Zscore(RADdip$alleleDepth, genoDip, RADdip$alleles2loc, 2L))
+Ztet <- abs(Zscore(RADtet$alleleDepth, genoTet, RADtet$alleles2loc, 4L))
 
 ggplot(mapping = aes(x = hhDip,
                      fill = rep(c("Mendelian", "Paralog"),
@@ -176,21 +181,35 @@ ggplot(mapping = aes(x = hapTet,
   labs(x = "Proportion samples with more haplotypes than expected", fill = "Locus type") +
   scale_x_continuous(trans = "log1p")
 
+ggplot(mapping = aes(x = Zdip,
+                     fill = rep(c("Mendelian", "Paralog"),
+                                each = nloci))) +
+  geom_density(alpha = 0.5) +
+  labs(x = "Z score", fill = "Locus type")
+
+ggplot(mapping = aes(x = Ztet,
+                     fill = rep(c("Mendelian", "Paralog"),
+                                each = nloci))) +
+  geom_density(alpha = 0.5) +
+  labs(x = "Z score", fill = "Locus type")
+
 # Summarize approach efficiency ####
 # Get 95th percentile for Mendelian markers. How many paralogs would be filtered at that cutoff?
 quantile(hhDip[1:nloci], 0.95)
 
-summtab <- data.frame(Approach = rep(c("Hind/He", "Ho/He", "Haplotypes", "Depth"), each = 2),
-                      Ploidy = rep(c("Diploid", "Tetraploid"), times = 4),
+summtab <- data.frame(Approach = rep(c("Hind/He", "Ho/He", "Haplotypes", "Depth", "Z-score"), each = 2),
+                      Ploidy = rep(c("Diploid", "Tetraploid"), times = 5),
                       Mendelian95 = NA_real_,
                       ParalogsFiltered = NA_real_,
                       SE = NA_real_)
 
 for(i in seq_len(nrow(summtab))){
-  x <- list(hhDip, hhTet, oeDip, oeTet, hapDip, hapTet, depthDip, depthTet)[[i]]
+  x <- list(hhDip, hhTet, oeDip, oeTet, hapDip, hapTet, depthDip, depthTet, Zdip, Ztet)[[i]]
   q <- quantile(x[1:nloci], 0.95,  na.rm = TRUE)
   p <- mean(x[(1:nloci) + nloci] > q, na.rm = TRUE)
   summtab$Mendelian95[i] <- q
   summtab$ParalogsFiltered[i] <- p
   summtab$SE[i] <- sqrt(p * (1 - p) / sum(!is.na(x[(1:nloci) + nloci])))
 }
+
+summtab
