@@ -25,9 +25,9 @@ allelesPerLoc <- sample(2:8, nloci, replace = TRUE)
 alFreqList <- vector(mode = "list", length = nloci)
 
 for(i in seq_len(nloci)){
-  af <- rgamma(allelesPerLoc[i] - 1L, shape = shape, scale = scale)
-  while(sum(af) >= 1 | all(af < minmaf)){
-    af <- rgamma(allelesPerLoc[i] - 1L, shape = shape, scale = scale)
+  af <- rgamma(allelesPerLoc[i] - 1L, shape = shape, scale = scale) / 10 + minmaf
+  while(sum(af) >= 1){
+    af <- rgamma(allelesPerLoc[i] - 1L, shape = shape, scale = scale) / 10 + minmaf
   }
   alFreqList[[i]] <- c(af, 1 - sum(af))
 }
@@ -39,9 +39,9 @@ allelesPerLoc2 <- sample(1:8, nloci2, replace = TRUE)
 alFreqList2 <- vector(mode = "list", length = nloci2)
 
 for(i in seq_len(nloci2)){
-  af <- rgamma(allelesPerLoc2[i] - 1L, shape = shape, scale = scale)
+  af <- rgamma(allelesPerLoc2[i] - 1L, shape = shape, scale = scale) / 10 + minmaf
   while(sum(af) >= 1){
-    af <- rgamma(allelesPerLoc2[i] - 1L, shape = shape, scale = scale)
+    af <- rgamma(allelesPerLoc2[i] - 1L, shape = shape, scale = scale) / 10 + minmaf
   }
   alFreqList2[[i]] <- c(af, 1 - sum(af))
 }
@@ -140,10 +140,10 @@ hhTet <- colMeans(HindHe(RADtet), na.rm = TRUE)
 genoDip <- GetProbableGenotypes(RADdip, omit1allelePerLocus = FALSE, multiallelic = "na")[[1]]
 genoTet <- GetProbableGenotypes(RADtet, omit1allelePerLocus = FALSE, multiallelic = "na")[[1]]
 
-mean(is.na(genoDip[,RADdip$alleles2loc > nloci]))  # 54% of paralogs don't have allele copy num adding up
-mean(is.na(genoDip[,RADdip$alleles2loc <= nloci])) # only 3% of non-paralogs have that issue
-mean(is.na(genoTet[,RADtet$alleles2loc > nloci]))  # 55%
-mean(is.na(genoTet[,RADtet$alleles2loc <= nloci])) # 26%
+mean(is.na(genoDip[,RADdip$alleles2loc > nloci]))  # 36% of paralogs don't have allele copy num adding up
+mean(is.na(genoDip[,RADdip$alleles2loc <= nloci])) # only 1% of non-paralogs have that issue
+mean(is.na(genoTet[,RADtet$alleles2loc > nloci]))  # 40%
+mean(is.na(genoTet[,RADtet$alleles2loc <= nloci])) # 10%
 
 oeDip <- colMeans(HoHe(genoDip, RADdip$alleles2loc, 2L), na.rm = TRUE)
 oeTet <- colMeans(HoHe(genoTet, RADtet$alleles2loc, 4L), na.rm = TRUE)
