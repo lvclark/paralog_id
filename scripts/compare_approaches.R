@@ -215,3 +215,7 @@ for(i in seq_len(nrow(summtab))){
 }
 
 summtab
+
+median(unlist(alFreqList))
+
+median(locDepth)
