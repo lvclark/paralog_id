@@ -3,6 +3,7 @@
 library(polyRAD)
 library(ggplot2)
 library(tictoc)
+library(dplyr)
 
 tic.clear()
 tic.clearlog() # start fresh recording timings
@@ -434,3 +435,7 @@ ggplot(mapping = aes(x = oeTet[[11]],
                                 each = nloci))) +
   geom_density(alpha = 0.5) +
   labs(x = "Ho/He", fill = "Locus type")
+
+# output for revised table
+summtab %>%
+  filter(Inbreeding %in% c(0.1, 0.5, 0.9))
