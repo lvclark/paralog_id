@@ -1,5 +1,8 @@
 library(VariantAnnotation)
 library(polyRAD)
+library(GenomicRanges)
+library(ggplot2)
+library(dplyr)
 
 # How do SNPs vs. haplotypes affect variance in Hind/He estimate?
 
@@ -93,3 +96,49 @@ ggplot(df, aes(x = HindHe, color = Marker)) +
   labs(color = "Marker type", x = expression(H[ind] / H[E])) +
   theme(legend.position = "bottom")
 dev.off()
+
+# Distance to nearest gene ####
+gff0 <- rtracklayer::import("~/Genomes/Miscanthus reference/Msinensis_497_v7.1.gene_exons.gff3.gz")
+gff1 <- gff0[gff0$type == "gene"]
+
+gff1
+
+snpGR <- GRanges("Chr01", IRanges(mydata2$locTable$Pos, width = 1))
+
+gndist <- distanceToNearest(snpGR, gff1, ignore.strand = TRUE)
+gndist
+hist(log1p(mcols(gndist)$distance))
+median(mcols(gndist)$distance) # 873 bp
+summary(mcols(gndist)$distance)
+# Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+# 0.0      0.0    872.5   9484.4   7045.8 597751.0 
+
+gndistDF <- data.frame(Locus = rep(GetLoci(mydata2), times = 2),
+                       Ploidy = rep(c("Diploid", "Tetraploid"), each = nLoci(mydata2)),
+                       HindHe = c(hh2loc_2x, hh2loc_4x),
+                       Distance_to_gene = rep(mcols(gndist)$distance, times = 2))
+gndistDF$Distance_class <- NA_character_
+gndistDF$Distance_class[gndistDF$Distance_to_gene == 0] <- "In gene"
+gndistDF$Distance_class[gndistDF$Distance_to_gene > 0 & gndistDF$Distance_to_gene <= 5e3] <- "Within 5kb of gene"
+gndistDF$Distance_class[gndistDF$Distance_to_gene > 5e3 & gndistDF$Distance_to_gene <= 30e3] <- "Within 30kb of gene"
+gndistDF$Distance_class[gndistDF$Distance_to_gene > 30e3] <- "Further than 30kb from gene"
+any(is.na(gndistDF$Distance_class))
+table(gndistDF$Distance_class)
+# Further than 30kb from gene                     In gene         Within 30kb of gene          Within 5kb of gene 
+#                        2050                        8220                        4038                        6608 
+
+gndistDF$Distance_class <- factor(gndistDF$Distance_class,
+                                  levels = c("In gene", "Within 5kb of gene",
+                                             "Within 30kb of gene", "Further than 30kb from gene"))
+
+mean(gndistDF$HindHe <= 2, na.rm = TRUE) # 100%
+
+gndistDF %>%
+  ggplot(aes(x = HindHe, fill = Distance_class)) +
+  geom_density(alpha = 0.5) +
+  facet_wrap(~ Ploidy)
+
+gndistDF %>%
+  ggplot(aes(x = HindHe, fill = Distance_to_gene == 0)) +
+  geom_density(alpha = 0.5) +
+  facet_wrap(~ Ploidy)

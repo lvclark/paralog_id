@@ -10,6 +10,7 @@ library(gridExtra)
 library(viridis)
 library(dplyr)
 library(polyRAD)
+library(GenomicRanges)
 
 # set up alleles2loc vectors
 alleles2locM <- match(tagtab$Miscanthus, unique(tagtab$Miscanthus))
@@ -339,3 +340,20 @@ mean(!is.na(HindHe_dip_Misc[keeplocM2]) & HindHe_dip_Misc[keeplocM2] > 0.26 & Hi
 # 47.0%
 mean(!is.na(HindHe_tet_Misc[keeplocM4]) & HindHe_tet_Misc[keeplocM4] > 0.54 & HindHe_tet_Misc[keeplocM4] < 0.78)
 # 50.0%
+
+# Distance to nearest gene ####
+gff0 <- rtracklayer::import("~/Genomes/Miscanthus reference/Msinensis_497_v7.1.gene_exons.gff3.gz")
+gff1 <- gff0[gff0$type == "gene"]
+
+gff1
+
+snpGR <- GRanges(sub("-.*", "", names(HindHe_dip_Misc)),
+                 IRanges(as.integer(substring(names(HindHe_dip_Misc), 7, 15)),
+                         width = 1))
+
+gndist <- distanceToNearest(snpGR, gff1, ignore.strand = TRUE)
+gndist
+hist(log1p(mcols(gndist)$distance))
+median(mcols(gndist)$distance) # 0; most tags that have neatly matching paralogs are in genes
+
+
