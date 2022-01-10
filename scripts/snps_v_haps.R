@@ -213,8 +213,8 @@ sweep(diptab, 2, colSums(diptab), "/")
 # Kept     0.5863042     0.5929384
 # Too high 0.2905873     0.1790867
 
-sweep(tettab, 2, colSums(diptab), "/")
+sweep(tettab, 2, colSums(tettab), "/")
 #          In a gene Not in a gene
-# Too low  0.2734034    0.49312511
-# Kept     0.5845088    0.46257002
-# Too high 0.1500385    0.07553896
+# Too low  0.2712468    0.47818930
+# Kept     0.5798982    0.44855967
+# Too high 0.1488550    0.07325103
