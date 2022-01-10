@@ -142,3 +142,79 @@ gndistDF %>%
   ggplot(aes(x = HindHe, fill = Distance_to_gene == 0)) +
   geom_density(alpha = 0.5) +
   facet_wrap(~ Ploidy)
+
+# Get threshold for filtering
+to2 <- TestOverdispersion(SubsetByTaxon(mydata2, diploids), to_test = c(8:13)) # 11 as optimal value
+
+temp <- SubsetByTaxon(mydata2, tetraploids)
+temp$possiblePloidies <- list(4L)
+
+to4 <- TestOverdispersion(temp, to_test = c(8:13)) # 10 is optimal value
+
+hist(hh2loc_2x, breaks = 50) # mode at 0.4; inbreeding 0.15
+
+hist(hh2loc_4x, breaks = 50) # mode at 0.6; inbreeding 0.1
+
+temp2 <- SubsetByTaxon(mydata2, diploids)
+temp2 <- MergeRareHaplotypes(temp2, min.ind.with.haplotype = 1)
+temp2 <- RemoveMonomorphicLoci(temp2) # 9790 markers retained out of 10458 originally.
+ExpectedHindHe(temp2, inbreeding = 0.15, overdispersion = 11)
+# Mean Hind/He: 0.403
+# Standard deviation: 0.111
+# 95% of observations are between 0.216 and 0.665
+
+ExpectedHindHe(temp, inbreeding = 0.1, overdispersion = 10)
+# Mean Hind/He: 0.619
+# Standard deviation: 0.0831
+# 95% of observations are between 0.464 and 0.813
+
+# Contingency tables of being in gene vs. being filtered
+ingene <- mcols(gndist)$distance == 0
+
+diptab <- matrix(c(sum(ingene & hh2loc_2x < 0.216, na.rm = TRUE),
+                   sum(ingene & hh2loc_2x >= 0.216 & hh2loc_2x <= 0.665, na.rm = TRUE),
+                   sum(ingene & hh2loc_2x > 0.665, na.rm = TRUE),
+                   sum(!ingene & hh2loc_2x < 0.216, na.rm = TRUE),
+                   sum(!ingene & hh2loc_2x >= 0.216 & hh2loc_2x <= 0.665, na.rm = TRUE),
+                   sum(!ingene & hh2loc_2x > 0.665, na.rm = TRUE)),
+                 nrow = 3, ncol = 2,
+                 dimnames = list(c("Too low", "Kept", "Too high"),
+                                 c("In a gene", "Not in a gene")))
+
+diptab
+#          In a gene Not in a gene
+# Too low        480          1343
+# Kept          2286          3493
+# Too high      1133          1055
+
+tettab <- matrix(c(sum(ingene & hh2loc_4x < 0.464, na.rm = TRUE),
+                   sum(ingene & hh2loc_4x >= 0.464 & hh2loc_2x <= 0.813, na.rm = TRUE),
+                   sum(ingene & hh2loc_4x > 0.813, na.rm = TRUE),
+                   sum(!ingene & hh2loc_4x < 0.464, na.rm = TRUE),
+                   sum(!ingene & hh2loc_4x >= 0.464 & hh2loc_2x <= 0.813, na.rm = TRUE),
+                   sum(!ingene & hh2loc_4x > 0.813, na.rm = TRUE)),
+                 nrow = 3, ncol = 2,
+                 dimnames = list(c("Too low", "Kept", "Too high"),
+                                 c("In a gene", "Not in a gene")))
+
+tettab
+#          In a gene Not in a gene
+# Too low       1066          2905
+# Kept          2279          2725
+# Too high       585           445
+
+# Fisher's Exact Test
+fisher.test(diptab, simulate.p.value = TRUE) # P = 0.0005
+fisher.test(tettab, simulate.p.value = TRUE) # P = 0.0005
+
+sweep(diptab, 2, colSums(diptab), "/")
+#          In a gene Not in a gene
+# Too low  0.1231085     0.2279749
+# Kept     0.5863042     0.5929384
+# Too high 0.2905873     0.1790867
+
+sweep(tettab, 2, colSums(diptab), "/")
+#          In a gene Not in a gene
+# Too low  0.2734034    0.49312511
+# Kept     0.5845088    0.46257002
+# Too high 0.1500385    0.07553896
