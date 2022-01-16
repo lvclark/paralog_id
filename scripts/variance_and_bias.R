@@ -1,5 +1,5 @@
 # Estimate variance and bias in Hind/He
-library(polyRAD) # v1.3, Sept. 5 2020
+library(polyRAD) # v1.6, January 2022
 library(ggplot2)
 library(dplyr)
 library(gridExtra)
@@ -11,19 +11,21 @@ library(gridExtra)
 # overdispersion = overdispersion parameter
 # inbreeding = inbreeding coefficient
 HHByParam <- function(MAF = 0.05, nsam = 500, depth = 20, overdispersion = 20,
-                      inbreeding = 0, ploidy = 2, nloc = 5000){
+                      inbreeding = 0, ploidy = 2, nloc = 5000,
+                      contamRate = 0, errorRate = 0){
   alleleFreq <- rep(c(1 - MAF, MAF), times = nloc)
   alleles2loc <- rep(1:nloc, each = 2)
   
   geno <- SimGenotypes(alleleFreq, alleles2loc, nsam, inbreeding, ploidy)
   alleleDepth <- SimAlleleDepth(matrix(depth, nrow = nsam, ncol = nloc,
                                        dimnames = list(NULL, as.character(1:nloc))),
-                                geno, alleles2loc, overdispersion)
+                                geno, alleles2loc, overdispersion, contamRate,
+                                errorRate)
   rownames(alleleDepth) <- paste0("sam", 1:nsam)
   simrad <- RADdata(alleleDepth, alleles2loc,
                     locTable = data.frame(row.names = paste0("loc", 1:nloc)),
                     possiblePloidies = list(as.integer(ploidy)),
-                    contamRate = 0.001,
+                    contamRate = contamRate,
                     alleleNucleotides = rep(c("A", "G"), times = nloc))
   
   hh <- HindHe(simrad)
@@ -41,14 +43,19 @@ sqrt(test$var)
 # run tests for variance
 ploidies <- c(2L, 4L)
 freqs <- c(0.01, 0.05, 0.1, 0.2)
-samsizes <- c(100, 500, 1000)
+samsizes <- c(50, 100, 500, 1000)
 depths <- c(2, 5, 10, 20, 50, 100, 200)
+contams <- c(0, 0.001, 0.01)
+errors <- c(0, 0.001)
 
-tottests <- length(ploidies) * length(freqs) * length(samsizes) * length(depths)
+tottests <- length(ploidies) * length(freqs) * length(samsizes) * length(depths) *
+  length(contams) * length(errors)
 
 testres <- data.frame(Ploidy = integer(tottests),
                       MAF = numeric(tottests),
                       N_sam = numeric(tottests),
+                      ContamRate = numeric(tottests),
+                      ErrorRate = numeric(tottests),
                       Depth = numeric(tottests),
                       Mean = numeric(tottests),
                       Variance = numeric(tottests),
@@ -59,29 +66,36 @@ for(p in ploidies){
   for(f in freqs){
     for(s in samsizes){
       for(d in depths){
-        res <- HHByParam(MAF = f, nsam = s, depth = d, ploidy = p,
-                         overdispersion = 20, inbreeding = 0, nloc = 5000)
-        testres$Ploidy[currrow] <- p
-        testres$MAF[currrow] <- f
-        testres$N_sam[currrow] <- s
-        testres$Depth[currrow] <- d
-        testres$Mean[currrow] <- res$mean
-        testres$Variance[currrow] <- res$var
-        testres$Prop_estimated[currrow] <- res$nonNA
-        currrow <- currrow + 1
-        if(currrow %% 10 == 0) print(currrow)
+        for(c in contams){
+          for(e in errors){
+            res <- HHByParam(MAF = f, nsam = s, depth = d, ploidy = p,
+                             overdispersion = 20, inbreeding = 0, nloc = 5000,
+                             contamRate = c, errorRate = e)
+            testres$Ploidy[currrow] <- p
+            testres$MAF[currrow] <- f
+            testres$N_sam[currrow] <- s
+            testres$Depth[currrow] <- d
+            testres$ContamRate[currrow] <- c
+            testres$ErrorRate[currrow] <- e
+            testres$Mean[currrow] <- res$mean
+            testres$Variance[currrow] <- res$var
+            testres$Prop_estimated[currrow] <- res$nonNA
+            currrow <- currrow + 1
+            if(currrow %% 10 == 0) print(currrow)
+          }
+        }
       }
     }
   }
 }
 
-#save(testres, file = "workspaces/variance_estimates.RData")
-load("workspaces/variance_estimates.RData")
+#save(testres, file = "workspaces/variance_estimates_2022-01-16.RData")
+load("workspaces/variance_estimates_2022-01-16.RData")
 
 testres$PloidyText <- ifelse(testres$Ploidy == 2, "Diploid", "Tetraploid")
 
 # plot results
-p1 <- ggplot(testres[testres$Depth < 200,],
+p1 <- ggplot(testres[testres$Depth < 200 & testres$ContamRate == 0 & testres$ErrorRate == 0,],
        aes(x = Depth, y = sqrt(Variance), color = as.factor(MAF), group = MAF)) +
   geom_line() +
   facet_grid(PloidyText ~ N_sam, labeller = labeller(N_sam = function(x) paste("N =", x))) +
@@ -92,7 +106,7 @@ p1
 #        width = 6.5, height = 3.5)
 
 # bias -- overestimated for rare alleles and small sample size, since so many NA
-p2 <- ggplot(testres[testres$Depth < 200,],
+p2 <- ggplot(testres[testres$Depth < 200 & testres$ContamRate == 0 & testres$ErrorRate == 0,],
        aes(x = Depth, y = Mean, color = as.factor(MAF), group = MAF)) +
   geom_line() +
   facet_grid(PloidyText ~ N_sam, labeller = labeller(N_sam = function(x) paste("N =", x))) +
@@ -294,3 +308,19 @@ ggplot(testres4, aes(x = NAF, y = Variance)) +
   geom_line(aes(lty = as.factor(MAF))) +
   geom_point() +
   facet_grid(~ PloidyText)
+
+# Effects of contamination and sequencing error ####
+testres %>%
+  filter(N_sam == 500 & MAF == 0.05) %>%
+  ggplot(aes(x = Depth, y = Variance, color = as.character(ErrorRate))) +
+  geom_line() +
+  facet_grid(PloidyText ~ ContamRate)
+
+testres %>%
+  filter(N_sam == 500 & MAF == 0.05) %>%
+  ggplot(aes(x = Depth, y = Mean, color = as.character(ErrorRate))) +
+  geom_line() +
+  facet_grid(PloidyText ~ ContamRate)
+
+# As expected, contamination and seq error bias slightly upwards
+# Variance doesn't seem to be affected
