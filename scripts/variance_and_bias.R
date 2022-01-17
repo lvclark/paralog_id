@@ -324,3 +324,48 @@ testres %>%
 
 # As expected, contamination and seq error bias slightly upwards
 # Variance doesn't seem to be affected
+
+testres$MAFtext <- paste("MAF =", testres$MAF)
+
+testres %>%
+  filter(N_sam == 500, Depth == 20) %>%
+  ggplot(aes(x = ContamRate, y = Mean)) +
+  geom_line(aes(linetype = as.character(ErrorRate))) +
+  geom_point(pch = 1) +
+  facet_grid(PloidyText ~ MAFtext, scales = "free_y") +
+  labs(x = "Contamination rate", y = "Mean estimate",
+       linetype = "Sequencing error rate") +
+  scale_x_continuous(breaks = seq(0, 0.01, by = 0.001),
+                     minor_breaks = NULL) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+
+# Slight increase with high contamination rate
+# Sequencing error causes more inflation at lower MAF
+
+testres %>%
+  filter(N_sam == 500, MAF == 0.05) %>%
+  ggplot(aes(x = ContamRate, y = Mean)) +
+  geom_line(aes(linetype = as.character(ErrorRate))) +
+  geom_point(pch = 1) +
+  facet_grid(PloidyText ~ Depth, scales = "free_y") +
+  labs(x = "Contamination rate", y = "Mean estimate",
+       linetype = "Sequencing error rate") +
+  scale_x_continuous(breaks = seq(0, 0.01, by = 0.001),
+                     minor_breaks = NULL) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+
+# Estimates are higher at depth below 10, but we already knew that
+
+testres %>%
+  filter(MAF == 0.05, Depth == 20) %>%
+  ggplot(aes(x = ContamRate, y = Mean)) +
+  geom_line(aes(linetype = as.character(ErrorRate))) +
+  geom_point(pch = 1) +
+  facet_grid(PloidyText ~ N_sam, scales = "free_y") +
+  labs(x = "Contamination rate", y = "Mean estimate",
+       linetype = "Sequencing error rate") +
+  scale_x_continuous(breaks = seq(0, 0.01, by = 0.001),
+                     minor_breaks = NULL) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+
+# Estimates are higher at sample size below 500, but we already knew that
