@@ -121,16 +121,17 @@ grid.arrange(arrangeGrob(p1 + ggtitle("A"), p2 + ggtitle("B")))
 #dev.off()
 
 
-# Explore overdispersion.  polyRAD 1.4 June 2021.
+# Explore overdispersion, inbreeding, and sequencing error.  polyRAD 1.6 Jan 2022.
 ods <- 5:20
 freqs2 <- c(0.01, 0.05)
 inbreed <- seq(0, 1, by = 0.1)
 
-tottests2 <- length(ploidies) * length(ods) * length(freqs2) * length(inbreed)
+tottests2 <- length(ploidies) * length(ods) * length(freqs2) * length(inbreed) * length(errors)
 testres2 <- data.frame(Ploidy = integer(tottests2),
                       MAF = numeric(tottests2),
                       Overdispersion = numeric(tottests2),
                       Inbreeding = numeric(tottests2),
+                      ErrorRate = numeric(tottests2),
                       Mean = numeric(tottests2),
                       Variance = numeric(tottests2),
                       Prop_estimated = numeric(tottests2))
@@ -140,17 +141,21 @@ for(p in ploidies){
   for(f in freqs2){
     for(o in ods){
       for(i in inbreed){
-        res <- HHByParam(MAF = f, nsam = 500L, depth = 20L, ploidy = p,
-                         overdispersion = o, inbreeding = i, nloc = 20000)
-        testres2$Ploidy[currrow] <- p
-        testres2$MAF[currrow] <- f
-        testres2$Overdispersion[currrow] <- o
-        testres2$Inbreeding[currrow] <- i
-        testres2$Mean[currrow] <- res$mean
-        testres2$Variance[currrow] <- res$var
-        testres2$Prop_estimated[currrow] <- res$nonNA
-        currrow <- currrow + 1L
-        if(currrow %% 10 == 0) print(currrow)
+        for(e in errors){
+          res <- HHByParam(MAF = f, nsam = 500L, depth = 20L, ploidy = p,
+                           overdispersion = o, inbreeding = i, nloc = 20000,
+                           errorRate = e)
+          testres2$Ploidy[currrow] <- p
+          testres2$MAF[currrow] <- f
+          testres2$Overdispersion[currrow] <- o
+          testres2$Inbreeding[currrow] <- i
+          testres2$ErrorRate[currrow] <- e
+          testres2$Mean[currrow] <- res$mean
+          testres2$Variance[currrow] <- res$var
+          testres2$Prop_estimated[currrow] <- res$nonNA
+          currrow <- currrow + 1L
+          if(currrow %% 10 == 0) print(currrow)
+        }
       }
     }
   }
@@ -158,8 +163,8 @@ for(p in ploidies){
 
 testres2$PloidyText <- ifelse(testres2$Ploidy == 2, "Diploid", "Tetraploid")
 
-#save(testres2, file = "workspaces/variance_estimates_overdispersion_inbreeding.RData")
-load("workspaces/variance_estimates_overdispersion_inbreeding.RData")
+#save(testres2, file = "workspaces/variance_estimates_overdispersion_inbreeding_2022-01-17.RData")
+load("workspaces/variance_estimates_overdispersion_inbreeding_2022-01-17.RData")
 
 # figure for manuscript
 #cairo_pdf("SuppFig2_overdispersion_inbreeding.pdf", width = 6.7, height = 3.5)
@@ -369,3 +374,6 @@ testres %>%
   theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 
 # Estimates are higher at sample size below 500, but we already knew that
+
+# Test error effects across inbreeding and MAF values
+
