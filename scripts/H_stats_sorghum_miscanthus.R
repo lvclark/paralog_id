@@ -295,7 +295,7 @@ tet_df$Ploidy <- "Tetraploids"
 all_df_long <- rbind(dip_df, tet_df)
 
 all_df_long %>%
-  filter(Reference == "Miscanthus") %>%
+  filter(Reference == "Miscanthus sinensis") %>%
   filter(HindHe < 1.1) -> all_df_long_filt
 
 all_df_long_filt_N <- 
@@ -322,6 +322,22 @@ ggplot(all_df_long_filt, mapping = aes(x = HindHe, fill = Depth_category)) +
   labs(fill = "Depth category", color = "Depth category",
        x = expression(H[ind] / H[E]))
 #dev.off()
+
+# tiff("SuppFig1_HindHe_vs_depth_scatter.tiff",
+#      res = 300, width = 5 * 300, height = 7 * 300,
+#      compression = "lzw")
+ggplot(all_df_long_filt, aes(x = Mean_depth, y = HindHe)) +
+  geom_point(alpha = 0.05) +
+  geom_hline(data = data.frame(Ploidy = c("Diploids", "Tetraploids"),
+                               Expected = c(0.5, 0.75)),
+             mapping = aes(yintercept = Expected),
+             lty = 2, color = "green", lwd = 1) +
+  geom_vline(xintercept = c(5, 100), lty = 3, color = "blue", lwd = 1) +
+  facet_wrap(~ Ploidy, nrow = 2) +
+  scale_x_continuous(trans = "log10") +
+  labs(y = expression(H[ind] / H[E]),
+       x = "Mean depth")
+# dev.off()
 
 # Expected Hind/He for these populations ####
 
