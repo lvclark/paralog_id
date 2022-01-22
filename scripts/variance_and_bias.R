@@ -170,21 +170,55 @@ load("workspaces/variance_estimates_overdispersion_inbreeding_2022-01-17.RData")
 #cairo_pdf("SuppFig2_overdispersion_inbreeding.pdf", width = 6.7, height = 3.5)
 # tiff("SuppFig2_overdispersion_inbreeding.tiff", width = 6.7 * 300, height = 3.5 * 300,
 #      res = 300, compression = "lzw")
-ggplot(testres2, mapping = aes(x = Overdispersion, y = Mean, color = Inbreeding, group = paste(Inbreeding, MAF))) +
+testres2 %>%
+  filter(ErrorRate == 0) %>%
+ggplot(mapping = aes(x = Overdispersion, y = Mean, color = Inbreeding, group = paste(Inbreeding, MAF))) +
   geom_line(aes(lty = as.factor(MAF))) +
   facet_grid(~ PloidyText, scales = "free_y") +
   scale_color_viridis_c() +
   labs(lty = "MAF", y = "Mean estimate")
 # dev.off()
 
+testres2 %>%
+  filter(ErrorRate == 0.001) %>%
+  ggplot(mapping = aes(x = Overdispersion, y = Mean, color = Inbreeding, group = paste(Inbreeding, MAF))) +
+  geom_line(aes(lty = as.factor(MAF))) +
+  facet_grid(~ PloidyText, scales = "free_y") +
+  scale_color_viridis_c() +
+  labs(lty = "MAF", y = "Mean estimate")
+
+testres2 %>%
+  filter(Overdispersion == 20) %>%
+  ggplot(aes(x = Inbreeding, y = Mean, linetype = as.factor(MAF),
+             color = as.factor(ErrorRate), shape = as.factor(MAF))) +
+  geom_line() +
+  geom_point() +
+  facet_grid(~ PloidyText, scales = "free_y") +
+  labs(lty = "MAF", shape = "MAF",
+       y = "Mean estimate", color = "Sequencing error rate") +
+  scale_color_manual(values = c("darkgreen", "dodgerblue"))
+
+testres2 %>%
+  filter(Overdispersion == 20) %>%
+  mutate(MAFtext = paste("MAF = ", MAF)) %>%
+  ggplot(aes(x = Inbreeding, y = Mean, linetype = as.factor(ErrorRate),
+             color = PloidyText, shape = as.factor(ErrorRate))) +
+  geom_line() +
+  geom_point() +
+  facet_grid(~ MAFtext) +
+  labs(lty = "Sequencing error rate", shape = "Sequencing error rate",
+       y = "Mean estimate", color = "Ploidy") +
+  scale_color_manual(values = c("darkgreen", "dodgerblue"))
+
 # Do this fig for hexaploids too since there is interest from sweetpotato
 p <- 6L
 
-tottests3 <- length(ods) * length(freqs2) * length(inbreed)
+tottests3 <- length(ods) * length(freqs2) * length(inbreed) * length(errors)
 testres3 <- data.frame(Ploidy = 6L,
                        MAF = numeric(tottests3),
                        Overdispersion = numeric(tottests3),
                        Inbreeding = numeric(tottests3),
+                       ErrorRate = numeric(tottests3),
                        Mean = numeric(tottests3),
                        Variance = numeric(tottests3),
                        Prop_estimated = numeric(tottests3),
@@ -194,21 +228,25 @@ currrow <- 1
 for(f in freqs2){
   for(o in ods){
     for(i in inbreed){
-      res <- HHByParam(MAF = f, nsam = 500L, depth = 20L, ploidy = p,
-                       overdispersion = o, inbreeding = i, nloc = 20000)
-      testres3$MAF[currrow] <- f
-      testres3$Overdispersion[currrow] <- o
-      testres3$Inbreeding[currrow] <- i
-      testres3$Mean[currrow] <- res$mean
-      testres3$Variance[currrow] <- res$var
-      testres3$Prop_estimated[currrow] <- res$nonNA
-      currrow <- currrow + 1L
-      if(currrow %% 10 == 0) print(currrow)
+      for(e in errors){
+        res <- HHByParam(MAF = f, nsam = 500L, depth = 20L, ploidy = p,
+                         overdispersion = o, inbreeding = i, nloc = 20000,
+                         errorRate = e)
+        testres3$MAF[currrow] <- f
+        testres3$Overdispersion[currrow] <- o
+        testres3$Inbreeding[currrow] <- i
+        testres2$ErrorRate[currrow] <- e
+        testres3$Mean[currrow] <- res$mean
+        testres3$Variance[currrow] <- res$var
+        testres3$Prop_estimated[currrow] <- res$nonNA
+        currrow <- currrow + 1L
+        if(currrow %% 10 == 0) print(currrow)
+      }
     }
   }
 }
 
-#save(testres3, file = "workspaces/variance_estimates_overdispersion_inbreeding_hexaploid.RData")
+save(testres3, file = "workspaces/variance_estimates_overdispersion_inbreeding_hexaploid_2022-01-22.RData")
 
 testres2 <- rbind(testres2, testres3)
 testres2$PloidyText <- factor(testres2$PloidyText, levels = c("Diploid", "Tetraploid", "Hexaploid"))
