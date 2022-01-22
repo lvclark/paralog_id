@@ -58,7 +58,7 @@ The goal is to demonstrate that Hind/He can clearly distinguish one-copy and
 two-copy loci, *i.e.* those aligned to *Miscanthus* vs. those aligned to
 *Sorghum*.  Figures are plotted to compare the distribution of Hind/He
 when tags are aligned to *Miscanthus* vs. *Sorghum*.  This script generates
-Figs. 1 and 2 in the main manuscript.
+Figs. 1 and 2 in the main manuscript and Figs. S1 and S2 in Additional File 1.
 
 `scripts/optimize_temperature.R` examines the output of `process_isoloci.py` to
 evaluate the effectiveness of the tabu search algorithm for optimizing Hind/He.
@@ -75,16 +75,22 @@ within the variant calling pipeline.
 `scripts/snps_v_haps.R` imports variants from a VCF, with and without phasing
 SNPs into haplotypes.  The distribution and variance of Hind/He is then compared
 between SNPs and haplotypes.  A figure is generated for visualizing the
-distribution.  This script generates Fig. S1 for Additional File 1.
+distribution.  This script generates Fig. S3 for Additional File 1, as well as
+results for Table 2 in the main manuscript regarding distance to genes.
 
 `scripts/variance_and_bias.R` uses simulated data to explore the impact of
 population and techinical parameters on the variance and bias of Hind/He.
-This script generates Fig. 4 in the manuscript and Figs. S2 and S3 in
+This script generates Fig. 4 in the manuscript and Figs. S4 and S5 in
 Additional File 1.
 
 `scripts/simulate_mapping_pops.R` uses simulated data to explore the variance
 of Hind/He in diploid and tetraploid F1 mapping populations.  This script
 generates Fig. 5 of the main manuscript.
+
+`scripts/compare_approaches.R` compares effectiveness of various approaches
+for filtering paralogs using simulated data.  Functions for the approaches
+can be found in `scripts/HoHe.R`.  This script generates the data found in
+Table 3 in the main manuscript.
 
 ### Documentation
 
