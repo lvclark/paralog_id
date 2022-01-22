@@ -54,10 +54,14 @@ accessions <- accessions[which(accessions$Prop_Msi < 0.5),]
 
 accessions$Depth <- rowMeans(Msa1$locDepth[accessions$Accession,])
 
+accessions$Ploidy <- factor(accessions$Ploidy)
+levels(accessions$Ploidy) <- c("Diploids", "Triploids", "Tetraploids")
+
 # plot Hind/He vs. ploidy and proportion Msi ancestry
-# tiff("191219hindhe_by_ploidy.tiff", width = 6.5 * 300, height = 4 * 300, res = 300,
+# pdf("Fig3_HindHe_by_ind.pdf", width = 6.7, height = 4)
+# tiff("Fig3_HindHe_by_ind.tiff",
+#      res = 300, width = 6.7 * 300, height = 4 * 300,
 #      compression = "lzw")
-#pdf("Fig3_HindHe_by_ind.pdf", width = 6.7, height = 4)
 ggplot(accessions, aes(x = Depth, y = HindHe, color = Prop_Msi)) +
   geom_point() +
   facet_wrap(~ Ploidy) +
@@ -66,6 +70,8 @@ ggplot(accessions, aes(x = Depth, y = HindHe, color = Prop_Msi)) +
        color = "Hybrid ancestry") +
   #coord_trans(x = "log")
   scale_x_continuous(trans = "log2", breaks = c(5, 10, 20, 40, 80, 160, 320)) +
-  geom_hline(data = data.frame(Ploidy = c("2x", "3x", "4x"), ExpectVal = c(0.5, 2/3, 0.75)),
+  geom_hline(data = data.frame(Ploidy = factor(c("Diploids", "Triploids", "Tetraploids"),
+                                               levels = levels(accessions$Ploidy)),
+                               ExpectVal = c(0.5, 2/3, 0.75)),
              mapping = aes(yintercept = ExpectVal), lty = 2)
-#dev.off()
+# dev.off()
