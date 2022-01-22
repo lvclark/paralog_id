@@ -93,8 +93,8 @@ Depth_tet_S <- tapply(colSums(tetraploid_mat), alleles2locS, sum)
 HindHe_tet_Sorg <- colMeans(hhS4, na.rm = TRUE)
 
 # put into data frame to compare distributions
-dip_df <- data.frame(Reference = c(rep("Miscanthus", length(HindHe_dip_Misc)),
-                                   rep("Sorghum", length(HindHe_dip_Sorg))),
+dip_df <- data.frame(Reference = c(rep("Miscanthus sinensis", length(HindHe_dip_Misc)),
+                                   rep("Sorghum bicolor", length(HindHe_dip_Sorg))),
                      HindHe = c(HindHe_dip_Misc, HindHe_dip_Sorg),
                      Depth = c(Depth_dip_M, Depth_dip_S))
 dip_df <- dip_df[which(dip_df$Depth > 0 & !is.na(dip_df$HindHe)),]
@@ -143,13 +143,13 @@ p2 <- ggplot(dip_df[dip_df$Depth >= 5 * nrow(diploid_mat) & dip_df$HindHe > 0,],
   geom_density(lwd = 1) +
   geom_vline(xintercept = 0.5, lty = 2) +
   scale_x_continuous(expression(H[ind] / H[E]),
-                   c(0.25, 0.5, 0.75, 1), limits = c(0, 1.5))
+                   c(0.25, 0.5, 0.75, 1))
 #ggsave("hindhegraph_190904.tiff", compression = "lzw")
 
 # add tetraploid data frame
 
-tet_df <- data.frame(Reference = c(rep("Miscanthus", length(HindHe_tet_Misc)),
-                                   rep("Sorghum", length(HindHe_tet_Sorg))),
+tet_df <- data.frame(Reference = c(rep("Miscanthus sinensis", length(HindHe_tet_Misc)),
+                                   rep("Sorghum bicolor", length(HindHe_tet_Sorg))),
                      HindHe = c(HindHe_tet_Misc, HindHe_tet_Sorg),
                      Depth = c(Depth_tet_M, Depth_tet_S))
 tet_df <- tet_df[which(tet_df$Depth > 0 & !is.na(tet_df$HindHe)),]
@@ -170,27 +170,27 @@ p4 <- ggplot(tet_df[tet_df$Depth >= 5 * nrow(tetraploid_mat) & tet_df$HindHe > 0
   geom_density(lwd = 1) +
   geom_vline(xintercept = 0.75, lty = 2) +
   scale_x_continuous(expression(H[ind] / H[E]),
-                     c(0.25, 0.5, 0.75, 1), limits = c(0, 1.5))
+                     c(0.25, 0.5, 0.75, 1))
 
 # plot together ####
-all_df <- data.frame(Reference = c(rep("Miscanthus", length(HindHe_dip_Misc)),
-                                   rep("Sorghum", length(HindHe_dip_Sorg))),
+all_df <- data.frame(Reference = c(rep("Miscanthus sinensis", length(HindHe_dip_Misc)),
+                                   rep("Sorghum bicolor", length(HindHe_dip_Sorg))),
                      HindHe_diploids = c(HindHe_dip_Misc, HindHe_dip_Sorg),
                      HindHe_tetraploids = c(HindHe_tet_Misc, HindHe_tet_Sorg),
                      Depth = c(Depth_dip_M + Depth_tet_M, Depth_dip_S + Depth_tet_S))
 all_df <- all_df[which(all_df$Depth > 0 & !is.na(all_df$HindHe_diploids) &
                          !is.na(all_df$HindHe_tetraploids)),]
 
-sum(all_df$Reference == "Miscanthus") # 21590
-sum(all_df$Reference == "Sorghum")    # 17860
+sum(all_df$Reference == "Miscanthus sinensis") # 21590
+sum(all_df$Reference == "Sorghum bicolor")    # 17860
 
 #save(all_df, file = "workspaces/all_df.RData")
 
 all_df_filt <- filter(all_df, #HindHe_diploids < 2, HindHe_tetraploids < 2,
                       Depth >= 5 * (nrow(diploid_mat) + nrow(tetraploid_mat)))
 
-sum(all_df_filt$Reference == "Miscanthus") # 11516
-sum(all_df_filt$Reference == "Sorghum")    #  8820
+sum(all_df_filt$Reference == "Miscanthus sinensis") # 11516
+sum(all_df_filt$Reference == "Sorghum bicolor")    #  8820
 
 p24 <- ggplot(all_df_filt, aes(x = HindHe_diploids, y = HindHe_tetraploids,
            color = Depth / (nrow(diploid_mat) + nrow(tetraploid_mat)))) +
@@ -199,19 +199,25 @@ p24 <- ggplot(all_df_filt, aes(x = HindHe_diploids, y = HindHe_tetraploids,
   scale_color_viridis(trans = "log", breaks = c(7, 20, 50, 150, 400)) +
   geom_vline(xintercept = 0.5, lty = 2) +
   geom_hline(yintercept = 0.75, lty = 2) +
-  facet_wrap(~ Reference) +
+  facet_wrap(~ Reference, nrow = 2) +
   labs(x = expression(H[ind] / H[E] ~ ", diploids"),
        y = expression(H[ind] / H[E] ~ ", tetraploids"),
        color = "Mean depth")
 
-#tiff("191218miscanthus_v_sorghum.tiff", width = 6.5 * 300, height = 5 * 300,
-#     res = 300, compression = "lzw")
-#pdf("Fig2_paralogdetect.pdf", width = 6.7, height = 5.2)
+#pdf("Fig2_paralogdetect.pdf", width = 6.7, height = 2.6)
+# tiff("Fig2_paralogdetect.tiff", res = 300, width = 6.7 * 300, height = 2.6 * 300,
+#      compression = "lzw")
 grid.arrange(arrangeGrob(p2 + theme(legend.position="none") + ggtitle("Diploids"), 
                          p4 + ggtitle("Tetraploids"),
-                         p24, layout_matrix = matrix(c(1,3,2,3), nrow = 2, ncol = 2),
-                         widths = c(0.75, 1)))
+                         layout_matrix = matrix(c(1,2), nrow = 1, ncol = 2),
+                         widths = c(0.60, 1)))
 #dev.off()
+
+# tiff("SuppFig2_diploid_vs_tetraploid_filtering.tiff",
+#      res = 300, width = 6 * 300, height = 9 * 300,
+#      compression = "lzw")
+p24
+# dev.off()
 
 # tiff("191218hh_vs_depth.tiff", width = 6.5 * 300, height = 7 * 300, res = 300,
 #      compression = "lzw")
