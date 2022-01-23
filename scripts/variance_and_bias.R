@@ -199,7 +199,7 @@ testres2 %>%
   scale_color_manual(values = c("darkgreen", "dodgerblue"))
 
 testres2 %>%
-  filter(Overdispersion == 20) %>%
+  filter(Overdispersion == 20, PloidyText %in% c("Diploid", "Tetraploid")) %>%
   mutate(MAFtext = paste("MAF = ", MAF)) %>%
   ggplot(aes(x = Inbreeding, y = Mean, linetype = as.factor(ErrorRate),
              color = PloidyText, shape = as.factor(ErrorRate))) +
