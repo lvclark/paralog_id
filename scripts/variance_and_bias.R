@@ -235,7 +235,7 @@ for(f in freqs2){
         testres3$MAF[currrow] <- f
         testres3$Overdispersion[currrow] <- o
         testres3$Inbreeding[currrow] <- i
-        testres2$ErrorRate[currrow] <- e
+        testres3$ErrorRate[currrow] <- e
         testres3$Mean[currrow] <- res$mean
         testres3$Variance[currrow] <- res$var
         testres3$Prop_estimated[currrow] <- res$nonNA
@@ -246,25 +246,46 @@ for(f in freqs2){
   }
 }
 
-save(testres3, file = "workspaces/variance_estimates_overdispersion_inbreeding_hexaploid_2022-01-22.RData")
+#save(testres3, file = "workspaces/variance_estimates_overdispersion_inbreeding_hexaploid_2022-01-22.RData")
 
 testres2 <- rbind(testres2, testres3)
 testres2$PloidyText <- factor(testres2$PloidyText, levels = c("Diploid", "Tetraploid", "Hexaploid"))
 
-ggplot(testres2, aes(x = Overdispersion, y = Mean, color = Inbreeding, group = Inbreeding)) +
+ggplot(testres2[testres2$ErrorRate == 0,], aes(x = Overdispersion, y = Mean, color = Inbreeding, group = Inbreeding)) +
+  geom_line() +
+  facet_grid(PloidyText ~ MAF, scales = "free_y") +
+  scale_color_viridis_c()
+
+ggplot(testres2[testres2$ErrorRate == 0.001,], aes(x = Overdispersion, y = Mean, color = Inbreeding, group = Inbreeding)) +
   geom_line() +
   facet_grid(PloidyText ~ MAF, scales = "free_y") +
   scale_color_viridis_c()
 
 # version of figure for tutorial
-png("overdispersion_inbreeding.png", width = 900, height = 600)
-testres2 %>% filter(Overdispersion <= 20) %>%
+png("overdispersion_inbreeding_turbo.png", width = 900, height = 600)
+testres2 %>% filter(Overdispersion <= 20, ErrorRate == 0.001) %>%
 ggplot(mapping = aes(x = Overdispersion, y = Mean, color = Inbreeding, group = paste(Inbreeding, MAF))) +
   geom_smooth(aes(lty = as.factor(MAF))) + ## Note that this is geom_smooth and not geom_line
   facet_grid(~ PloidyText, scales = "free_y") +
-  scale_color_viridis_c() +
+  scale_color_viridis_c(option = "turbo") +
   labs(lty = "MAF", y = "Mean Hind/He") +
-  geom_text(data = testres2[testres2$Overdispersion == 20 & testres2$MAF == 0.01,],
+  geom_text(data = testres2[testres2$Overdispersion == 20 & testres2$MAF == 0.01 &
+                              testres2$ErrorRate == 0.001,],
+            mapping = aes(label = Inbreeding, y = Mean + 0.02),
+            x = 20) +
+  scale_x_continuous(minor_breaks = 5:20) +
+  scale_y_continuous(breaks = seq(0, 0.8, by = 0.1))
+dev.off()
+
+png("overdispersion_inbreeding_viridis.png", width = 900, height = 600)
+testres2 %>% filter(Overdispersion <= 20, ErrorRate == 0.001) %>%
+  ggplot(mapping = aes(x = Overdispersion, y = Mean, color = Inbreeding, group = paste(Inbreeding, MAF))) +
+  geom_smooth(aes(lty = as.factor(MAF))) + ## Note that this is geom_smooth and not geom_line
+  facet_grid(~ PloidyText, scales = "free_y") +
+  scale_color_viridis_c(option = "viridis") +
+  labs(lty = "MAF", y = "Mean Hind/He") +
+  geom_text(data = testres2[testres2$Overdispersion == 20 & testres2$MAF == 0.01 &
+                              testres2$ErrorRate == 0.001,],
             mapping = aes(label = Inbreeding, y = Mean + 0.02),
             x = 20) +
   scale_x_continuous(minor_breaks = 5:20) +
