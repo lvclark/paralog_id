@@ -144,64 +144,75 @@ gndistDF %>%
   facet_wrap(~ Ploidy)
 
 # Get threshold for filtering
-to2 <- TestOverdispersion(SubsetByTaxon(mydata2, diploids), to_test = c(8:13)) # 11 as optimal value
+temp2 <- SubsetByTaxon(mydata2, diploids)
+temp2 <- MergeRareHaplotypes(temp2, min.ind.with.haplotype = ceiling(nTaxa(temp2) * 2 * 0.001))
+temp2 <- RemoveMonomorphicLoci(temp2) # 9790 markers retained out of 10458 originally.
+
+temp2 <- AddAlleleFreqHWE(temp2)
+loci001_2x <- unique(GetLoci(temp2)[temp2$alleles2loc[which(temp2$alleleFreq >= 0.001 * 5 & temp2$alleleFreq < 0.5)]]) # 8621 loci
+temp2 <- SubsetByLocus(temp2, loci001_2x)
+
+to2 <- TestOverdispersion(temp2, to_test = c(8:13)) # 11 as optimal value
 
 temp <- SubsetByTaxon(mydata2, tetraploids)
 temp$possiblePloidies <- list(4L)
+temp <- AddAlleleFreqHWE(temp)
+loci001_4x <- unique(GetLoci(temp)[temp$alleles2loc[which(temp$alleleFreq >= 0.001 * 5 & temp$alleleFreq < 0.5)]]) # 10046 loci
+temp <- SubsetByLocus(temp, loci001_4x)
 
 to4 <- TestOverdispersion(temp, to_test = c(8:13)) # 10 is optimal value
 
-hist(hh2loc_2x, breaks = 50) # mode at 0.4; inbreeding 0.15
+loci05_2x <- unique(GetLoci(temp2)[temp2$alleles2loc[temp2$alleleFreq >= 0.05 & temp2$alleleFreq < 0.5]]) # 5507 loci
+loci05_4x <- unique(GetLoci(temp)[temp$alleles2loc[temp$alleleFreq >= 0.05 & temp$alleleFreq < 0.5]])     # 6156 loci
 
-hist(hh2loc_4x, breaks = 50) # mode at 0.6; inbreeding 0.1
+hist(hh2loc_2x[loci05_2x], breaks = 50) # mode at 0.3; inbreeding 0.35
 
-temp2 <- SubsetByTaxon(mydata2, diploids)
-temp2 <- MergeRareHaplotypes(temp2, min.ind.with.haplotype = 1)
-temp2 <- RemoveMonomorphicLoci(temp2) # 9790 markers retained out of 10458 originally.
-ExpectedHindHe(temp2, inbreeding = 0.15, overdispersion = 11)
-# Mean Hind/He: 0.403
-# Standard deviation: 0.111
-# 95% of observations are between 0.216 and 0.665
+hist(hh2loc_4x[loci05_4x], breaks = 50) # mode at 0.5; inbreeding 0.25
 
-ExpectedHindHe(temp, inbreeding = 0.1, overdispersion = 10)
-# Mean Hind/He: 0.619
-# Standard deviation: 0.0831
-# 95% of observations are between 0.464 and 0.813
+ExpectedHindHe(temp2, inbreeding = 0.35, overdispersion = 11, errorRate = 0.001)
+# Mean Hind/He: 0.326
+# Standard deviation: 0.105
+# 95% of observations are between 0.175 and 0.584
+
+ExpectedHindHe(temp, inbreeding = 0.25, overdispersion = 10, errorRate = 0.001)
+# Mean Hind/He: 0.509
+# Standard deviation: 0.0881
+# 95% of observations are between 0.356 and 0.716
 
 # Contingency tables of being in gene vs. being filtered
 ingene <- mcols(gndist)$distance == 0
 
-diptab <- matrix(c(sum(ingene & hh2loc_2x < 0.216, na.rm = TRUE),
-                   sum(ingene & hh2loc_2x >= 0.216 & hh2loc_2x <= 0.665, na.rm = TRUE),
-                   sum(ingene & hh2loc_2x > 0.665, na.rm = TRUE),
-                   sum(!ingene & hh2loc_2x < 0.216, na.rm = TRUE),
-                   sum(!ingene & hh2loc_2x >= 0.216 & hh2loc_2x <= 0.665, na.rm = TRUE),
-                   sum(!ingene & hh2loc_2x > 0.665, na.rm = TRUE)),
+diptab <- matrix(c(sum(ingene & hh2loc_2x < 0.175, na.rm = TRUE),
+                   sum(ingene & hh2loc_2x >= 0.175 & hh2loc_2x <= 0.584, na.rm = TRUE),
+                   sum(ingene & hh2loc_2x > 0.584, na.rm = TRUE),
+                   sum(!ingene & hh2loc_2x < 0.175, na.rm = TRUE),
+                   sum(!ingene & hh2loc_2x >= 0.175 & hh2loc_2x <= 0.584, na.rm = TRUE),
+                   sum(!ingene & hh2loc_2x > 0.584, na.rm = TRUE)),
                  nrow = 3, ncol = 2,
                  dimnames = list(c("Too low", "Kept", "Too high"),
                                  c("In a gene", "Not in a gene")))
 
 diptab
 #          In a gene Not in a gene
-# Too low        480          1343
-# Kept          2286          3493
-# Too high      1133          1055
+# Too low        337           950
+# Kept          2201          3654
+# Too high      1361          1287
 
-tettab <- matrix(c(sum(ingene & hh2loc_4x < 0.464, na.rm = TRUE),
-                   sum(ingene & hh2loc_4x >= 0.464 & hh2loc_2x <= 0.813, na.rm = TRUE),
-                   sum(ingene & hh2loc_4x > 0.813, na.rm = TRUE),
-                   sum(!ingene & hh2loc_4x < 0.464, na.rm = TRUE),
-                   sum(!ingene & hh2loc_4x >= 0.464 & hh2loc_2x <= 0.813, na.rm = TRUE),
-                   sum(!ingene & hh2loc_4x > 0.813, na.rm = TRUE)),
+tettab <- matrix(c(sum(ingene & hh2loc_4x < 0.356, na.rm = TRUE),
+                   sum(ingene & hh2loc_4x >= 0.356 & hh2loc_2x <= 0.716, na.rm = TRUE),
+                   sum(ingene & hh2loc_4x > 0.716, na.rm = TRUE),
+                   sum(!ingene & hh2loc_4x < 0.356, na.rm = TRUE),
+                   sum(!ingene & hh2loc_4x >= 0.356 & hh2loc_2x <= 0.716, na.rm = TRUE),
+                   sum(!ingene & hh2loc_4x > 0.716, na.rm = TRUE)),
                  nrow = 3, ncol = 2,
                  dimnames = list(c("Too low", "Kept", "Too high"),
                                  c("In a gene", "Not in a gene")))
 
 tettab
 #          In a gene Not in a gene
-# Too low       1066          2905
-# Kept          2279          2725
-# Too high       585           445
+# Too low        588          1727
+# Kept          2419          3500
+# Too high      1091           930
 
 # Fisher's Exact Test
 fisher.test(diptab, simulate.p.value = TRUE) # P = 0.0005
@@ -209,12 +220,30 @@ fisher.test(tettab, simulate.p.value = TRUE) # P = 0.0005
 
 sweep(diptab, 2, colSums(diptab), "/")
 #          In a gene Not in a gene
-# Too low  0.1231085     0.2279749
-# Kept     0.5863042     0.5929384
-# Too high 0.2905873     0.1790867
+# Too low  0.08643242     0.1612629
+# Kept     0.56450372     0.6202682
+# Too high 0.34906386     0.2184689
 
 sweep(tettab, 2, colSums(tettab), "/")
 #          In a gene Not in a gene
-# Too low  0.2712468    0.47818930
-# Kept     0.5798982    0.44855967
-# Too high 0.1488550    0.07325103
+# Too low  0.1434846     0.2804937
+# Kept     0.5902879     0.5684587
+# Too high 0.2662274     0.1510476
+
+sweep(diptab, 1, rowSums(diptab), "/")
+#          In a gene Not in a gene
+# Too low  0.2618493     0.7381507
+# Kept     0.3759180     0.6240820
+# Too high 0.5139728     0.4860272
+
+sweep(tettab, 1, rowSums(tettab), "/")
+#          In a gene Not in a gene
+# Too low  0.2539957     0.7460043
+# Kept     0.4086839     0.5913161
+# Too high 0.5398318     0.4601682
+
+mean(ingene) # 0.393
+
+rowSums(diptab) / sum(diptab) # 59.8% retained
+
+rowSums(tettab) / sum(tettab) # 57.7# retained
