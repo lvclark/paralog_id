@@ -162,10 +162,7 @@ testres2$PloidyText <- ifelse(testres2$Ploidy == 2, "Diploid", "Tetraploid")
 #save(testres2, file = "workspaces/variance_estimates_overdispersion_inbreeding_2022-01-17.RData")
 load("workspaces/variance_estimates_overdispersion_inbreeding_2022-01-17.RData")
 
-# figure for manuscript
-#cairo_pdf("SuppFig2_overdispersion_inbreeding.pdf", width = 6.7, height = 3.5)
-# tiff("SuppFig2_overdispersion_inbreeding.tiff", width = 6.7 * 300, height = 3.5 * 300,
-#      res = 300, compression = "lzw")
+
 testres2 %>%
   filter(ErrorRate == 0) %>%
 ggplot(mapping = aes(x = Overdispersion, y = Mean, color = Inbreeding, group = paste(Inbreeding, MAF))) +
@@ -173,8 +170,11 @@ ggplot(mapping = aes(x = Overdispersion, y = Mean, color = Inbreeding, group = p
   facet_grid(~ PloidyText, scales = "free_y") +
   scale_color_viridis_c() +
   labs(lty = "MAF", y = "Mean estimate")
-# dev.off()
 
+# figure for manuscript
+#cairo_pdf("SuppFig4_overdispersion_inbreeding.pdf", width = 6.7, height = 3.5)
+# tiff("SuppFig4_overdispersion_inbreeding.tiff", width = 6.7 * 300, height = 3.5 * 300,
+#       res = 300, compression = "lzw")
 testres2 %>%
   filter(ErrorRate == 0.001) %>%
   ggplot(mapping = aes(x = Overdispersion, y = Mean, color = Inbreeding, group = paste(Inbreeding, MAF))) +
@@ -182,6 +182,7 @@ testres2 %>%
   facet_grid(~ PloidyText, scales = "free_y") +
   scale_color_viridis_c() +
   labs(lty = "MAF", y = "Mean estimate")
+# dev.off()
 
 testres2 %>%
   filter(Overdispersion == 20) %>%
@@ -194,6 +195,9 @@ testres2 %>%
        y = "Mean estimate", color = "Sequencing error rate") +
   scale_color_manual(values = c("darkgreen", "dodgerblue"))
 
+# cairo_pdf("Fig4_seq_error.pdf", width = 6.7, height = 3.5)
+# tiff("Fig4_seq_error.tiff", width = 6.7 * 300, height = 3.5 * 300,
+#      res = 300, compression = "lzw")
 testres2 %>%
   filter(Overdispersion == 20, PloidyText %in% c("Diploid", "Tetraploid")) %>%
   mutate(MAFtext = paste("MAF = ", MAF)) %>%
@@ -205,6 +209,7 @@ testres2 %>%
   labs(lty = "Sequencing error rate", shape = "Sequencing error rate",
        y = "Mean estimate", color = "Ploidy") +
   scale_color_manual(values = c("darkgreen", "dodgerblue"))
+# dev.off()
 
 # Do this fig for hexaploids too since there is interest from sweetpotato
 p <- 6L
