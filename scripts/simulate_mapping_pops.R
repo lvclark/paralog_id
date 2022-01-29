@@ -101,12 +101,45 @@ locres5 %>% filter(Ploidy == "Tetraploid") %>%
   geom_histogram() +
   facet_wrap(~ Cross_type)
 
-#cairo_pdf("Fig5_mapping.pdf", width = 6.7, height = 3.5)
 ggplot(locres5, aes(x = Estimate, color = Cross_type)) +
   geom_density() +
   facet_wrap(~ Ploidy, scales = "free_x") +
   scale_color_manual(values = dittoSeq::dittoColors(1))
-#dev.off()
 
 testres5
 sqrt(testres5$Variance) # standard deviation of estimate
+
+# Expected het for each cross type
+locres5$Expected_heterozygosity <- numeric(nrow(locres5))
+locres5$Expected_heterozygosity[locres5$Ploidy == "Diploid"] <- 0.5
+for(crs in names(cross_types$Tetraploid)){
+  parents <- cross_types$Tetraploid[[crs]]
+  gamprob1 <- polyRAD:::.gameteProb(polyRAD:::.makeGametes(parents[1], 4), 4)
+  gamprob2 <- polyRAD:::.gameteProb(polyRAD:::.makeGametes(parents[2], 4), 4)
+  out <- 0
+  for(i in 0:2){
+    for(j in 0:2){
+      progprob <- gamprob1[i+1,] * gamprob2[j+1,]
+      geno <- i + j
+      het <- (1 - (geno / 4) ^ 2 - ((4 - geno) / 4) ^ 2) * 0.75
+      out <- out + progprob * het
+    }
+  }
+  locres5$Expected_heterozygosity[locres5$Cross_type == crs] <- out
+}
+
+
+ggplot(locres5, aes(x = Estimate)) +
+  geom_density() +
+  facet_wrap(~ paste(Ploidy, Cross_type), scales = "free_x")
+
+# cairo_pdf("Fig7_mapping.pdf", width = 6.7, height = 3.5)
+# tiff("Fig7_mapping.tiff", res = 300, width = 6.7 * 300, height = 3.5 * 300,
+#      compression = "lzw")
+ggplot(locres5, aes(y = Estimate, x = Cross_type, fill = as.factor(Expected_heterozygosity))) +
+  geom_violin(draw_quantiles = 0.5) +
+  facet_grid(rows = vars(Ploidy) , scales = "free_y", space = "free_y") +
+  coord_flip() +
+  scale_fill_viridis_d() +
+  labs(fill = "Expected heterozygosity", x = "Cross type")
+# dev.off()
