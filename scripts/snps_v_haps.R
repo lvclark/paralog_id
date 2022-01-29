@@ -182,12 +182,17 @@ ExpectedHindHe(temp, inbreeding = 0.25, overdispersion = 10, errorRate = 0.001)
 # Contingency tables of being in gene vs. being filtered
 ingene <- mcols(gndist)$distance == 0
 
-diptab <- matrix(c(sum(ingene & hh2loc_2x < 0.175, na.rm = TRUE),
-                   sum(ingene & hh2loc_2x >= 0.175 & hh2loc_2x <= 0.584, na.rm = TRUE),
-                   sum(ingene & hh2loc_2x > 0.584, na.rm = TRUE),
-                   sum(!ingene & hh2loc_2x < 0.175, na.rm = TRUE),
-                   sum(!ingene & hh2loc_2x >= 0.175 & hh2loc_2x <= 0.584, na.rm = TRUE),
-                   sum(!ingene & hh2loc_2x > 0.584, na.rm = TRUE)),
+min2x <- 0.175
+max2x <- 0.584
+min4x <- 0.356
+max4x <- 0.716
+
+diptab <- matrix(c(sum(ingene & hh2loc_2x < min2x, na.rm = TRUE),
+                   sum(ingene & hh2loc_2x >= min2x & hh2loc_2x <= max2x, na.rm = TRUE),
+                   sum(ingene & hh2loc_2x > max2x, na.rm = TRUE),
+                   sum(!ingene & hh2loc_2x < min2x, na.rm = TRUE),
+                   sum(!ingene & hh2loc_2x >= min2x & hh2loc_2x <= max2x, na.rm = TRUE),
+                   sum(!ingene & hh2loc_2x > max2x, na.rm = TRUE)),
                  nrow = 3, ncol = 2,
                  dimnames = list(c("Too low", "Kept", "Too high"),
                                  c("In a gene", "Not in a gene")))
@@ -198,12 +203,12 @@ diptab
 # Kept          2201          3654
 # Too high      1361          1287
 
-tettab <- matrix(c(sum(ingene & hh2loc_4x < 0.356, na.rm = TRUE),
-                   sum(ingene & hh2loc_4x >= 0.356 & hh2loc_2x <= 0.716, na.rm = TRUE),
-                   sum(ingene & hh2loc_4x > 0.716, na.rm = TRUE),
-                   sum(!ingene & hh2loc_4x < 0.356, na.rm = TRUE),
-                   sum(!ingene & hh2loc_4x >= 0.356 & hh2loc_2x <= 0.716, na.rm = TRUE),
-                   sum(!ingene & hh2loc_4x > 0.716, na.rm = TRUE)),
+tettab <- matrix(c(sum(ingene & hh2loc_4x < min4x, na.rm = TRUE),
+                   sum(ingene & hh2loc_4x >= min4x & hh2loc_2x <= max4x, na.rm = TRUE),
+                   sum(ingene & hh2loc_4x > max4x, na.rm = TRUE),
+                   sum(!ingene & hh2loc_4x < min4x, na.rm = TRUE),
+                   sum(!ingene & hh2loc_4x >= min4x & hh2loc_2x <= max4x, na.rm = TRUE),
+                   sum(!ingene & hh2loc_4x > max4x, na.rm = TRUE)),
                  nrow = 3, ncol = 2,
                  dimnames = list(c("Too low", "Kept", "Too high"),
                                  c("In a gene", "Not in a gene")))
@@ -247,3 +252,41 @@ mean(ingene) # 0.393
 rowSums(diptab) / sum(diptab) # 59.8% retained
 
 rowSums(tettab) / sum(tettab) # 57.7# retained
+
+# Effect of filtering on minor allele frequency distribution ####
+allelefreqs_2x <- AddAlleleFreqHWE(SubsetByTaxon(mydata2, diploids))$alleleFreq
+allelefreqs_4x <- AddAlleleFreqHWE(SubsetByTaxon(mydata2, tetraploids))$alleleFreq
+MAF_2x <- tapply(allelefreqs_2x, mydata2$alleles2loc, function(x) sort(x, decreasing = TRUE)[2])
+MAF_4x <- tapply(allelefreqs_4x, mydata2$alleles2loc, function(x) sort(x, decreasing = TRUE)[2])
+filt2x <- filt4x <- character(nLoci(mydata2))
+filt2x[hh2loc_2x < min2x] <- "Filtered; too low"
+filt2x[hh2loc_2x >= min2x & hh2loc_2x <= max2x] <- "Retained"
+filt2x[hh2loc_2x > max2x] <- "Filtered; too high"
+filt4x[hh2loc_4x < min4x] <- "Filtered; too low"
+filt4x[hh2loc_4x >= min4x & hh2loc_4x <= max4x] <- "Retained"
+filt4x[hh2loc_4x > max4x] <- "Filtered; too high"
+
+maftab <- data.frame(HindHe = c(hh2loc_2x, hh2loc_4x),
+                     MAF = c(MAF_2x, MAF_4x),
+                     PloidyText = rep(c("Diploids", "Tetraploids"), each = nLoci(mydata2)),
+                     Filtering = c(filt2x, filt4x))
+maftab$Filtering <- factor(maftab$Filtering, levels = c("Filtered; too low", "Retained", "Filtered; too high"))
+
+ggplot(maftab[!is.na(maftab$Filtering),], aes(x = MAF, fill = Filtering)) +
+  geom_density() +
+  facet_wrap(~PloidyText, nrow = 2)
+
+ggplot(maftab[!is.na(maftab$Filtering),], aes(x = MAF, fill = PloidyText)) +
+  geom_density(alpha = 0.5) +
+  facet_wrap(~Filtering, nrow = 3)
+
+# tiff("Fig3_HindHe_vs_MAF.tiff", res = 300, width = 3.35 * 300, height = 6 * 300,
+#      compression = "lzw")
+ggplot(maftab[!is.na(maftab$Filtering),], aes(x = MAF, y = HindHe)) +
+  geom_point(alpha = 0.1, size = 0.5) +
+  geom_hline(data = data.frame(PloidyText = c("Diploids", "Diploids", "Tetraploids", "Tetraploids"),
+                               HindHe = c(min2x, max2x, min4x, max4x)),
+             aes(yintercept = HindHe), linetype = 2, color = "blue") +
+  facet_wrap(~PloidyText, nrow = 2) +
+  labs(y = expression(H[ind] / H[E]), x = "Minor allele frequency")
+# dev.off()
