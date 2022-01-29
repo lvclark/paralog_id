@@ -282,6 +282,7 @@ ggplot(maftab[!is.na(maftab$Filtering),], aes(x = MAF, fill = PloidyText)) +
 
 # tiff("Fig3_HindHe_vs_MAF.tiff", res = 300, width = 3.35 * 300, height = 6 * 300,
 #      compression = "lzw")
+# cairo_pdf("Fig3_HindHe_vs_MAF.pdf", width = 3.35, height = 6)
 ggplot(maftab[!is.na(maftab$Filtering),], aes(x = MAF, y = HindHe)) +
   geom_point(alpha = 0.1, size = 0.5) +
   geom_hline(data = data.frame(PloidyText = c("Diploids", "Diploids", "Tetraploids", "Tetraploids"),
