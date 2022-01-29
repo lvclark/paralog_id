@@ -32,7 +32,8 @@ HHByParamMapping <- function(cross_type = c(1, 0), nsam = 500, depth = 20, overd
   geno <- rbind(parent1, parent2, geno)
   alleleDepth <- SimAlleleDepth(matrix(depth, nrow = nsam + 2, ncol = nloc,
                                        dimnames = list(NULL, as.character(1:nloc))),
-                                geno, alleles2loc, overdispersion)
+                                geno, alleles2loc, overdispersion,
+                                contamRate = 0, errorRate = 0.001)
   rownames(alleleDepth) <- c("parent1", "parent2", paste0("sam", 1:nsam))
   simrad <- RADdata(alleleDepth, alleles2loc,
                     locTable = data.frame(row.names = paste0("loc", 1:nloc)),
@@ -86,7 +87,7 @@ for(i in seq_len(tottests5)){
   locres5$Estimate[theserows] <- res$values
 }
 
-#save(testres5, locres5, file = "workspaces/sim_mapping_pops.RData")
+#save(testres5, locres5, file = "workspaces/sim_mapping_pops_2022-01-29.RData")
 
 locres5$Cross_type <- factor(locres5$Cross_type, levels = unique(locres5$Cross_type))
 
