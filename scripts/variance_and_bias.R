@@ -40,7 +40,7 @@ test <- HHByParam()
 hist(test$values)
 sqrt(test$var)
 
-# run tests for variance
+# run tests for variance ####
 ploidies <- c(2L, 4L)
 freqs <- c(0.01, 0.05, 0.1, 0.2)
 samsizes <- c(50, 100, 500, 1000)
@@ -112,12 +112,99 @@ p2 <- ggplot(testres[testres$Depth < 200 & testres$ContamRate == 0 & testres$Err
   labs(y = "Mean estimate", color = "MAF", x = "Read depth")
 p2
 
-#cairo_pdf("Fig4_samplesize_depth_maf.pdf", width = 6.7, height = 6)
 grid.arrange(arrangeGrob(p1 + ggtitle("A"), p2 + ggtitle("B")))
-#dev.off()
 
+# Simulate paralogous loci ####
+overdispersion = 20
+inbreeding = 0
+nloc = 5000
+tottests_p <- length(ploidies) * length(freqs) * length(samsizes) * length(depths)
+testres_p <- data.frame(Ploidy = integer(tottests_p),
+                      MAF = numeric(tottests_p),
+                      N_sam = numeric(tottests_p),
+                      Depth = numeric(tottests_p),
+                      Mean = numeric(tottests_p),
+                      Variance = numeric(tottests_p),
+                      Prop_estimated = numeric(tottests_p))
+currrow <- 1
+alleles2loc <- rep(1:(nloc*2), each = 2)
+alleles2loc2 <- (alleles2loc + 1L) %/% 2L
+for(p in ploidies){
+  for(f in freqs){
+    alleleFreq <- rep(c(1 - f, f), times = nloc*2)
+    
+    for(s in samsizes){
+      for(d in depths){
+        geno <- SimGenotypes(alleleFreq, alleles2loc, s, inbreeding, p)
+        alleleDepth <- SimAlleleDepth(matrix(d, nrow = s, ncol = nloc*2,
+                                             dimnames = list(NULL, as.character(1:(nloc*2)))),
+                                      geno, alleles2loc, overdispersion, contamRate = 0,
+                                      errorRate = 0.001)
+        rownames(alleleDepth) <- paste0("sam", 1:s)
+        # Combine pairs of loci as paralogs
+        colnames(alleleDepth) <- paste0("loc", alleles2loc2, "_",
+                                        rep(1:4, times = nloc))
+        
+        simrad <- RADdata(alleleDepth, alleles2loc2,
+                          locTable = data.frame(row.names = paste0("loc", 1:nloc)),
+                          possiblePloidies = list(as.integer(p)),
+                          contamRate = 0,
+                          alleleNucleotides = rep(c("AC", "GC", "AT", "GT"), times = nloc))
+        
+        hh <- HindHe(simrad)
+        hhByLoc <- colMeans(hh, na.rm = TRUE)
 
-# Explore overdispersion, inbreeding, and sequencing error.  polyRAD 1.6 Jan 2022.
+        testres_p$Ploidy[currrow] <- p
+        testres_p$MAF[currrow] <- f
+        testres_p$N_sam[currrow] <- s
+        testres_p$Depth[currrow] <- d
+        testres_p$Mean[currrow] <- mean(hhByLoc, na.rm = TRUE)
+        testres_p$Variance[currrow] <- var(hhByLoc, na.rm = TRUE)
+        testres_p$Prop_estimated[currrow] <- mean(!is.na(hhByLoc))
+        currrow <- currrow + 1
+        if(currrow %% 10 == 0) print(currrow)
+      }
+    }
+  }
+}
+#save(testres_p, file = "workspaces/variance_estimates_paralogs_2022-01-26.RData")
+load("workspaces/variance_estimates_paralogs_2022-01-26.RData")
+
+testres_p$PloidyText <- ifelse(testres_p$Ploidy == 2, "Diploid", "Tetraploid")
+
+testres_pc <-
+  rbind(cbind(testres[testres$ErrorRate == 0.001 & testres$ContamRate == 0,
+                      colnames(testres_p)],
+              Marker = rep("Mendelian", times = sum(testres$ErrorRate == 0.001 & testres$ContamRate == 0))),
+        cbind(testres_p,
+              Marker = rep("Collapsed_paralogs", times = nrow(testres_p))))
+
+testres_pc$Marker <- factor(testres_pc$Marker, levels = unique(testres_pc$Marker))
+
+# MAF of 0.2 doesn't add much, so remove it to declutter figure
+testres_pc <- testres_pc[testres_pc$MAF < 0.2 & testres_pc$Depth < 200,]
+
+p2 <- ggplot(testres_pc,
+       aes(x = Depth, y = Mean, color = as.factor(MAF), linetype = Marker)) +
+  geom_line() +
+  facet_grid(PloidyText ~ N_sam, labeller = labeller(N_sam = function(x) paste("N =", x))) +
+  scale_x_continuous(breaks = depths, trans = "log2") +
+  labs(y = "Mean estimate", color = "MAF", x = "Read depth")
+
+p1 <- ggplot(testres_pc,
+       aes(x = Depth, y = sqrt(Variance), color = as.factor(MAF), linetype = Marker)) +
+  geom_line() +
+  facet_grid(PloidyText ~ N_sam, labeller = labeller(N_sam = function(x) paste("N =", x))) +
+  scale_x_continuous(breaks = depths, trans = "log2") +
+  labs(y = "Standard deviation of estimate", color = "MAF", x = "Read depth")
+
+# cairo_pdf("Fig6_samplesize_depth_maf.pdf", width = 6.7, height = 6)
+# tiff("Fig6_samplesize_depth_maf.tiff", res = 300,
+#      width = 6.7 * 300, height = 6 * 300, compression = "lzw")
+grid.arrange(arrangeGrob(p1 + ggtitle("A"), p2 + ggtitle("B")))
+# dev.off()
+
+# Explore overdispersion, inbreeding, and sequencing error.  polyRAD 1.6 Jan 2022. ####
 ods <- 5:20
 freqs2 <- c(0.01, 0.05)
 inbreed <- seq(0, 1, by = 0.1)
