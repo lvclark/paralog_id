@@ -122,7 +122,7 @@ colnames(locDepth2) <- as.character(seq_len(nloci2))
 ADdip1 <- lapply(genoDip1,
                  function(x){
                    out <- SimAlleleDepth(locDepth1, x, alleles2loc1,
-                         overdispersion = 20, contamRate = 0.001)
+                         overdispersion = 20, contamRate = 0, errorRate = 0.001)
                    rownames(out) <- paste0("sam", seq_len(nsam))
                    colnames(out) <- paste0("loc", alleles2loc1, "_", unlist(lapply(allelesPerLoc, seq_len)))
                    out
@@ -130,7 +130,7 @@ ADdip1 <- lapply(genoDip1,
 ADdip2 <- lapply(genoDip2,
                  function(x){
                    out <- SimAlleleDepth(locDepth2, x, alleles2loc2,
-                         overdispersion = 20, contamRate = 0.001)
+                         overdispersion = 20, contamRate = 0, errorRate = 0.001)
                    rownames(out) <- paste0("sam", seq_len(nsam))
                    # combine pairs of adjacent loci into single loci
                    colnames(out) <- paste0("loc", (alleles2loc2 + 1L) %/% 2L + nloci, "_",
@@ -142,7 +142,7 @@ ADdip2 <- lapply(genoDip2,
 ADtet1 <- lapply(genoTet1,
                  function(x){
                    out <- SimAlleleDepth(locDepth1, x, alleles2loc1,
-                         overdispersion = 20, contamRate = 0.001)
+                         overdispersion = 20, contamRate = 0, errorRate = 0.001)
                    rownames(out) <- paste0("sam", seq_len(nsam))
                    colnames(out) <- paste0("loc", alleles2loc1, "_", unlist(lapply(allelesPerLoc, seq_len)))
                    out
@@ -150,7 +150,7 @@ ADtet1 <- lapply(genoTet1,
 ADtet2 <- lapply(genoTet2,
                  function(x){
                    out <- SimAlleleDepth(locDepth2, x, alleles2loc2,
-                         overdispersion = 20, contamRate = 0.001)
+                         overdispersion = 20, contamRate = 0, errorRate = 0.001)
                    rownames(out) <- paste0("sam", seq_len(nsam))
                    # combine pairs of adjacent loci into single loci
                    colnames(out) <- paste0("loc", (alleles2loc2 + 1L) %/% 2L + nloci, "_",
