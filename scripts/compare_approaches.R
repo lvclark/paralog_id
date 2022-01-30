@@ -86,7 +86,8 @@ for(i in seq_len(nloci + nloci2)){
 }
 
 # Simulate genotypes ####
-inbr <- seq(0, 1, by = 0.1) # inbreeding level
+#inbr <- seq(0, 1, by = 0.1) # inbreeding level
+inbr <- c(0.1, 0.5, 0.9)
 
 alleles2loc1 <- rep(seq_len(nloci), times = allelesPerLoc)
 alleles2loc2 <- rep(seq_len(nloci2), times = allelesPerLoc2)
@@ -168,7 +169,7 @@ alleles2loc_combined <- c(alleles2loc1, (alleles2loc2 + 1L) %/% 2L + nloci)
 
 tic.clearlog()
 
-RADdip <- lapply(1:11,
+RADdip <- lapply(seq_along(inbr),
                  function(x){
                    out <- RADdata(cbind(ADdip1[[x]], ADdip2[[x]]), alleles2loc_combined,
                   data.frame(row.names = paste0("loc", seq_len(nloci * 2))),
@@ -182,7 +183,7 @@ RADdip <- lapply(1:11,
 tictocres[["IterateHWE", "Dip"]] <- extractTimings(tic.log(format = FALSE))
 tic.clearlog()
 
-RADtet <- lapply(1:11,
+RADtet <- lapply(seq_along(inbr),
                  function(x){
                    out <- RADdata(cbind(ADtet1[[x]], ADtet2[[x]]), alleles2loc_combined,
                   data.frame(row.names = paste0("loc", seq_len(nloci * 2))),
@@ -201,7 +202,7 @@ tic.clearlog()
 # Run statistics on loci ####
 source("scripts/HoHe.R")
 
-hhDip <- lapply(1:11, function(x){
+hhDip <- lapply(seq_along(inbr), function(x){
   tic(paste("HindHe in diploids at inbreeding", inbr[x]))
   out <- colMeans(HindHe(RADdip[[x]]), na.rm = TRUE)
   toc(log = TRUE)
@@ -209,7 +210,7 @@ hhDip <- lapply(1:11, function(x){
 } )
 tictocres[["HindHe", "Dip"]] <- extractTimings(tic.log(format = FALSE))
 tic.clearlog()
-hhTet <- lapply(1:11, function(x){
+hhTet <- lapply(seq_along(inbr), function(x){
   tic(paste("HindHe in tetraploids at inbreeding", inbr[x]))
   out <- colMeans(HindHe(RADtet[[x]]), na.rm = TRUE)
   toc(log = TRUE)
@@ -218,7 +219,7 @@ hhTet <- lapply(1:11, function(x){
 tictocres[["HindHe", "Tet"]] <- extractTimings(tic.log(format = FALSE))
 tic.clearlog()
 
-genoDip <- lapply(1:11,
+genoDip <- lapply(seq_along(inbr),
                   function(x){
                     tic(paste("GetProbableGenotypes in diploids at inbreeding", inbr[x]))
                     out <- GetProbableGenotypes(RADdip[[x]], omit1allelePerLocus = FALSE, multiallelic = "na")[[1]]
@@ -227,7 +228,7 @@ genoDip <- lapply(1:11,
                   })
 tictocres[["GetProbableGenotypes", "Dip"]] <- extractTimings(tic.log(format = FALSE))
 tic.clearlog()
-genoTet <- lapply(1:11,
+genoTet <- lapply(seq_along(inbr),
                   function(x){
                     tic(paste("GetProbableGenotypes in tetraploids at inbreeding", inbr[x]))
                     out <- GetProbableGenotypes(RADtet[[x]], omit1allelePerLocus = FALSE, multiallelic = "na")[[1]]
@@ -237,12 +238,12 @@ genoTet <- lapply(1:11,
 tictocres[["GetProbableGenotypes", "Tet"]] <- extractTimings(tic.log(format = FALSE))
 tic.clearlog()
 
-mean(is.na(genoDip[[2]][,RADdip$alleles2loc > nloci]))  # 36% of paralogs don't have allele copy num adding up
-mean(is.na(genoDip[[2]][,RADdip$alleles2loc <= nloci])) # only 1% of non-paralogs have that issue
-mean(is.na(genoTet[[2]][,RADtet$alleles2loc > nloci]))  # 40%
-mean(is.na(genoTet[[2]][,RADtet$alleles2loc <= nloci])) # 10%
+mean(is.na(genoDip[[1]][,RADdip[[1]]$alleles2loc > nloci]))  # 36% of paralogs don't have allele copy num adding up
+mean(is.na(genoDip[[1]][,RADdip[[1]]$alleles2loc <= nloci])) # only 1% of non-paralogs have that issue
+mean(is.na(genoTet[[1]][,RADtet[[1]]$alleles2loc > nloci]))  # 41%
+mean(is.na(genoTet[[1]][,RADtet[[1]]$alleles2loc <= nloci])) # 11%
 
-oeDip <- lapply(1:11,
+oeDip <- lapply(seq_along(inbr),
                 function(x){
                   tic(paste("HoHe in diploids at inbreeding", inbr[x]))
                   out <- colMeans(HoHe(genoDip[[x]], RADdip[[x]]$alleles2loc, 2L), na.rm = TRUE)
@@ -251,7 +252,7 @@ oeDip <- lapply(1:11,
                 })
 tictocres[["HoHe", "Dip"]] <- extractTimings(tic.log(format = FALSE))
 tic.clearlog()
-oeTet <- lapply(1:11,
+oeTet <- lapply(seq_along(inbr),
                 function(x){
                   tic(paste("HoHe in tetraploids at inbreeding", inbr[x]))
                   out <- colMeans(HoHe(genoTet[[x]], RADtet[[x]]$alleles2loc, 4L), na.rm = TRUE)
@@ -261,7 +262,7 @@ oeTet <- lapply(1:11,
 tictocres[["HoHe", "Tet"]] <- extractTimings(tic.log(format = FALSE))
 tic.clearlog()
 
-hapDip <- lapply(1:11,
+hapDip <- lapply(seq_along(inbr),
                  function(x){
                    tic(paste("Haplotype count in diploids at inbreeding", inbr[x]))
                    out <- colMeans(HapPerGen(RADdip[[x]]$alleleDepth, RADdip[[x]]$alleles2loc) > 2L)
@@ -270,7 +271,7 @@ hapDip <- lapply(1:11,
                  })
 tictocres[["Haplotypes", "Dip"]] <- extractTimings(tic.log(format = FALSE))
 tic.clearlog()
-hapTet <- lapply(1:11,
+hapTet <- lapply(seq_along(inbr),
                  function(x){
                    tic(paste("Haplotype count in tetraploids at inbreeding", inbr[x]))
                    out <- colMeans(HapPerGen(RADtet[[x]]$alleleDepth, RADtet[[x]]$alleles2loc) > 4L)
@@ -287,7 +288,7 @@ tictocres[["Depth", "Dip"]] <- extractTimings(tic.log(format = FALSE))
 tic.clearlog()
 #depthTet <- colMeans(GetLocDepth(RADtet))
 
-Zdip <- lapply(1:11,
+Zdip <- lapply(seq_along(inbr),
                function(x){
                  tic(paste("Z-score in diploids at inbreeding", inbr[x]))
                  out <- abs(Zscore(RADdip[[x]]$alleleDepth, genoDip[[x]], RADdip[[x]]$alleles2loc, 2L))
@@ -296,7 +297,7 @@ Zdip <- lapply(1:11,
                })
 tictocres[["Zscore", "Dip"]] <- extractTimings(tic.log(format = FALSE))
 tic.clearlog()
-Ztet <- lapply(1:11,
+Ztet <- lapply(seq_along(inbr),
                function(x){
                  tic(paste("Z-score in tetraploids at inbreeding", inbr[x]))
                  out <- abs(Zscore(RADtet[[x]]$alleleDepth, genoTet[[x]], RADtet[[x]]$alleles2loc, 4L))
@@ -346,10 +347,10 @@ ggplot(mapping = aes(x = Ztet[[2]],
 
 # Summarize approach efficiency ####
 # Get 95th percentile for Mendelian markers. How many paralogs would be filtered at that cutoff?
-quantile(hhDip[1:nloci], 0.95)
+quantile(hhDip[[1]][1:nloci], 0.95, na.rm = TRUE)
 
-summtab <- data.frame(Approach = rep(c("Hind/He", "Ho/He", "Haplotypes", "Z-score", "Depth"), each = 22),
-                      Ploidy = rep(rep(c("Diploid", "Tetraploid"), each = 11), times = 5),
+summtab <- data.frame(Approach = rep(c("Hind/He", "Ho/He", "Haplotypes", "Z-score", "Depth"), each = length(inbr) * 2),
+                      Ploidy = rep(rep(c("Diploid", "Tetraploid"), each = length(inbr)), times = 5),
                       Inbreeding = rep(inbr, times = 10),
                       Mendelian95 = NA_real_,
                       ParalogsFiltered = NA_real_,
@@ -362,14 +363,14 @@ summtab <- data.frame(Approach = rep(c("Hind/He", "Ho/He", "Haplotypes", "Z-scor
                                           tictocres[["Haplotypes", "Tet"]],
                                           tictocres[["Zscore", "Dip"]] + tictocres[["IterateHWE", "Dip"]] + tictocres[["GetProbableGenotypes", "Dip"]],
                                           tictocres[["Zscore", "Tet"]] + tictocres[["IterateHWE", "Tet"]] + tictocres[["GetProbableGenotypes", "Tet"]],
-                                          rep(tictocres[["Depth", "Dip"]], 22)))
+                                          rep(tictocres[["Depth", "Dip"]], 2 * length(inbr))))
 
 summtab$Approach <- factor(summtab$Approach, levels = unique(summtab$Approach))
 
 for(i in seq_len(nrow(summtab))){
-  testindex <- (i + 10L) %/% 11L
+  testindex <- (i + length(inbr) - 1L) %/% length(inbr)
   if(testindex < 9){
-    inbreedingindex <- (i + 10L) %% 11L + 1L
+    inbreedingindex <- (i + length(inbr) - 1L) %% length(inbr) + 1L
     x <- list(hhDip, hhTet, oeDip, oeTet, hapDip, hapTet, Zdip, Ztet)[[testindex]][[inbreedingindex]]
   } else {
     x <- depthDip
