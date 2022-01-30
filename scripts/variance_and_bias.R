@@ -398,7 +398,7 @@ dev.off()
 ## If we test a range of overdispersion and inbreeding, users can look at the chart for 
 ## a better way to estimate inbreeding if they know their overdispersion.
 
-# Null alleles
+# Null alleles ####
 
 # NAF is the frequency of a null allele
 HHByParam_Null <- function(MAF = 0.05, NAF = 0.05, nsam = 500, depth = 20, overdispersion = 20,
@@ -409,7 +409,8 @@ HHByParam_Null <- function(MAF = 0.05, NAF = 0.05, nsam = 500, depth = 20, overd
   geno <- SimGenotypes(alleleFreq, alleles2loc, nsam, inbreeding, ploidy)
   alleleDepth <- SimAlleleDepth(matrix(depth, nrow = nsam, ncol = nloc,
                                        dimnames = list(NULL, as.character(1:nloc))),
-                                geno, alleles2loc, overdispersion)
+                                geno, alleles2loc, overdispersion,
+                                contamRate = 0, errorRate = 0.001)
   rownames(alleleDepth) <- paste0("sam", 1:nsam)
   alleleDepth <- alleleDepth[,-seq(3, nloc * 3, by = 3)] # remove null alleles
   alleles2loc <- alleles2loc[-seq(3, nloc * 3, by = 3)]
@@ -455,13 +456,13 @@ for(p in ploidies){
   }
 }
 
-#save(testres4, file = "workspaces/variance_estimates_null_alleles.RData")
-load("workspaces/variance_estimates_null_alleles.RData")
+#save(testres4, file = "workspaces/variance_estimates_null_alleles_2022-01-29.RData")
+load("workspaces/variance_estimates_null_alleles_2022-01-29.RData")
 
 testres4$PloidyText <- ifelse(testres4$Ploidy == 2, "Diploid", "Tetraploid")
 
-#cairo_pdf("SuppFig3_null_alleles.pdf", width = 3.35, height = 5.2)
-# tiff("SuppFig3_null_alleles.tiff", width = 3.35 * 300, height = 5.2 * 300,
+#cairo_pdf("SuppFig5_null_alleles.pdf", width = 3.35, height = 5.2)
+# tiff("SuppFig5_null_alleles.tiff", width = 3.35 * 300, height = 5.2 * 300,
 #      res = 300, compression = "lzw")
 ggplot(testres4, aes(x = NAF, y = Mean)) +
   geom_line(aes(lty = as.factor(MAF))) +
