@@ -86,8 +86,8 @@ ggplot(df, aes(x = HindHe, color = Marker)) +
   labs(color = "Marker type")
 # dev.off()
 
-#cairo_pdf("SuppFig1_SNPs_vs_haps.pdf", width = 3.35, height = 4.5)
-tiff("SuppFig1_SNPs_vs_haps.tiff", width = 3.35 * 300, height = 4.5 * 300, res = 300,
+#cairo_pdf("SuppFig3_SNPs_vs_haps.pdf", width = 3.35, height = 4.5)
+tiff("SuppFig3_SNPs_vs_haps.tiff", width = 3.35 * 300, height = 4.5 * 300, res = 300,
      compression = "lzw")
 ggplot(df, aes(x = HindHe, color = Marker)) +
   geom_density() +

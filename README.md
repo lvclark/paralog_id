@@ -66,7 +66,7 @@ Figures are plotted to compare Hind/He before and after the tabu search.
 
 `scripts/get_inbreeding.R` tests code to estimate inbreeding from preliminary
 Hind/He distributions, and also plots Hind/He vs. ploidy, depth, and proportion
-_M. sinensis_ ancestry for the manuscript.  This script generates Fig. 3 for the
+_M. sinensis_ ancestry for the manuscript.  This script generates Fig. 4 for the
 main manuscript.
 
 `scripts/isoloci_fun_test.py` contains code for testing individual functions
@@ -76,16 +76,18 @@ within the variant calling pipeline.
 SNPs into haplotypes.  The distribution and variance of Hind/He is then compared
 between SNPs and haplotypes.  A figure is generated for visualizing the
 distribution.  This script generates Fig. S3 for Additional File 1, as well as
-results for Table 2 in the main manuscript regarding distance to genes.
+results for Table 2 in the main manuscript regarding distance to genes, and
+Fig. 3 in the main manuscript regarding the effect of Hind/He filtering on
+minor allele frequency.
 
 `scripts/variance_and_bias.R` uses simulated data to explore the impact of
 population and techinical parameters on the variance and bias of Hind/He.
-This script generates Fig. 4 in the manuscript and Figs. S4 and S5 in
+This script generates Figs. 5 and 6 in the manuscript and Figs. S4 and S5 in
 Additional File 1.
 
 `scripts/simulate_mapping_pops.R` uses simulated data to explore the variance
 of Hind/He in diploid and tetraploid F1 mapping populations.  This script
-generates Fig. 5 of the main manuscript.
+generates Fig. 7 of the main manuscript.
 
 `scripts/compare_approaches.R` compares effectiveness of various approaches
 for filtering paralogs using simulated data.  Functions for the approaches

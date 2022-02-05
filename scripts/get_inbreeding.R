@@ -58,8 +58,8 @@ accessions$Ploidy <- factor(accessions$Ploidy)
 levels(accessions$Ploidy) <- c("Diploids", "Triploids", "Tetraploids")
 
 # plot Hind/He vs. ploidy and proportion Msi ancestry
-# pdf("Fig3_HindHe_by_ind.pdf", width = 6.7, height = 4)
-# tiff("Fig3_HindHe_by_ind.tiff",
+# pdf("Fig4_HindHe_by_ind.pdf", width = 6.7, height = 4)
+# tiff("Fig4_HindHe_by_ind.tiff",
 #      res = 300, width = 6.7 * 300, height = 4 * 300,
 #      compression = "lzw")
 ggplot(accessions, aes(x = Depth, y = HindHe, color = Prop_Msi)) +

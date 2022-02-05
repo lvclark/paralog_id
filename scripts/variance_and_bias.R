@@ -282,8 +282,8 @@ testres2 %>%
        y = "Mean estimate", color = "Sequencing error rate") +
   scale_color_manual(values = c("darkgreen", "dodgerblue"))
 
-# cairo_pdf("Fig4_seq_error.pdf", width = 6.7, height = 3.5)
-# tiff("Fig4_seq_error.tiff", width = 6.7 * 300, height = 3.5 * 300,
+# cairo_pdf("Fig5_seq_error.pdf", width = 6.7, height = 3.5)
+# tiff("Fig5_seq_error.tiff", width = 6.7 * 300, height = 3.5 * 300,
 #      res = 300, compression = "lzw")
 testres2 %>%
   filter(Overdispersion == 20, PloidyText %in% c("Diploid", "Tetraploid")) %>%
